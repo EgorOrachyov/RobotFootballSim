@@ -1,0 +1,5 @@
+# Build directories (default for clion)
+/**/*build*
+
+# IDE fiels
+/**/.idea
