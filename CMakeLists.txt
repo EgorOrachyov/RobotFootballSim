@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.17)
 project(rfsim LANGUAGES CXX)
 
 # Configure dependencies
-
 message(STATUS "Add GLFW as window system API")
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -28,6 +27,11 @@ add_subdirectory(deps/box2d)
 
 message(STATUS "Add stb image for image data processing")
 add_subdirectory(deps/stb)
+
+message(STATUS "Add imgui as library for GUI elements")
+add_library(imgui INTERFACE)
+target_include_directories(imgui INTERFACE deps/imgui)
+target_include_directories(imgui INTERFACE deps/imgui/backends)
 
 # Copy resources files into binary dir
 file(COPY resources DESTINATION ${CMAKE_BINARY_DIR})
