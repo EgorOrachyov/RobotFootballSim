@@ -21,6 +21,7 @@ various game strategies and game mechanics.
 * [box2d](https://github.com/erincatto/box2d) for 2d robots physics simulation 
 * [imgui](https://github.com/ocornut/imgui) for creating application GUI
 * [stb image](https://github.com/nothings/stb) for images processing
+* [glm](https://github.com/g-truc/glm) for 3d math functions
 
 ## Getting started
 

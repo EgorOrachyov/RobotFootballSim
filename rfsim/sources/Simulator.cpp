@@ -1,0 +1,55 @@
+////////////////////////////////////////////////////////////////////////////////////
+// MIT License                                                                    //
+//                                                                                //
+// Copyright (c) 2021 The RobotFootballSim project authors                        //
+//                                                                                //
+// Permission is hereby granted, free of charge, to any person obtaining a copy   //
+// of this software and associated documentation files (the "Software"), to deal  //
+// in the Software without restriction, including without limitation the rights   //
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell      //
+// copies of the Software, and to permit persons to whom the Software is          //
+// furnished to do so, subject to the following conditions:                       //
+//                                                                                //
+// The above copyright notice and this permission notice shall be included in all //
+// copies or substantial portions of the Software.                                //
+//                                                                                //
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR     //
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,       //
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE    //
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER         //
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,  //
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  //
+// SOFTWARE.                                                                      //
+////////////////////////////////////////////////////////////////////////////////////
+
+#include <Simulator.hpp>
+#include <graphics/WindowManager.hpp>
+
+namespace rfsim {
+
+    Simulator::Simulator(int argc, const char *const *argv) {
+        // Parse user args
+        for (int i = 0; i < argc; i++) {
+            mArgs.emplace_back(argv[i]);
+        }
+
+        // Setup main window and window manager
+        mWindowManager = std::make_shared<WindowManager>();
+        mPrimaryWindow = mWindowManager->CreateWindow({640, 480}, "Robot Football Sim");
+    }
+
+    Simulator::~Simulator() {
+        // Release in reverse order
+        mPrimaryWindow = nullptr;
+        mWindowManager = nullptr;
+    }
+
+    int Simulator::Run() {
+        while (!mPrimaryWindow->ShouldClose()) {
+            mWindowManager->UpdateFrame();
+        }
+
+        return 0;
+    }
+
+}
