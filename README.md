@@ -1,4 +1,4 @@
-![rfsim-concept](https://github.com/EgorOrachyov/RobotFootballSim/blob/master/docs/pictures/rfsim_app_concept.png?raw=true)
+![rfsim](https://github.com/EgorOrachyov/RobotFootballSim/blob/master/docs/pictures/rfsim_app_concept.png?raw=true)
 
 # Robot Football Simulator
 
