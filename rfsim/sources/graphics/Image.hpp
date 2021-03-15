@@ -22,8 +22,53 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#include <graphics/Painter.hpp>
+#ifndef RFSIM_IMAGE_HPP
+#define RFSIM_IMAGE_HPP
+
+#include <glm/vec2.hpp>
+#include <vector>
+#include <string>
+#include <memory>
+#include <cinttypes>
 
 namespace rfsim {
 
+    /**
+     * RGBA Image class.
+     */
+    class Image {
+    public:
+        Image(std::string&& name, const glm::uvec2& size, std::vector<uint8_t> &&data, unsigned int channelsCount, unsigned int pixelSize);
+        Image(const Image& image) = default;
+        Image(Image&& image) noexcept = default;
+        ~Image() = default;
+
+        unsigned int GetWidth() const;
+        unsigned int GetHeight() const;
+        unsigned int GetChannelsCount() const;
+        unsigned int GetPixelSize() const;
+        const glm::uvec2 &GetSize() const;
+        const std::string &GetName() const;
+        const std::vector<uint8_t> &GetPixelData() const;
+
+        /**
+         * @brief Load image from file.
+         * Loads image in RGBA format, with 4 bytes per pixel and 8 bit depth per color component.
+         * Supported formats: png, jpeg, svg, bmp, tga, etc. Refer to stb_image.
+         *
+         * @param filePath Qualified path to file with image.
+         * @return Image or null pointer if failed to load.
+         */
+        static std::shared_ptr<Image> LoadFromFilePath(std::string &&filePath);
+
+    private:
+        std::string mName;
+        std::vector<uint8_t> mData;
+        glm::uvec2 mSize;
+        unsigned int mChannelsCount;
+        unsigned int mPixelSize;
+    };
+
 }
+
+#endif //RFSIM_IMAGE_HPP

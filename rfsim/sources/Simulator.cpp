@@ -35,7 +35,7 @@ namespace rfsim {
 
         // Setup main window and window manager
         mWindowManager = std::make_shared<WindowManager>();
-        mPrimaryWindow = mWindowManager->CreateWindow({640, 480}, "Robot Football Sim");
+        mPrimaryWindow = mWindowManager->CreateWindow({1280, 720}, "Robot Football Sim");
     }
 
     Simulator::~Simulator() {
@@ -46,7 +46,7 @@ namespace rfsim {
 
     int Simulator::Run() {
         while (!mPrimaryWindow->ShouldClose()) {
-            mWindowManager->UpdateFrame();
+            mWindowManager->Update();
         }
 
         return 0;

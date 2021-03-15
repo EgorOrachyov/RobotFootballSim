@@ -22,14 +22,19 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
+#include <GL/glew.h>
 #include <graphics/WindowManager.hpp>
 #include <iostream>
 
 namespace rfsim {
 
     WindowManager::WindowManager() {
-        glfwInit();
         glfwSetErrorCallback(ErrorCallback);
+
+        if (glfwInit() != GLFW_TRUE) {
+            std::cerr << "Failed to initialize GLFW" << std::endl;
+            return;
+        }
 
 #ifdef RFSIM_PLATFORM_MACOS
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -62,10 +67,18 @@ namespace rfsim {
         window->MakeContextCurrent();
         mWindows.push_back(window);
 
+        if (mWindows.size() == 1) {
+            // When first window is created can load GL functions
+            // refer to https://gist.github.com/iondune/bf24795910abdcfa3360
+            if (glewInit() != GLEW_OK) {
+                std::cerr << "Failed to initialize GLEW" << std::endl;
+            }
+        }
+
         return window;
     }
 
-    void WindowManager::UpdateFrame() {
+    void WindowManager::Update() {
         // OS events
         glfwPollEvents();
 

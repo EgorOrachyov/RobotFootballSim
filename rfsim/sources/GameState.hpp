@@ -22,41 +22,34 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_WINDOW_HPP
-#define RFSIM_WINDOW_HPP
+#ifndef RFSIM_GAMESTATE_HPP
+#define RFSIM_GAMESTATE_HPP
 
-#include <GLFW/glfw3.h>
 #include <glm/vec2.hpp>
-#include <string>
+#include <vector>
 
 namespace rfsim {
 
-    /**
-     * Wrapper for GLFW window.
-     */
-    class Window {
+    class GameState {
     public:
-        explicit Window(GLFWwindow* hnd);
-        ~Window();
+        struct Robot {
+            glm::vec2 position{};
+            float angle = 0.0f;
+        };
 
-        /** Bind window as drawing target */
-        void MakeContextCurrent();
-        void SetTitle(const std::string& caption);
+        struct Ball {
+            glm::vec2 position{};
+        };
 
-        /** @return True if user wants to close window */
-        bool ShouldClose() const;
-
-        glm::ivec2 GetPosition() const;
-        glm::ivec2 GetSize() const;
-        glm::ivec2 GetFramebufferSize() const;
-
-        /** @return Internal glfw hnd */
-        GLFWwindow* GetNativeHnd() const;
-
-    private:
-        GLFWwindow* mHND = nullptr;
+        unsigned int teamSize = 0;
+        unsigned int scoreTeam1 = 0;
+        unsigned int scoreTeam2 = 0;
+        std::vector<unsigned int> robotsTeam1;
+        std::vector<unsigned int> robotsTeam2;
+        std::vector<Robot> robots;
+        Ball ball;
     };
 
 }
 
-#endif //RFSIM_WINDOW_HPP
+#endif //RFSIM_GAMESTATE_HPP

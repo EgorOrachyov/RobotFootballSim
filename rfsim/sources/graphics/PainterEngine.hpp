@@ -22,16 +22,64 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_PAINTER_HPP
-#define RFSIM_PAINTER_HPP
+#ifndef RFSIM_PAINTERENGINE_HPP
+#define RFSIM_PAINTERENGINE_HPP
+
+#include <graphics/Image.hpp>
+#include <graphics/Window.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec4.hpp>
+#include <memory>
 
 namespace rfsim {
 
+    /**
+     * Painter for drawing 2d primitives.
+     */
+    class PainterEngine {
+    public:
+        using Size = glm::vec2;
+        using Point = glm::vec2;
+        using Rect = glm::vec4;
+        using Color = glm::vec4;
+
+        struct Palette {
+            Color PenColor{0.0f, 0.0f, 0.0f, 0.0f};
+            Color BrushColor{0.0f, 0.0f, 0.0f, 0.0f};
+            bool Filled = false;
+        };
+
+        PainterEngine(const Rect& area, std::shared_ptr<Window> target);
+        PainterEngine(const PainterEngine& engine) = delete;
+        PainterEngine(PainterEngine&& engine) noexcept = delete;
+        ~PainterEngine() = default;
+
+        void DrawLine(const Point& from, const Point& to);
+        void DrawRect(const Rect& rect);
+        void DrawEllipse(const Point& center, float radiusX, float radiusY);
+        void DrawCircle(const Point& center, float radius);
+        void DrawImage(const Rect& target, float angle, const std::shared_ptr<Image> &image);
+        void Clear();
+
+        void Draw();
+
+        void SetDrawArea(const Rect& area);
+        void SetPenColor(const Color& color);
+        void SetBrushColor(const Color& color);
+        void SetFilling(bool fill);
+        void SetDrawPalette(const Palette& palette);
+
+        const Rect& GetDrawArea() const;
+        const Palette& GetDrawPalette() const;
+        const std::shared_ptr<Window> &GetWindow() const;
+
+    private:
+        Rect mArea;
+        Palette mPalette;
+        std::shared_ptr<Window> mWindow;
+        std::shared_ptr<class PainterEnginePrivate> mPrivate;
+    };
+
 }
 
-class Painter {
-
-};
-
-
-#endif //RFSIM_PAINTER_HPP
+#endif //RFSIM_PAINTERENGINE_HPP

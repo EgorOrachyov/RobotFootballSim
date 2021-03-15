@@ -22,41 +22,80 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_WINDOW_HPP
-#define RFSIM_WINDOW_HPP
-
-#include <GLFW/glfw3.h>
-#include <glm/vec2.hpp>
-#include <string>
+#include <graphics/PainterEngine.hpp>
+#include <utility>
 
 namespace rfsim {
 
-    /**
-     * Wrapper for GLFW window.
-     */
-    class Window {
+    class PainterEnginePrivate {
     public:
-        explicit Window(GLFWwindow* hnd);
-        ~Window();
 
-        /** Bind window as drawing target */
-        void MakeContextCurrent();
-        void SetTitle(const std::string& caption);
-
-        /** @return True if user wants to close window */
-        bool ShouldClose() const;
-
-        glm::ivec2 GetPosition() const;
-        glm::ivec2 GetSize() const;
-        glm::ivec2 GetFramebufferSize() const;
-
-        /** @return Internal glfw hnd */
-        GLFWwindow* GetNativeHnd() const;
-
-    private:
-        GLFWwindow* mHND = nullptr;
     };
 
-}
+    PainterEngine::PainterEngine(const Rect &area, std::shared_ptr<Window> target)
+        : mArea(area),
+          mWindow(std::move(target)) {
 
-#endif //RFSIM_WINDOW_HPP
+    }
+
+    void PainterEngine::DrawLine(const Point &from, const Point &to) {
+
+    }
+
+    void PainterEngine::DrawRect(const Rect &rect) {
+
+    }
+
+    void PainterEngine::DrawEllipse(const Point &center, float radiusX, float radiusY) {
+
+    }
+
+    void PainterEngine::DrawCircle(const Point &center, float radius) {
+
+    }
+
+    void PainterEngine::DrawImage(const Rect &target, float angle, const std::shared_ptr<Image> &image) {
+
+    }
+
+    void PainterEngine::Clear() {
+
+    }
+
+    void PainterEngine::Draw() {
+
+    }
+
+    void PainterEngine::SetDrawArea(const Rect &area) {
+        mArea = area;
+    }
+
+    void PainterEngine::SetPenColor(const Color &color) {
+        mPalette.PenColor = color;
+    }
+
+    void PainterEngine::SetBrushColor(const Color &color) {
+        mPalette.BrushColor = color;
+    }
+
+    void PainterEngine::SetFilling(bool fill) {
+        mPalette.Filled = fill;
+    }
+
+    void PainterEngine::SetDrawPalette(const Palette &palette) {
+        mPalette = palette;
+    }
+
+    const PainterEngine::Rect & PainterEngine::GetDrawArea() const {
+        return mArea;
+    }
+
+    const PainterEngine::Palette & PainterEngine::GetDrawPalette() const {
+        return mPalette;
+    }
+
+    const std::shared_ptr<Window> &PainterEngine::GetWindow() const {
+        return mWindow;
+    }
+
+}

@@ -55,7 +55,7 @@ namespace rfsim {
          *
          * @note Must be called every frame for smooth update.
          */
-        void UpdateFrame();
+        void Update();
 
     private:
 

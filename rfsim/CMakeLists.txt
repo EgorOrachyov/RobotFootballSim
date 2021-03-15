@@ -1,20 +1,24 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.11)
 project(rfsim-app LANGUAGES CXX)
 
 set(RFSIM_SOURCES
         sources/Main.cpp
         sources/Simulator.cpp
-        sources/Simulator.hpp)
+        sources/Simulator.hpp
+        sources/GameState.hpp
+        )
 
 set(RFSIM_GRAPHICS_SOURCES
         sources/graphics/Window.cpp
         sources/graphics/Window.hpp
         sources/graphics/WindowManager.cpp
         sources/graphics/WindowManager.hpp
-        sources/graphics/Painter.cpp
-        sources/graphics/Painter.hpp
+        sources/graphics/PainterEngine.cpp
+        sources/graphics/PainterEngine.hpp
         sources/graphics/GraphicsServer.cpp
-        sources/graphics/GraphicsServer.hpp)
+        sources/graphics/GraphicsServer.hpp
+        sources/graphics/Image.cpp
+        sources/graphics/Image.hpp)
 
 add_executable(rfsim
         ${RFSIM_SOURCES}

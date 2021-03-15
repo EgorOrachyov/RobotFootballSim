@@ -11,13 +11,13 @@ various game strategies and game mechanics.
 - [ ] Dynamic algorithms loading
 - [ ] Simulated 2d physics of the game
 - [ ] 2d rendering for the football game
-- [ ] Game logic and roles 
+- [ ] Game logic and rules 
 - [ ] GUI application, widgets and menus
 
 ## Third-party dependencies
 
-* [GLFW](https://www.glfw.org) for cross-platform window and input management
-* [GLEW](https://github.com/Perlmint/glew-cmake) for OpenGL functions and extensions loading
+* [glfw](https://www.glfw.org) for cross-platform window and input management
+* [glew](https://github.com/Perlmint/glew-cmake) for OpenGL functions and extensions loading
 * [box2d](https://github.com/erincatto/box2d) for 2d robots physics simulation 
 * [imgui](https://github.com/ocornut/imgui) for creating application GUI
 * [stb image](https://github.com/nothings/stb) for images processing
