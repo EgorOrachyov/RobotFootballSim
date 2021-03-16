@@ -22,47 +22,63 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_SIMULATOR_HPP
-#define RFSIM_SIMULATOR_HPP
-
-#include <memory>
-#include <vector>
-#include <string>
+#include <opengl/GLTexture.hpp>
 
 namespace rfsim {
 
-    /**
-     * @brief Simulator main class.
-     *
-     * Manages sub-systems, update loop, application start-up and configuration parsing.
-     */
-    class Simulator {
-    public:
-        /**
-         * Create the simulator class.
-         *
-         * @param argc Number of the OS native app args
-         * @param argv AActual arguments
-         */
-        Simulator(int argc, const char* const* argv);
-        ~Simulator();
+    GLTexture::GLTexture(const std::shared_ptr<Image> &image) {
+        assert(image != nullptr);
 
-        /**
-         * Run the main simulator update loop.
-         * This function returns control only when user closes the application.
-         *
-         * @return 0 if simulator successfully finished.
-         */
-        int Run();
+        mName = image->GetName();
+        mSize = image->GetSize();
+        mChannelsCount = image->GetChannelsCount();
+        mPixelSize = image->GetPixelSize();
 
-    private:
+        assert(mPixelSize == 4);
+        assert(mChannelsCount == 4);
 
-        std::vector<std::string> mArgs;
-        std::shared_ptr<class Window> mPrimaryWindow;
-        std::shared_ptr<class WindowManager> mWindowManager;
-        std::shared_ptr<class PainterEngine> mPainter;
-    };
+        glGenTextures(1, &mTexture);
+        glBindTexture(GL_TEXTURE_2D, mTexture);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, mSize.x, mSize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->GetPixelData().data());
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    GLTexture::~GLTexture() {
+        if (mTexture) {
+            glDeleteTextures(1, &mTexture);
+            mTexture = 0;
+        }
+    }
+
+    unsigned int GLTexture::GetWidth() const {
+        return mSize.x;
+    }
+
+    unsigned int GLTexture::GetHeight() const {
+        return mSize.y;
+    }
+
+    unsigned int GLTexture::GetChannelsCount() const {
+        return mChannelsCount;
+    }
+
+    unsigned int GLTexture::GetPixelSize() const {
+        return mPixelSize;
+    }
+
+    const glm::uvec2 & GLTexture::GetSize() const {
+        return mSize;
+    }
+
+    const std::string & GLTexture::GetName() const {
+        return mName;
+    }
+
+    GLuint GLTexture::GetTextureHnd() const {
+        return mTexture;
+    }
 
 }
-
-#endif //RFSIM_SIMULATOR_HPP

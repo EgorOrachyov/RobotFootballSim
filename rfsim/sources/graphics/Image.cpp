@@ -30,9 +30,9 @@
 namespace rfsim {
 
     Image::Image(std::string &&name, const glm::uvec2 &size, std::vector<uint8_t> &&data, unsigned int channelsCount, unsigned int pixelSize)
-        : mName(std::forward<std::string>(name)),
+        : mName(std::move(name)),
           mSize(size),
-          mData(std::forward<std::vector<uint8_t>>(data)),
+          mData(std::move(data)),
           mChannelsCount(channelsCount),
           mPixelSize(pixelSize) {
         assert(pixelSize > 0);

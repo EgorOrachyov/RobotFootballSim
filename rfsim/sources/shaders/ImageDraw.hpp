@@ -22,47 +22,52 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_SIMULATOR_HPP
-#define RFSIM_SIMULATOR_HPP
+#ifndef RFSIM_IMAGEDRAW_HPP
+#define RFSIM_IMAGEDRAW_HPP
 
-#include <memory>
-#include <vector>
 #include <string>
 
 namespace rfsim {
 
-    /**
-     * @brief Simulator main class.
-     *
-     * Manages sub-systems, update loop, application start-up and configuration parsing.
-     */
-    class Simulator {
-    public:
-        /**
-         * Create the simulator class.
-         *
-         * @param argc Number of the OS native app args
-         * @param argv AActual arguments
-         */
-        Simulator(int argc, const char* const* argv);
-        ~Simulator();
+    std::string IMAGE_DRAW_VERTEX_SOURCE = R"(
+    // Remember: macOS max supported version is 4.1
+    #version 410 core
 
-        /**
-         * Run the main simulator update loop.
-         * This function returns control only when user closes the application.
-         *
-         * @return 0 if simulator successfully finished.
-         */
-        int Run();
+    layout (location = 0) in vec3 position;
+    layout (location = 1) in vec2 texCoords;
+    layout (location = 2) in vec4 color;
 
-    private:
+    uniform vec2 areaSize;
+    uniform mat4 projView;
 
-        std::vector<std::string> mArgs;
-        std::shared_ptr<class Window> mPrimaryWindow;
-        std::shared_ptr<class WindowManager> mWindowManager;
-        std::shared_ptr<class PainterEngine> mPainter;
-    };
+    out vec2 fsTexCoords;
+    out vec4 fsColor;
+
+    void main() {
+        fsTexCoords = texCoords;
+        fsColor = color;
+        gl_Position = projView * vec4(position.x, areaSize.y - position.y, position.z, 1.0f);
+    }
+    )";
+
+    std::string IMAGE_DRAW_FRAGMENT_SOURCE = R"(
+    // Remember: macOS max supported version is 4.1
+    #version 410 core
+
+    layout (location = 0) out vec4 outColor;
+
+    uniform sampler2D imageTexture;
+
+    in vec2 fsTexCoords;
+    in vec4 fsColor;
+
+    void main() {
+        vec4 color = texture(imageTexture, fsTexCoords).rgba;
+        vec4 multiplied = fsColor * color;
+        outColor = multiplied.rgba;
+    }
+    )";
 
 }
 
-#endif //RFSIM_SIMULATOR_HPP
+#endif //RFSIM_IMAGEDRAW_HPP

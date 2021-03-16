@@ -22,72 +22,58 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_PAINTERENGINE_HPP
-#define RFSIM_PAINTERENGINE_HPP
+#ifndef RFSIM_GLDYNAMICGEOMETRY_HPP
+#define RFSIM_GLDYNAMICGEOMETRY_HPP
 
-#include <graphics/Image.hpp>
-#include <graphics/Window.hpp>
-#include <glm/vec2.hpp>
-#include <glm/vec4.hpp>
+#include <opengl/GLDynamicBuffer.hpp>
+#include <opengl/GLGeometryLayout.hpp>
 #include <memory>
+#include <array>
 
 namespace rfsim {
 
     /**
-     * Painter for drawing 2d primitives.
+     * Dynamic OpenGL geometry with fixed topology and vertices layout.
+     * Allows dynamically update content and recreate object, if needed.
      */
-    class PainterEngine {
+    class GLDynamicGeometry {
     public:
-        using Size = glm::vec2;
-        using Point = glm::vec2;
-        using Rect = glm::vec4;
-        using Recti = glm::ivec4;
-        using Color = glm::vec4;
+        // For our tasks its enough. Default GL constant is 8 (or 16 on some platforms)
+        static const unsigned int MAX_VERTEX_BUFFERS = 4;
 
-        struct Palette {
-            Color penColor{0.0f, 0.0f, 0.0f, 0.0f};
-            Color brushColor{0.0f, 0.0f, 0.0f, 0.0f};
-            bool filled = false;
-            unsigned int penWidth = 1;
-        };
+        GLDynamicGeometry(size_t vertexBuffersCount, bool useIndices, GLenum topology, GLGeometryLayout&& layout);
+        GLDynamicGeometry(const GLDynamicGeometry& other) = delete;
+        GLDynamicGeometry(GLDynamicGeometry&& other) noexcept = delete;
+        ~GLDynamicGeometry();
 
-        PainterEngine(const Recti& area, const Rect& space, std::shared_ptr<Window> target);
-        PainterEngine(const PainterEngine& engine) = delete;
-        PainterEngine(PainterEngine&& engine) noexcept = delete;
-        ~PainterEngine() = default;
+        const std::shared_ptr<GLDynamicVertexBuffer> &GetBuffer(unsigned int index) const;
+        const std::array<std::shared_ptr<GLDynamicVertexBuffer>, MAX_VERTEX_BUFFERS> &GetBuffers() const;
+        const std::shared_ptr<GLDynamicIndexBuffer> &GetIndexBuffer() const;
 
-        void DrawLine(const Point& from, const Point& to);
-        void DrawRect(const Rect& rect);
-        void DrawEllipse(const Point& center, float radiusX, float radiusY);
-        void DrawCircle(const Point& center, float radius);
-        void DrawImage(const Rect& target, float angle, const std::shared_ptr<Image> &image);
-        void Clear();
+        void UpdateResource();
+        void ClearGeometry();
+        void Bind();
+        void Unbind();
+        void Draw(size_t indicesCount, size_t instancesCount) const;
 
-        void Draw();
-
-        void SetDrawArea(const Recti& area);
-        void SetDrawSpace(const Rect& space);
-        void SetPenColor(const Color& color);
-        void SetPenWidth(unsigned int width);
-        void SetBrushColor(const Color& color);
-        void SetFilling(bool fill);
-        void SetClearColor(const Color& color);
-        void SetDrawPalette(const Palette& palette);
-
-        const Recti& GetDrawArea() const;
-        const Rect& GetDrawSpace() const;
-        const Palette& GetDrawPalette() const;
-        const std::shared_ptr<Window> &GetWindow() const;
+        GLuint GetHnd() const;
+        GLenum GetTopology() const;
 
     private:
-        Recti mArea;
-        Rect mSpace;
-        Palette mPalette;
-        Color mClearColor;
-        std::shared_ptr<Window> mWindow;
-        std::shared_ptr<class PainterEnginePrivate> mPrivate;
+        void ReleaseVAO();
+        void RecreateVAO();
+
+        GLuint mVAO = 0;
+        GLenum mTopology;
+        GLGeometryLayout mLayout;
+        size_t mVertexBuffersCount;
+        std::array<std::shared_ptr<GLDynamicVertexBuffer>, MAX_VERTEX_BUFFERS> mVertexBuffers;
+        std::shared_ptr<GLDynamicIndexBuffer> mIndexBuffer;
     };
 
 }
 
-#endif //RFSIM_PAINTERENGINE_HPP
+
+
+
+#endif //RFSIM_GLDYNAMICGEOMETRY_HPP

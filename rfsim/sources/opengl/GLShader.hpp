@@ -22,47 +22,46 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_SIMULATOR_HPP
-#define RFSIM_SIMULATOR_HPP
+#ifndef RFSIM_GLSHADER_HPP
+#define RFSIM_GLSHADER_HPP
 
-#include <memory>
+#include <GL/glew.h>
+#include <glm/matrix.hpp>
+#include <opengl/GLTexture.hpp>
 #include <vector>
+#include <array>
 #include <string>
 
 namespace rfsim {
 
     /**
-     * @brief Simulator main class.
-     *
-     * Manages sub-systems, update loop, application start-up and configuration parsing.
+     * Wrapper for OpenGL program.
+     * Allows to create from sources, compile and link complete OpenGL program.
      */
-    class Simulator {
+    class GLShader {
     public:
-        /**
-         * Create the simulator class.
-         *
-         * @param argc Number of the OS native app args
-         * @param argv AActual arguments
-         */
-        Simulator(int argc, const char* const* argv);
-        ~Simulator();
+        static const size_t MAX_SHADER_STAGES = 5;
 
-        /**
-         * Run the main simulator update loop.
-         * This function returns control only when user closes the application.
-         *
-         * @return 0 if simulator successfully finished.
-         */
-        int Run();
+        GLShader(const std::vector<char>& vertexStage, const std::vector<char> &fragmentStage);
+        ~GLShader();
+
+        GLuint GetProgram() const;
+
+        void Bind() const;
+        void Unbind() const;
+
+        void SetVec2(const std::string& name, const glm::vec2& vec) const;
+        void SetMatrix4(const std::string& name, const glm::mat4& mat) const;
+        void SetTexture(const std::string& name, const std::shared_ptr<GLTexture> &texture, int slot) const;
 
     private:
+        int GetLocation(const std::string& name) const;
 
-        std::vector<std::string> mArgs;
-        std::shared_ptr<class Window> mPrimaryWindow;
-        std::shared_ptr<class WindowManager> mWindowManager;
-        std::shared_ptr<class PainterEngine> mPainter;
+        size_t mNumStages = 0;
+        GLuint mProgram = 0;
+        std::array<GLuint, MAX_SHADER_STAGES> mStages{};
     };
 
 }
 
-#endif //RFSIM_SIMULATOR_HPP
+#endif //RFSIM_GLSHADER_HPP

@@ -18,11 +18,27 @@ set(RFSIM_GRAPHICS_SOURCES
         sources/graphics/GraphicsServer.cpp
         sources/graphics/GraphicsServer.hpp
         sources/graphics/Image.cpp
-        sources/graphics/Image.hpp)
+        sources/graphics/Image.hpp
+        sources/graphics/PainterItems.hpp)
+
+set(RFSIM_OPENGL_SOURCES
+        sources/opengl/GLDynamicBuffer.hpp
+        sources/opengl/GLDynamicGeometry.cpp
+        sources/opengl/GLDynamicGeometry.hpp
+        sources/opengl/GLGeometryLayout.hpp
+        sources/opengl/GLShader.cpp
+        sources/opengl/GLShader.hpp
+        sources/opengl/GLTexture.cpp
+        sources/opengl/GLTexture.hpp)
+
+set(RFSIM_SHADERS
+        sources/shaders/ImageDraw.hpp)
 
 add_executable(rfsim
         ${RFSIM_SOURCES}
-        ${RFSIM_GRAPHICS_SOURCES})
+        ${RFSIM_GRAPHICS_SOURCES}
+        ${RFSIM_OPENGL_SOURCES}
+        ${RFSIM_SHADERS})
 
 target_include_directories(rfsim PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_include_directories(rfsim PRIVATE ${CMAKE_CURRENT_LIST_DIR}/sources)

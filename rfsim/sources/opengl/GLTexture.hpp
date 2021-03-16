@@ -22,47 +22,35 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_SIMULATOR_HPP
-#define RFSIM_SIMULATOR_HPP
+#ifndef RFSIM_GLTEXTURE_HPP
+#define RFSIM_GLTEXTURE_HPP
 
-#include <memory>
-#include <vector>
-#include <string>
+#include <graphics/Image.hpp>
+#include <GL/glew.h>
 
 namespace rfsim {
 
-    /**
-     * @brief Simulator main class.
-     *
-     * Manages sub-systems, update loop, application start-up and configuration parsing.
-     */
-    class Simulator {
+    class GLTexture {
     public:
-        /**
-         * Create the simulator class.
-         *
-         * @param argc Number of the OS native app args
-         * @param argv AActual arguments
-         */
-        Simulator(int argc, const char* const* argv);
-        ~Simulator();
+        GLTexture(const std::shared_ptr<Image> &image);
+        ~GLTexture();
 
-        /**
-         * Run the main simulator update loop.
-         * This function returns control only when user closes the application.
-         *
-         * @return 0 if simulator successfully finished.
-         */
-        int Run();
+        unsigned int GetWidth() const;
+        unsigned int GetHeight() const;
+        unsigned int GetChannelsCount() const;
+        unsigned int GetPixelSize() const;
+        const glm::uvec2 &GetSize() const;
+        const std::string &GetName() const;
+        GLuint GetTextureHnd() const;
 
     private:
-
-        std::vector<std::string> mArgs;
-        std::shared_ptr<class Window> mPrimaryWindow;
-        std::shared_ptr<class WindowManager> mWindowManager;
-        std::shared_ptr<class PainterEngine> mPainter;
+        GLuint mTexture = 0;
+        std::string mName;
+        glm::uvec2 mSize;
+        unsigned int mChannelsCount;
+        unsigned int mPixelSize;
     };
 
 }
 
-#endif //RFSIM_SIMULATOR_HPP
+#endif //RFSIM_GLTEXTURE_HPP

@@ -22,47 +22,27 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_SIMULATOR_HPP
-#define RFSIM_SIMULATOR_HPP
+#ifndef RFSIM_GLGEOMETRYLAYOUT_HPP
+#define RFSIM_GLGEOMETRYLAYOUT_HPP
 
-#include <memory>
+#include <GL/glew.h>
 #include <vector>
-#include <string>
 
 namespace rfsim {
 
-    /**
-     * @brief Simulator main class.
-     *
-     * Manages sub-systems, update loop, application start-up and configuration parsing.
-     */
-    class Simulator {
-    public:
-        /**
-         * Create the simulator class.
-         *
-         * @param argc Number of the OS native app args
-         * @param argv AActual arguments
-         */
-        Simulator(int argc, const char* const* argv);
-        ~Simulator();
-
-        /**
-         * Run the main simulator update loop.
-         * This function returns control only when user closes the application.
-         *
-         * @return 0 if simulator successfully finished.
-         */
-        int Run();
-
-    private:
-
-        std::vector<std::string> mArgs;
-        std::shared_ptr<class Window> mPrimaryWindow;
-        std::shared_ptr<class WindowManager> mWindowManager;
-        std::shared_ptr<class PainterEngine> mPainter;
+    struct GLVertex {
+        unsigned int location = -1;
+        unsigned int bufferId = -1;
+        size_t stride = 0;
+        size_t offset = 0;
+        GLenum baseType = GL_NONE;
+        size_t components = 0;
+        bool perInstance = false;
+        bool normalize = false;
     };
+
+    using GLGeometryLayout = std::vector<GLVertex>;
 
 }
 
-#endif //RFSIM_SIMULATOR_HPP
+#endif //RFSIM_GLGEOMETRYLAYOUT_HPP
