@@ -35,11 +35,19 @@ set(RFSIM_SHADERS
         sources/shaders/ImageDraw.hpp
         sources/shaders/RectDraw.hpp)
 
+set(RFSIM_PHYSICS_SOURCES
+        sources/physics/PhysicsServer.cpp
+        sources/physics/PhysicsServer.hpp
+        sources/physics/PhysicsGameProperties.hpp
+        sources/physics/PhysicsGameInitInfo.hpp
+        sources/physics/PhysicsGameState.hpp)
+
 add_executable(rfsim
         ${RFSIM_SOURCES}
         ${RFSIM_GRAPHICS_SOURCES}
         ${RFSIM_OPENGL_SOURCES}
-        ${RFSIM_SHADERS})
+        ${RFSIM_SHADERS}
+        ${RFSIM_PHYSICS_SOURCES})
 
 target_include_directories(rfsim PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_include_directories(rfsim PRIVATE ${CMAKE_CURRENT_LIST_DIR}/sources)
