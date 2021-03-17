@@ -39,6 +39,7 @@ namespace rfsim {
         unsigned int GetHeight() const;
         unsigned int GetChannelsCount() const;
         unsigned int GetPixelSize() const;
+        bool IsSRGB() const;
         const glm::uvec2 &GetSize() const;
         const std::string &GetName() const;
         GLuint GetTextureHnd() const;
@@ -47,6 +48,7 @@ namespace rfsim {
         GLuint mTexture = 0;
         std::string mName;
         glm::uvec2 mSize;
+        bool mIsSRGB;
         unsigned int mChannelsCount;
         unsigned int mPixelSize;
     };

@@ -132,9 +132,19 @@ namespace rfsim {
         glUseProgram(0);
     }
 
+    void GLShader::SetBool(const std::string &name, bool value) const {
+        int location = GetLocation(name);
+        glUniform1i(location, value? 1: 0);
+    }
+
     void GLShader::SetVec2(const std::string &name, const glm::vec2 &vec) const {
         int location = GetLocation(name);
         glUniform2f(location, vec.x, vec.y);
+    }
+
+    void GLShader::SetVec4(const std::string &name, const glm::vec4 &vec) const {
+        int location = GetLocation(name);
+        glUniform4f(location, vec.x, vec.y, vec.z, vec.w);
     }
 
     void GLShader::SetMatrix4(const std::string &name, const glm::mat4 &mat) const {

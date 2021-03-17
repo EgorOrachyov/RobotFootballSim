@@ -33,6 +33,7 @@ namespace rfsim {
         mSize = image->GetSize();
         mChannelsCount = image->GetChannelsCount();
         mPixelSize = image->GetPixelSize();
+        mIsSRGB = image->IsSRGB();
 
         assert(mPixelSize == 4);
         assert(mChannelsCount == 4);
@@ -67,6 +68,10 @@ namespace rfsim {
 
     unsigned int GLTexture::GetPixelSize() const {
         return mPixelSize;
+    }
+
+    bool GLTexture::IsSRGB() const {
+        return mIsSRGB;
     }
 
     const glm::uvec2 & GLTexture::GetSize() const {

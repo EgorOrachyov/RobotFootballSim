@@ -29,10 +29,11 @@
 
 namespace rfsim {
 
-    Image::Image(std::string &&name, const glm::uvec2 &size, std::vector<uint8_t> &&data, unsigned int channelsCount, unsigned int pixelSize)
+    Image::Image(std::string &&name, const glm::uvec2 &size, std::vector<uint8_t> &&data, unsigned int channelsCount, unsigned int pixelSize, bool isSRGB)
         : mName(std::move(name)),
           mSize(size),
           mData(std::move(data)),
+          mIsSRGB(isSRGB),
           mChannelsCount(channelsCount),
           mPixelSize(pixelSize) {
         assert(pixelSize > 0);
@@ -56,6 +57,10 @@ namespace rfsim {
         return mPixelSize;
     }
 
+    bool Image::IsSRGB() const {
+        return mIsSRGB;
+    }
+
     const glm::uvec2 & Image::GetSize() const {
         return mSize;
     }
@@ -68,7 +73,7 @@ namespace rfsim {
         return mData;
     }
 
-    std::shared_ptr<Image> Image::LoadFromFilePath(std::string &&filePath) {
+    std::shared_ptr<Image> Image::LoadFromFilePath(std::string &&filePath, bool isSRGB) {
         std::shared_ptr<Image> result;
 
         int width = 0;
@@ -87,7 +92,7 @@ namespace rfsim {
             pixelData.resize(width * height * channels);
             std::memcpy(pixelData.data(), data, width * height * channels);
 
-            result = std::make_shared<Image>(std::move(filePath), glm::uvec2(width, height), std::move(pixelData), channels, channels);
+            result = std::make_shared<Image>(std::move(filePath), glm::uvec2(width, height), std::move(pixelData), channels, channels, isSRGB);
         }
 
         if (data) {

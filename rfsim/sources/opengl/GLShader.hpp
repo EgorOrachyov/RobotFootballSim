@@ -50,7 +50,9 @@ namespace rfsim {
         void Bind() const;
         void Unbind() const;
 
+        void SetBool(const std::string& name, bool value) const;
         void SetVec2(const std::string& name, const glm::vec2& vec) const;
+        void SetVec4(const std::string& name, const glm::vec4& vec) const;
         void SetMatrix4(const std::string& name, const glm::mat4& mat) const;
         void SetTexture(const std::string& name, const std::shared_ptr<GLTexture> &texture, int slot) const;
 

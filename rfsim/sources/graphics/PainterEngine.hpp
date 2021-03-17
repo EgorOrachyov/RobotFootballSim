@@ -47,6 +47,7 @@ namespace rfsim {
         struct Palette {
             Color penColor{0.0f, 0.0f, 0.0f, 0.0f};
             Color brushColor{0.0f, 0.0f, 0.0f, 0.0f};
+            Color transparentColor{2.0f, 2.0f, 2.0f, 2.0f};
             bool filled = false;
             unsigned int penWidth = 1;
         };
@@ -70,6 +71,7 @@ namespace rfsim {
         void SetPenColor(const Color& color);
         void SetPenWidth(unsigned int width);
         void SetBrushColor(const Color& color);
+        void SetTransparentColor(const Color& color);
         void SetFilling(bool fill);
         void SetClearColor(const Color& color);
         void SetDrawPalette(const Palette& palette);

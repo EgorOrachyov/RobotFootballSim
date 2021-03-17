@@ -36,6 +36,7 @@ namespace rfsim {
     struct PainterItem {
         PainterEngine::Color penColor;
         PainterEngine::Color brushColor;
+        PainterEngine::Color transparentColor;
         bool filled;
         unsigned int penWidth;
         int zOrder;
@@ -43,6 +44,7 @@ namespace rfsim {
         PainterItem(const PainterEngine::Palette& palette, int z) {
             penColor = palette.penColor;
             brushColor = palette.brushColor;
+            transparentColor = palette.transparentColor;
             filled = palette.filled;
             penWidth = palette.penWidth;
             zOrder = z;

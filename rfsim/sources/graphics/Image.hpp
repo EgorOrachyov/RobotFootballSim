@@ -38,7 +38,7 @@ namespace rfsim {
      */
     class Image {
     public:
-        Image(std::string&& name, const glm::uvec2& size, std::vector<uint8_t> &&data, unsigned int channelsCount, unsigned int pixelSize);
+        Image(std::string&& name, const glm::uvec2& size, std::vector<uint8_t> &&data, unsigned int channelsCount, unsigned int pixelSize, bool isSRGB);
         Image(const Image& image) = default;
         Image(Image&& image) noexcept = default;
         ~Image() = default;
@@ -47,6 +47,7 @@ namespace rfsim {
         unsigned int GetHeight() const;
         unsigned int GetChannelsCount() const;
         unsigned int GetPixelSize() const;
+        bool IsSRGB() const;
         const glm::uvec2 &GetSize() const;
         const std::string &GetName() const;
         const std::vector<uint8_t> &GetPixelData() const;
@@ -57,14 +58,16 @@ namespace rfsim {
          * Supported formats: png, jpeg, svg, bmp, tga, etc. Refer to stb_image.
          *
          * @param filePath Qualified path to file with image.
+         * @param isSRGB Pass true if image in SRGB format
          * @return Image or null pointer if failed to load.
          */
-        static std::shared_ptr<Image> LoadFromFilePath(std::string &&filePath);
+        static std::shared_ptr<Image> LoadFromFilePath(std::string &&filePath, bool isSRGB = true);
 
     private:
         std::string mName;
         std::vector<uint8_t> mData;
         glm::uvec2 mSize;
+        bool mIsSRGB;
         unsigned int mChannelsCount;
         unsigned int mPixelSize;
     };

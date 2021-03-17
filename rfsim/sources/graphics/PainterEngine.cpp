@@ -99,8 +99,9 @@ namespace rfsim {
             mImages.push_back(std::move(image));
         }
 
-        unsigned int GetNextZ() {
-            return ++mCurrentZ;
+        int GetNextZ() {
+            mCurrentZ += mStepZ;
+            return mCurrentZ;
         }
 
         void Prepare() {
@@ -109,25 +110,31 @@ namespace rfsim {
 
         void Draw(const Recti& area, const Rect& space, const std::shared_ptr<Window> &target, const Color& clearColor) {
             target->MakeContextCurrent();
-
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
             glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+            glDepthMask(GL_TRUE);
+            glClearDepthf(1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glFrontFace(GL_CCW);
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glEnable(GL_DEPTH_TEST);
-            glDepthMask(GL_TRUE);
             glDepthFunc(GL_LESS);
+            glEnable(GL_BLEND);
+            glBlendEquation(GL_FUNC_ADD);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             static const std::string AREA_SIZE = "areaSize";
             static const std::string PROJ_VIEW = "projView";
             glm::vec2 areaSize = glm::vec2(space.z, space.w);
-            glm::mat4 proj = glm::ortho(space.x, space.x + space.z, space.y, space.y + space.w, 0.0f, (float) mMinZ);
+            glm::mat4 proj = glm::ortho(space.x, space.x + space.z, space.y, space.y + space.w, 0.0f, (float) -mFarZ);
 
             mImageDrawShader->Bind();
             for (const auto& image: mImages) {
                 static const std::string IMAGE_TEXTURE = "imageTexture";
+                static const std::string TRANSPARENT_COLOR = "transparentColor";
+                static const std::string IS_SRGB = "isSRGB";
 
                 mImageDrawGeometry->ClearGeometry();
                 image.PrepareImage(*mImageDrawGeometry);
@@ -138,6 +145,8 @@ namespace rfsim {
                 mImageDrawShader->SetMatrix4(PROJ_VIEW, proj);
                 mImageDrawShader->SetVec2(AREA_SIZE, areaSize);
                 mImageDrawShader->SetTexture(IMAGE_TEXTURE, image.image, 0);
+                mImageDrawShader->SetVec4(TRANSPARENT_COLOR, image.transparentColor);
+                mImageDrawShader->SetBool(IS_SRGB, image.image->IsSRGB());
 
                 mImageDrawGeometry->Bind();
                 mImageDrawGeometry->Draw(6, 1);
@@ -148,14 +157,15 @@ namespace rfsim {
         }
 
         void Clear() {
-            mCurrentZ = mMinZ;
+            mCurrentZ = mFarZ;
             mRects.clear();
             mImages.clear();
         }
 
     private:
-        unsigned int mMinZ = -10000;
-        unsigned int mCurrentZ = mMinZ;
+        int mFarZ = -10000;
+        int mStepZ = 2;
+        int mCurrentZ = mFarZ;
         std::vector<PainterRect> mRects;
         std::vector<PainterImage> mImages;
         std::shared_ptr<GLDynamicGeometry> mImageDrawGeometry;
@@ -218,6 +228,10 @@ namespace rfsim {
 
     void PainterEngine::SetBrushColor(const Color &color) {
         mPalette.brushColor = color;
+    }
+
+    void PainterEngine::SetTransparentColor(const Color &color) {
+        mPalette.transparentColor = color;
     }
 
     void PainterEngine::SetFilling(bool fill) {
