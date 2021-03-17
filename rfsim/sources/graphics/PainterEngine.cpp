@@ -27,6 +27,7 @@
 #include <opengl/GLGeometryLayout.hpp>
 #include <opengl/GLTexture.hpp>
 #include <shaders/ImageDraw.hpp>
+#include <shaders/RectDraw.hpp>
 #include <graphics/PainterEngine.hpp>
 #include <graphics/PainterItems.hpp>
 #include <unordered_map>
@@ -81,6 +82,56 @@ namespace rfsim {
             }
 
             mImageDrawGeometry = std::make_shared<GLDynamicGeometry>(2, true, GL_TRIANGLES, std::move(imageDrawLayout));
+
+            vertex.resize(RECT_DRAW_VERTEX_SOURCE.size());
+            std::memcpy(vertex.data(), RECT_DRAW_VERTEX_SOURCE.data(), RECT_DRAW_VERTEX_SOURCE.size());
+
+            fragment.resize(RECT_DRAW_FRAGMENT_SOURCE.size());
+            std::memcpy(fragment.data(), RECT_DRAW_FRAGMENT_SOURCE.data(), RECT_DRAW_FRAGMENT_SOURCE.size());
+
+            mRectDrawShader = std::make_shared<GLShader>(vertex, fragment);
+
+            GLGeometryLayout rectDrawLayout(4);
+            {
+                rectDrawLayout[0].location = 0;
+                rectDrawLayout[0].bufferId = 0;
+                rectDrawLayout[0].stride = 3 * sizeof(float);
+                rectDrawLayout[0].offset = 0;
+                rectDrawLayout[0].baseType = GL_FLOAT;
+                rectDrawLayout[0].components = 3;
+                rectDrawLayout[0].perInstance = false;
+
+                rectDrawLayout[1].location = 1;
+                rectDrawLayout[1].bufferId = 1;
+                rectDrawLayout[1].stride = (4 + 4 + 1) * sizeof(float);
+                rectDrawLayout[1].offset = (0) * sizeof(float);
+                rectDrawLayout[1].baseType = GL_FLOAT;
+                rectDrawLayout[1].components = 4;
+                rectDrawLayout[1].perInstance = false;
+
+                rectDrawLayout[2].location = 2;
+                rectDrawLayout[2].bufferId = 1;
+                rectDrawLayout[2].stride = (4 + 4 + 1) * sizeof(float);
+                rectDrawLayout[2].offset = (0 + 4) * sizeof(float);
+                rectDrawLayout[2].baseType = GL_FLOAT;
+                rectDrawLayout[2].components = 4;
+                rectDrawLayout[2].perInstance = false;
+
+                rectDrawLayout[3].location = 3;
+                rectDrawLayout[3].bufferId = 1;
+                rectDrawLayout[3].stride = (4 + 4 + 1) * sizeof(float);
+                rectDrawLayout[3].offset = (0 + 4 + 4) * sizeof(float);
+                rectDrawLayout[3].baseType = GL_FLOAT;
+                rectDrawLayout[3].components = 1;
+                rectDrawLayout[3].perInstance = false;
+            }
+
+            mRectDrawGeometry = std::make_shared<GLDynamicGeometry>(2, true, GL_TRIANGLES, std::move(rectDrawLayout));
+        }
+
+        void AddRect(const PainterEngine::Rect& r, float angle, const PainterEngine::Palette& palette) {
+            PainterRect rect(r, angle, palette, GetNextZ());
+            mRects.push_back(rect);
         }
 
         void AddImage(const PainterEngine::Rect &target, float angle, const std::shared_ptr<Image> &i, const PainterEngine::Palette& palette) {
@@ -125,10 +176,15 @@ namespace rfsim {
             glBlendEquation(GL_FUNC_ADD);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+            glViewport(area.x, area.y, area.z, area.w);
+
             static const std::string AREA_SIZE = "areaSize";
             static const std::string PROJ_VIEW = "projView";
             glm::vec2 areaSize = glm::vec2(space.z, space.w);
             glm::mat4 proj = glm::ortho(space.x, space.x + space.z, space.y, space.y + space.w, 0.0f, (float) -mFarZ);
+
+            // Draw images separately
+            // todo: batch draw commands with the same image
 
             mImageDrawShader->Bind();
             for (const auto& image: mImages) {
@@ -136,11 +192,12 @@ namespace rfsim {
                 static const std::string TRANSPARENT_COLOR = "transparentColor";
                 static const std::string IS_SRGB = "isSRGB";
 
+                size_t indicesToDraw = 0;
+
                 mImageDrawGeometry->ClearGeometry();
-                image.PrepareImage(*mImageDrawGeometry);
+                image.PrepareImage(*mImageDrawGeometry, indicesToDraw);
                 mImageDrawGeometry->UpdateResource();
 
-                glViewport(area.x, area.y, area.z, area.w);
 
                 mImageDrawShader->SetMatrix4(PROJ_VIEW, proj);
                 mImageDrawShader->SetVec2(AREA_SIZE, areaSize);
@@ -148,12 +205,39 @@ namespace rfsim {
                 mImageDrawShader->SetVec4(TRANSPARENT_COLOR, image.transparentColor);
                 mImageDrawShader->SetBool(IS_SRGB, image.image->IsSRGB());
 
+                assert(indicesToDraw);
+
                 mImageDrawGeometry->Bind();
                 mImageDrawGeometry->Draw(6, 1);
                 mImageDrawGeometry->Unbind();
             }
-
             mImageDrawShader->Unbind();
+
+            // Draw all rects in batch fashion
+            // Params are packed into vertex attributes
+
+            mRectDrawShader->Bind();
+            mRectDrawGeometry->ClearGeometry();
+            size_t totalIndicesToDraw = 0;
+            size_t totalVerticesToDraw = 0;
+            for (const auto& rect: mRects) {
+                size_t indicesToDraw = 0;
+                size_t verticesToDraw = 0;
+
+                rect.PrepareRect(*mRectDrawGeometry, totalVerticesToDraw, indicesToDraw, verticesToDraw);
+
+                assert(indicesToDraw);
+                assert(verticesToDraw);
+                totalIndicesToDraw += indicesToDraw;
+                totalVerticesToDraw += verticesToDraw;
+            }
+            mRectDrawGeometry->UpdateResource();
+            mRectDrawShader->SetMatrix4(PROJ_VIEW, proj);
+            mRectDrawShader->SetVec2(AREA_SIZE, areaSize);
+            mRectDrawGeometry->Bind();
+            mRectDrawGeometry->Draw(totalIndicesToDraw, 1);
+            mRectDrawGeometry->Unbind();
+            mRectDrawShader->Unbind();
         }
 
         void Clear() {
@@ -166,7 +250,11 @@ namespace rfsim {
         int mFarZ = -10000;
         int mStepZ = 2;
         int mCurrentZ = mFarZ;
+
         std::vector<PainterRect> mRects;
+        std::shared_ptr<GLDynamicGeometry> mRectDrawGeometry;
+        std::shared_ptr<GLShader> mRectDrawShader;
+
         std::vector<PainterImage> mImages;
         std::shared_ptr<GLDynamicGeometry> mImageDrawGeometry;
         std::shared_ptr<GLShader> mImageDrawShader;
@@ -185,8 +273,8 @@ namespace rfsim {
 
     }
 
-    void PainterEngine::DrawRect(const Rect &rect) {
-
+    void PainterEngine::DrawRect(const Rect &rect, float angle) {
+        mPrivate->AddRect(rect, angle, mPalette);
     }
 
     void PainterEngine::DrawEllipse(const Point &center, float radiusX, float radiusY) {

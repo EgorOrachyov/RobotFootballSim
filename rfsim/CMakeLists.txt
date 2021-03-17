@@ -32,7 +32,8 @@ set(RFSIM_OPENGL_SOURCES
         sources/opengl/GLTexture.hpp)
 
 set(RFSIM_SHADERS
-        sources/shaders/ImageDraw.hpp)
+        sources/shaders/ImageDraw.hpp
+        sources/shaders/RectDraw.hpp)
 
 add_executable(rfsim
         ${RFSIM_SOURCES}

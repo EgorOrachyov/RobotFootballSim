@@ -35,6 +35,17 @@ namespace rfsim {
 
     /**
      * Painter for drawing 2d primitives.
+     *
+     * Use coordinate space, defined as follows.
+     *
+     *                              x-axis
+     *        (originX,originY)------------>originX+w
+     *        |
+     *        |
+     *        |
+     * y-axis |
+     *        |
+     *     originY+h
      */
     class PainterEngine {
     public:
@@ -52,18 +63,54 @@ namespace rfsim {
             unsigned int penWidth = 1;
         };
 
+        /**
+         * Creates painter engine.
+         *
+         * @param area Area in pixels of the target screen, used for drawing.
+         * @param space Virtual coordinates space mapped to the screen.
+         * @param target Target window for drawing.
+         */
         PainterEngine(const Recti& area, const Rect& space, std::shared_ptr<Window> target);
         PainterEngine(const PainterEngine& engine) = delete;
         PainterEngine(PainterEngine&& engine) noexcept = delete;
         ~PainterEngine() = default;
 
         void DrawLine(const Point& from, const Point& to);
-        void DrawRect(const Rect& rect);
+
+        /**
+         * Draw rect on the paint device.
+         *
+         * @note If set filling=true rect is filled with brush color
+         * @note If set filling=false rect is drawn as frame with pen color and pen width sides
+         *
+         * @param rect Rect shape (top left corner, width and height)
+         * @param angle Clockwise rotation of the rect (relative to rect center)
+         */
+        void DrawRect(const Rect& rect, float angle);
+
         void DrawEllipse(const Point& center, float radiusX, float radiusY);
         void DrawCircle(const Point& center, float radius);
+
+        /**
+         * Draw image on top of the paint device.
+         *
+         * @note Image color is multiplied to brush color
+         * @note Transparent color used to discard pixels
+         *
+         * @param target Rect, which defines bounds of the drawn image
+         * @param angle Clockwise rotation in radians of the target rect
+         * @param image Image to draw. Must be in RGBA 8-bit per component format.
+         */
         void DrawImage(const Rect& target, float angle, const std::shared_ptr<Image> &image);
+
+        /**
+         * Clear Paint area. All drawn objects will be removed.
+         */
         void Clear();
 
+        /**
+         * Issue actual drawing on OpenGL side.
+         */
         void Draw();
 
         void SetDrawArea(const Recti& area);

@@ -62,7 +62,135 @@ namespace rfsim {
             angle = a;
         }
 
+        void PrepareRect(GLDynamicGeometry& geometry, size_t baseIndex, size_t &indicesToDraw, size_t &verticesToDraw) const {
+            const size_t FRAME_VERTICES_COUNT = 4;
+            const size_t VERTICES_COUNT_FILLED = 4;
+            const size_t VERTICES_COUNT_NOT_FILLED = 8;
+            const size_t INDICES_COUNT_FILLED = 3 * 2;
+            const size_t INDICES_COUNT_NOT_FILLED = 3 * 8;
 
+            glm::vec3 framePositions[FRAME_VERTICES_COUNT];
+            FillAndRotateRect(framePositions, FRAME_VERTICES_COUNT);
+
+            auto& colorData = geometry.GetBuffer(1);
+            auto& vertexData = geometry.GetBuffer(0);
+            auto& indexData = geometry.GetIndexBuffer();
+
+            // If borders have actually more width, than rect itself, then draw filled rect
+            auto checkFilled = filled || ((2.0f * (float) penWidth) >= rect.z) || ((2.0f * (float) penWidth) >= rect.w);
+
+            // Set 1.0f in vertex attribute
+            auto fFilled = checkFilled? 1.0f: 0.0f;
+
+            // Base offset, since rendered in batch
+            auto bi = (uint32_t) baseIndex;
+
+            verticesToDraw = checkFilled? VERTICES_COUNT_FILLED: VERTICES_COUNT_NOT_FILLED;
+
+            for (size_t i = 0; i < verticesToDraw; i++) {
+                colorData->Append((const unsigned char*)&penColor, sizeof(penColor));
+                colorData->Append((const unsigned char*)&brushColor, sizeof(brushColor));
+                colorData->Append((const unsigned char*)&fFilled, sizeof(float));
+            }
+
+            if (checkFilled) {
+                //
+                // v0------------v3
+                // |              |
+                // v1------------v2
+                //
+
+                uint32_t indices[INDICES_COUNT_FILLED] = {
+                    bi + 0, bi + 1, bi + 2,
+                    bi + 2, bi + 3, bi + 0
+                };
+
+                vertexData->Append((const uint8_t*)framePositions, sizeof(framePositions));
+                indexData->Append(indices, INDICES_COUNT_FILLED);
+                indicesToDraw = INDICES_COUNT_FILLED;
+            }
+            else {
+                auto w = (float) penWidth;
+
+                //
+                // v0------------v3
+                // | v4--------v7 |
+                // | |          | |
+                // | v5--------v6 |
+                // v1------------v2
+                //
+
+                glm::vec3 innerFramePositions[FRAME_VERTICES_COUNT];
+                FillRect(innerFramePositions, FRAME_VERTICES_COUNT);
+
+                innerFramePositions[0] += glm::vec3(w, w, 0);
+                innerFramePositions[1] += glm::vec3(w, -w, 0);
+                innerFramePositions[2] += glm::vec3(-w, -w, 0);
+                innerFramePositions[3] += glm::vec3(-w, w, 0);
+
+                RotateRect(innerFramePositions, FRAME_VERTICES_COUNT);
+
+                glm::vec3 positions[VERTICES_COUNT_NOT_FILLED] = {
+                    framePositions[0],
+                    framePositions[1],
+                    framePositions[2],
+                    framePositions[3],
+                    innerFramePositions[0],
+                    innerFramePositions[1],
+                    innerFramePositions[2],
+                    innerFramePositions[3],
+                };
+
+                uint32_t indices[INDICES_COUNT_NOT_FILLED] = {
+                    bi + 0, bi + 1, bi + 5,
+                    bi + 0, bi + 5, bi + 4,
+                    bi + 1, bi + 2, bi + 6,
+                    bi + 1, bi + 6, bi + 5,
+                    bi + 2, bi + 3, bi + 7,
+                    bi + 2, bi + 7, bi + 6,
+                    bi + 3, bi + 0, bi + 4,
+                    bi + 3, bi + 4, bi + 7
+                };
+
+                vertexData->Append((const uint8_t*)positions, sizeof(positions));
+                indexData->Append(indices, INDICES_COUNT_NOT_FILLED);
+                indicesToDraw = INDICES_COUNT_NOT_FILLED;
+            }
+        }
+
+        void RotateRect(glm::vec3* positions, size_t count) const {
+            assert(count == 4);
+
+            glm::vec2 corner = glm::vec2{rect.x, rect.y};
+            glm::vec2 size = glm::vec2{rect.z, rect.w};
+            glm::vec3 center = glm::vec3(corner + size * 0.5f, 0.0);
+
+            auto rotation = glm::rotate(angle, glm::vec3{0, 0, 1.0});
+
+            for (size_t i = 0; i < count; i++) {
+                glm::vec3& p = positions[i];
+
+                glm::vec4 relative = glm::vec4((p - center), 0.0f);
+                p = center + glm::vec3(rotation * relative);
+                p.z = (float) zOrder;
+            }
+        }
+
+        void FillRect(glm::vec3* positions, size_t count) const {
+            assert(count == 4);
+
+            glm::vec2 size = glm::vec2{rect.z, rect.w};
+
+            positions[0] = glm::vec3{rect.x, rect.y, 0};
+            positions[1] = glm::vec3{rect.x, rect.y + size.y, 0};
+            positions[2] = glm::vec3{rect.x + size.x, rect.y + size.y, 0};
+            positions[3] = glm::vec3{rect.x + size.x, rect.y, 0};
+        }
+
+        void FillAndRotateRect(glm::vec3* positions, size_t count) const {
+            FillRect(positions, count);
+            RotateRect(positions, count);
+        }
     };
 
     struct PainterImage: public PainterRect {
@@ -75,22 +203,12 @@ namespace rfsim {
             image = i;
         }
 
-        void PrepareImage(GLDynamicGeometry& geometry) const {
+        void PrepareImage(GLDynamicGeometry& geometry, size_t &indicesToDraw) const {
             const size_t VERTICES_COUNT = 4;
             const size_t INDICES_COUNT = 6;
 
-            glm::vec2 corner = glm::vec2{rect.x, rect.y};
-            glm::vec2 size = glm::vec2{rect.z, rect.w};
-            glm::vec3 center = glm::vec3(corner + size * 0.5f, 0.0);
-
-            auto rotation = glm::rotate(angle, glm::vec3{0, 0, 1.0});
-
-            glm::vec3 positions[VERTICES_COUNT] = {
-                {rect.x, rect.y, 0},
-                {rect.x, rect.y + size.y, 0},
-                {rect.x + size.x, rect.y + size.y, 0},
-                {rect.x + size.x, rect.y, 0},
-            };
+            glm::vec3 positions[VERTICES_COUNT];
+            FillAndRotateRect(positions, VERTICES_COUNT);
 
             glm::vec2 texCoords[VERTICES_COUNT] = {
                 {0.0f, 1.0f},
@@ -104,12 +222,6 @@ namespace rfsim {
                 2, 3, 0
             };
 
-            for (auto& p: positions) {
-                glm::vec4 relative = glm::vec4((p - center), 0.0f);
-                p = center + glm::vec3(rotation * relative);
-                p.z = (float) zOrder;
-            }
-
             auto& vertexData = geometry.GetBuffer(0);
 
             for (size_t i = 0; i < VERTICES_COUNT; i++) {
@@ -122,6 +234,8 @@ namespace rfsim {
 
             auto& indexData = geometry.GetIndexBuffer();
             indexData->Append(indices, INDICES_COUNT);
+
+            indicesToDraw = INDICES_COUNT;
         }
     };
 

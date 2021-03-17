@@ -66,6 +66,7 @@ namespace rfsim {
         auto shadowColor = glm::vec4(0.1, 0.1, 0.1, 1.5f);
         auto noTrsp = glm::vec4(2.0f);
 
+        mPainter->SetPenColor(white);
         mPainter->SetBrushColor(glm::vec4 {1.0f});
         mPainter->SetClearColor(glm::vec4 {0.0f});
 
