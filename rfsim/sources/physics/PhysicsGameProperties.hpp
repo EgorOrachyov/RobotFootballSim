@@ -25,6 +25,8 @@
 #ifndef RFSIM_PHYSICSGAMEPROPERTIES_HPP
 #define RFSIM_PHYSICSGAMEPROPERTIES_HPP
 
+#include "glm/vec2.hpp"
+
 namespace rfsim {
 
     /**
@@ -33,8 +35,22 @@ namespace rfsim {
      * Robots size, mass, friction,
      * ball restitution, field friction.
      */
-    class PhysicsGameProperties {
+    struct PhysicsGameProperties {
+        float fieldFriction = 0.0f;
 
+        float robotRadius = 0.0f;
+        float robotHeight = 0.0f;
+        float robotMass = 0.0f;
+        float robotFriction = 0.0f;
+        float robotRestitution = 0.0f;
+        // Positions of motors relative to robot center.
+        glm::vec2 robotLeftMotorOffset = {};
+        glm::vec2 robotRightMotorOffset = {};
+
+        float ballRadius = 0.0f;
+        float ballMass = 0.0f;
+        float ballFriction = 0.0f;
+        float ballRestitution = 0.0f;
     };
 
 }

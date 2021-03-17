@@ -25,19 +25,53 @@
 #ifndef RFSIM_PHYSICSSERVER_HPP
 #define RFSIM_PHYSICSSERVER_HPP
 
+#include <map>
+#include <memory>
+
 #include <physics/PhysicsGameProperties.hpp>
 #include <physics/PhysicsGameInitInfo.hpp>
 #include <physics/PhysicsGameState.hpp>
+
+class b2World;
+class b2Body;
 
 namespace rfsim {
 
     class PhysicsServer {
     public:
+        PhysicsServer();
+        ~PhysicsServer();
+
+        PhysicsServer(const PhysicsServer &other) = delete;
+        PhysicsServer(PhysicsServer &&other) noexcept = delete;
+        PhysicsServer& operator=(const PhysicsServer &other) = delete;
+        PhysicsServer& operator=(PhysicsServer &&other) noexcept = delete;
+
         void SetGameProperties(const PhysicsGameProperties& properties);
         void BeginGame(const PhysicsGameInitInfo& info);
         void GameStep(float dt);
-        void GetCurrentGameState(PhysicsGameState& state);
+        // TODO: define more clearly how to activate motors: through power or force
+        void UpdateMotorsPower(int robotId, float leftMotorForce, float rightMotorForce);
+        void GetCurrentGameState(PhysicsGameState& state) const;
         void EndGame();
+
+    private:
+        // Convert position from game coordinates (y axis points down) to physics ones (y axis points up)
+        static glm::vec2 ToPhysicsCoords(const glm::vec2& p);
+        // Convert position from physics coordinates (y axis points up) to game ones (y axis points down)
+        static glm::vec2 ToGameCoords(const glm::vec2& p);
+
+    private:
+        std::shared_ptr<b2World> mWorld;
+
+        b2Body *mRoomBounds;
+        b2Body *mFieldBoundSensors;
+
+        // Each robot has its ID as the index in the vector
+        std::map<int, b2Body*> mRobots;
+        b2Body* mBall;
+
+        PhysicsGameProperties mProperties;
     };
 
 }

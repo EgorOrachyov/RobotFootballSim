@@ -25,6 +25,9 @@
 #ifndef RFSIM_PHYSICSGAMEINITINFO_HPP
 #define RFSIM_PHYSICSGAMEINITINFO_HPP
 
+#include <vector>
+#include <glm/vec2.hpp>
+
 namespace rfsim {
 
     /**
@@ -34,8 +37,27 @@ namespace rfsim {
      * Includes: robots counts, robots ids per team, initial robots positions
      * and orientations.
      */
-    class PhysicsGameInitInfo {
+    struct PhysicsGameInitInfo {
+        struct RobotInitInfo {
+            int         id;
+            glm::vec2   position;
+            // Angle in radians
+            float       angle;
+        };
 
+        glm::vec2 ballPosition;
+
+        std::vector<RobotInitInfo> robotsTeamA;
+        std::vector<RobotInitInfo> robotsTeamB;
+
+        // Hard wall bounds.
+        glm::vec2 roomTopLeftBounds;
+        glm::vec2 roomBottomRightBounds;
+
+        // Field bounds, they won't be used for collision,
+        // but only for determining if a ball is out of bounds.
+        glm::vec2 fieldTopLeftBounds;
+        glm::vec2 fieldBottomRightBounds;
     };
 
 }

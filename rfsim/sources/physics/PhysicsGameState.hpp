@@ -34,8 +34,22 @@ namespace rfsim {
      * Includes: robots positions, orientation,
      * ball position, information about collisions and etc.
      */
-    class PhysicsGameState {
+    struct PhysicsGameState {
+        struct BodyState {
+            glm::vec2   position;
+            glm::vec2   velocity;
+            float       angle;
+        };
+        struct RobotsCollisionInfo {
+            int robotIdA;
+            int robotIdB;
+        };
 
+        // Index of a robot in a vector is its ID
+        std::vector<BodyState> robots;
+        BodyState ball;
+
+        std::vector<RobotsCollisionInfo> collisions;
     };
 
 }
