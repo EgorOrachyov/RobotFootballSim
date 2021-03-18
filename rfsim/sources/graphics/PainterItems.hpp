@@ -165,7 +165,22 @@ namespace rfsim {
             glm::vec2 size = glm::vec2{rect.z, rect.w};
             glm::vec3 center = glm::vec3(corner + size * 0.5f, 0.0);
 
-            auto rotation = glm::rotate(angle, glm::vec3{0, 0, 1.0});
+            // current system is left-handed, angle defines counter-clockwise rotation
+            float r[2][2] = {
+                {  cosf(angle), +sinf(angle) },
+                { -sinf(angle),  cosf(angle) }
+            };
+
+            // fill columns
+            glm::mat4 rotation = {
+                 r[0][0], r[1][0], 0, 0,
+                 r[0][1], r[1][1], 0, 0,
+                       0,       0, 1, 0, 
+                       0,       0, 0, 0
+            };
+
+            // Y-axis is inverted
+            rotation = glm::scale(rotation, { 1, -1, 1 });
 
             for (size_t i = 0; i < count; i++) {
                 glm::vec3& p = positions[i];
