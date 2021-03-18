@@ -48,6 +48,8 @@ void PhysicsServer::BeginGame(const PhysicsGameInitInfo &info)
     assert(info.robotsTeamA.size() == info.robotsTeamB.size());
     assert(!mWorld);
 
+    // TODO: fieldFriction using friction joints
+
     mWorld = std::make_shared<b2World>(b2Vec2(0, 0));
 
     const float roomFriction = 0.5f;
@@ -187,10 +189,13 @@ void PhysicsServer::BeginGame(const PhysicsGameInitInfo &info)
             // must not exist with the same id
             assert(mRobots.find(i.id) == mRobots.end());
 
+            const glm::vec2 pos = ToPhysicsCoords({ i.position.x, i.position.y });
+            const float angle = AngleToPhysicsCoords(i.angle);
+
             b2BodyDef robotBodyDef = {};
             robotBodyDef.type = b2_dynamicBody;
-            robotBodyDef.position = { i.position.x, i.position.y };
-            robotBodyDef.angle = i.angle;
+            robotBodyDef.position = { pos.x, pos.y };
+            robotBodyDef.angle = angle;
 
             b2Body *body = mWorld->CreateBody(&robotBodyDef);
 
@@ -211,6 +216,18 @@ void PhysicsServer::BeginGame(const PhysicsGameInitInfo &info)
 
             body->CreateFixture(&fixture);
 
+            // TODO: remove
+            float rx = rand();
+            float ry = rand();
+
+            rx /= RAND_MAX;
+            ry /= RAND_MAX;
+
+            rx = (rx - 0.5f) * 2;
+            ry = (ry - 0.5f) * 2;
+
+            body->ApplyForce({rx * 30000, ry * 30000}, body->GetPosition(), true);
+
             mRobots[i.id] = body;
         }
     }
@@ -225,6 +242,11 @@ void PhysicsServer::BeginGame(const PhysicsGameInitInfo &info)
 void PhysicsServer::GameStep(float dt)
 {
     assert(mWorld);
+
+    int32 velocityIterations = 8;
+    int32 positionIterations = 3;
+
+    mWorld->Step(dt, velocityIterations, positionIterations);
 
     // TODO: physics world step
 }
@@ -272,8 +294,8 @@ void PhysicsServer::GetCurrentGameState(PhysicsGameState &state) const
     {
         PhysicsGameState::BodyState s = {};
         s.position = ToGameCoords({ mBall->GetPosition().x, mBall->GetPosition().y });
-        s.angle = mBall->GetAngle();
         s.velocity = ToGameCoords({ mBall->GetLinearVelocity().x, mBall->GetLinearVelocity().y });
+        s.angle = AngleToGameCoords(mBall->GetAngle());
 
         state.ball = s;
     }
@@ -285,10 +307,10 @@ void PhysicsServer::GetCurrentGameState(PhysicsGameState &state) const
 
         PhysicsGameState::BodyState s = {};
         s.position = ToGameCoords({ body->GetPosition().x, body->GetPosition().y });
-        s.angle = body->GetAngle();
         s.velocity = ToGameCoords({ body->GetLinearVelocity().x, body->GetLinearVelocity().y });
+        s.angle = AngleToGameCoords(body->GetAngle());
 
-        state.robots[r.first] = s;
+        state.robots[id] = s;
     }
 
     // TODO: collisions info
@@ -310,9 +332,18 @@ glm::vec2 PhysicsServer::ToPhysicsCoords(const glm::vec2 &p)
     return { p.x, -p.y };
 }
 
+float PhysicsServer::AngleToPhysicsCoords(float angle)
+{
+    return angle;
+}
+
 glm::vec2 PhysicsServer::ToGameCoords(const glm::vec2 &p)
 {
     return { p.x, -p.y };
 }
 
+float PhysicsServer::AngleToGameCoords(float angle)
+{
+    return angle;
+}
 }

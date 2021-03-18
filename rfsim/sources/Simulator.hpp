@@ -61,6 +61,7 @@ namespace rfsim {
         std::shared_ptr<class Window> mPrimaryWindow;
         std::shared_ptr<class WindowManager> mWindowManager;
         std::shared_ptr<class PainterEngine> mPainter;
+        std::shared_ptr<class PhysicsServer> mPhysicsServer;
     };
 
 }
