@@ -59,15 +59,16 @@ namespace rfsim {
         // TODO: change properties to real ones
         PhysicsGameProperties physicsProperties = {};
         {
-            physicsProperties.fieldFriction = 0.25f;
+            physicsProperties.fieldFriction = 0.5f;
 
             physicsProperties.robotRadius = 0.1f;
             physicsProperties.robotHeight = 0.1f;
             physicsProperties.robotMass = 1.0f;
             physicsProperties.robotFriction = 0.25f;
             physicsProperties.robotRestitution = 0.1f;
-            physicsProperties.robotLeftMotorOffset = { -0.08f, 0 };
-            physicsProperties.robotRightMotorOffset = { 0.08f, 0 };
+            // TODO: set correct values
+            physicsProperties.robotLeftMotorOffset = { 0, -0.8f };
+            physicsProperties.robotRightMotorOffset = { 0, 0.8f };
 
             physicsProperties.ballRadius = 0.05f;
             physicsProperties.ballMass = 0.250f;
@@ -107,11 +108,14 @@ namespace rfsim {
         mPainter->SetBrushColor(glm::vec4 {1.0f});
         mPainter->SetClearColor(glm::vec4 {0.1f});
 
-        float dt = 1.0 / 60.0f;
+        float dt = 1.0f / 60.0f;
 
         int frameCount = 0;
 
         while (!mPrimaryWindow->ShouldClose()) {
+
+            mPhysicsServer->UpdateMotorsPower(0,25,50);
+
             mPhysicsServer->GameStep(dt);
 
             PhysicsGameState physicsState;

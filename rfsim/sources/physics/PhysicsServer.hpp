@@ -56,6 +56,8 @@ namespace rfsim {
         void EndGame();
 
     private:
+        void SetFieldFriction(b2Body *target, float maxForceMult = 1.0f, float maxTorqueMult = 1.0f);
+
         // Convert position from game coordinates (y axis points down) to physics ones (y axis points up)
         static glm::vec2 ToPhysicsCoords(const glm::vec2& p);
         static float AngleToPhysicsCoords(float angle);

@@ -48,8 +48,6 @@ void PhysicsServer::BeginGame(const PhysicsGameInitInfo &info)
     assert(info.robotsTeamA.size() == info.robotsTeamB.size());
     assert(!mWorld);
 
-    // TODO: fieldFriction using friction joints
-
     mWorld = std::make_shared<b2World>(b2Vec2(0, 0));
 
     const float roomFriction = 0.5f;
@@ -174,6 +172,8 @@ void PhysicsServer::BeginGame(const PhysicsGameInitInfo &info)
         fixture.shape = &shape;
 
         mBall->CreateFixture(&fixture);
+
+        SetFieldFriction(mBall);
     }
 
     // robots
@@ -182,10 +182,15 @@ void PhysicsServer::BeginGame(const PhysicsGameInitInfo &info)
         &info.robotsTeamB
     };
 
+    const float robotAngularDamping = 100;
+
     for (const auto *lst : allRobots)
     {
         for (const auto &i : *lst)
         {
+            // robot IDs must be less than robot count
+            assert(i.id < info.robotsTeamA.size() + info.robotsTeamB.size());
+
             // must not exist with the same id
             assert(mRobots.find(i.id) == mRobots.end());
 
@@ -196,6 +201,7 @@ void PhysicsServer::BeginGame(const PhysicsGameInitInfo &info)
             robotBodyDef.type = b2_dynamicBody;
             robotBodyDef.position = { pos.x, pos.y };
             robotBodyDef.angle = angle;
+            robotBodyDef.angularDamping = robotAngularDamping;
 
             b2Body *body = mWorld->CreateBody(&robotBodyDef);
 
@@ -216,27 +222,39 @@ void PhysicsServer::BeginGame(const PhysicsGameInitInfo &info)
 
             body->CreateFixture(&fixture);
 
-            // TODO: remove
-            float rx = rand();
-            float ry = rand();
-
-            rx /= RAND_MAX;
-            ry /= RAND_MAX;
-
-            rx = (rx - 0.5f) * 2;
-            ry = (ry - 0.5f) * 2;
-
-            body->ApplyForce({rx * 30000, ry * 30000}, body->GetPosition(), true);
+            SetFieldFriction(body);
 
             mRobots[i.id] = body;
         }
     }
+}
 
-    // robot IDs must be less than robot count
-    for (const auto &r : mRobots)
-    {
-        assert(r.first < (int)mRobots.size());
-    }
+void PhysicsServer::SetFieldFriction(b2Body *target, float maxForceMult, float maxTorqueMult)
+{
+    assert(mWorld);
+    assert(mRoomBounds);
+
+    float gravity = 9.8f;
+	float I = target->GetInertia();
+	float mass = target->GetMass();
+
+    // (for notes, refer to apply_force example in box2d testbed)
+	// for a circle: I = 0.5 * m * r * r ==> r = sqrt(2 * I / m)
+	float effectiveRadius = b2Sqrt(2.0f * I / mass);
+
+    maxForceMult *= mProperties.fieldFriction;
+    maxTorqueMult *= mProperties.fieldFriction;
+
+    b2FrictionJointDef jd;
+	jd.localAnchorA.SetZero();
+	jd.localAnchorB.SetZero();
+	jd.bodyA = mRoomBounds;
+	jd.bodyB = target;
+	jd.collideConnected = true;
+	jd.maxForce = maxForceMult * mass * gravity;
+	jd.maxTorque = maxTorqueMult * mass * effectiveRadius * gravity;
+    
+    mWorld->CreateJoint(&jd);
 }
 
 void PhysicsServer::GameStep(float dt)
@@ -247,8 +265,6 @@ void PhysicsServer::GameStep(float dt)
     int32 positionIterations = 3;
 
     mWorld->Step(dt, velocityIterations, positionIterations);
-
-    // TODO: physics world step
 }
 
 void PhysicsServer::UpdateMotorsPower(int robotId, float leftMotorForce, float rightMotorForce)
@@ -263,9 +279,9 @@ void PhysicsServer::UpdateMotorsPower(int robotId, float leftMotorForce, float r
     // world-space direction from cos and sin of the angle
     const b2Vec2 dir = { robot->GetTransform().q.c, robot->GetTransform().q.s } ;
 
-    const b2Vec2 localMotorPos[] = {
-        { mProperties.robotLeftMotorOffset.x,  mProperties.robotLeftMotorOffset.y },
-        { mProperties.robotRightMotorOffset.x, mProperties.robotRightMotorOffset.y }
+    const glm::vec2 motorPositions[] = {
+        ToPhysicsCoords({ mProperties.robotLeftMotorOffset.x,  mProperties.robotLeftMotorOffset.y }),
+        ToPhysicsCoords({ mProperties.robotRightMotorOffset.x, mProperties.robotRightMotorOffset.y })
     };
 
     const float forces[] = {
@@ -275,9 +291,10 @@ void PhysicsServer::UpdateMotorsPower(int robotId, float leftMotorForce, float r
 
     for (int i = 0; i < 2; i++)
     {
-        if (forces[i] < eps)
+        if (forces[i] > eps)
         {
-            const b2Vec2 worldMotorPos = robot->GetWorldPoint(localMotorPos[i]);
+            const b2Vec2 localMotorPos = { motorPositions[i].x, motorPositions[i].y };
+            const b2Vec2 worldMotorPos = robot->GetWorldPoint(localMotorPos);
             const b2Vec2 worldForce = { dir.x * forces[i], dir.y * forces[i] };
 
             robot->ApplyForce(worldForce, worldMotorPos, true);            
