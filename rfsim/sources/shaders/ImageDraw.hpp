@@ -44,7 +44,7 @@ namespace rfsim {
     out vec4 fsColor;
 
     void main() {
-        fsTexCoords = texCoords;
+        fsTexCoords = vec2(texCoords.x, 1.0 - texCoords.y);
         fsColor = color;
         gl_Position = projView * vec4(position.x, areaSize.y - position.y, position.z, 1.0f);
     }

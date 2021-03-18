@@ -334,7 +334,8 @@ glm::vec2 PhysicsServer::ToPhysicsCoords(const glm::vec2 &p)
 
 float PhysicsServer::AngleToPhysicsCoords(float angle)
 {
-    return angle;
+    // clockwise to counter-clockwise
+    return -angle;
 }
 
 glm::vec2 PhysicsServer::ToGameCoords(const glm::vec2 &p)
@@ -344,6 +345,7 @@ glm::vec2 PhysicsServer::ToGameCoords(const glm::vec2 &p)
 
 float PhysicsServer::AngleToGameCoords(float angle)
 {
-    return angle;
+    // counter-clockwise to clockwise
+    return -angle;
 }
 }
