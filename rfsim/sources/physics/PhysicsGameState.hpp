@@ -40,16 +40,23 @@ namespace rfsim {
             glm::vec2   velocity;
             float       angle;
         };
-        struct RobotsCollisionInfo {
+        struct RobotCollisionInfo {
             int robotIdA;
             int robotIdB;
+        };
+        enum class BallCollisionType {
+            None,
+            WithGoal,
+            OutOfBounds
         };
 
         // Index of a robot in a vector is its ID
         std::vector<BodyState> robots;
         BodyState ball;
 
-        std::vector<RobotsCollisionInfo> collisions;
+        std::vector<RobotCollisionInfo> robotCollisions;
+        std::vector<int> outOfBoundsRobots;
+        BallCollisionType ballCollision;
     };
 
 }

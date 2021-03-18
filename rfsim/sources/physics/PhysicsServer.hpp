@@ -37,6 +37,8 @@ class b2Body;
 
 namespace rfsim {
 
+    class PhysicsContactListener;
+
     class PhysicsServer {
     public:
         PhysicsServer();
@@ -58,6 +60,11 @@ namespace rfsim {
     private:
         void SetFieldFriction(b2Body *target, float maxForceMult = 1.0f, float maxTorqueMult = 1.0f);
 
+        bool IsBounds(b2Body *body) const;
+        bool IsGoal(b2Body *body) const;
+        bool IsBall(b2Body *body) const;
+        bool TryGetRobotByBody(b2Body *body, int &outId) const;
+
         // Convert position from game coordinates (y axis points down) to physics ones (y axis points up)
         static glm::vec2 ToPhysicsCoords(const glm::vec2& p);
         static float AngleToPhysicsCoords(float angle);
@@ -67,6 +74,7 @@ namespace rfsim {
 
     private:
         std::shared_ptr<b2World> mWorld;
+        std::shared_ptr<PhysicsContactListener> mContactListener;
 
         b2Body *mRoomBounds;
         b2Body *mFieldBoundSensors;

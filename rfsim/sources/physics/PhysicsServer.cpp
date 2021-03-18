@@ -29,13 +29,49 @@
 
 namespace rfsim {
 
-PhysicsServer::PhysicsServer()
+class PhysicsContactListener : public b2ContactListener
 {
-}
+public:
+    PhysicsContactListener() = default;
+    ~PhysicsContactListener() = default;
+
+    PhysicsContactListener(const PhysicsContactListener &other) = delete;
+    PhysicsContactListener(PhysicsContactListener &&other) noexcept = delete;
+    PhysicsContactListener & operator=(const PhysicsContactListener &other) = delete;
+    PhysicsContactListener & operator=(PhysicsContactListener &&other) noexcept = delete;
+
+    void PreSolve(b2Contact* contact, const b2Manifold* oldManifold) override
+	{
+        const b2Manifold* manifold = contact->GetManifold();
+
+	    if (manifold->pointCount == 0)
+	    {
+		    return;
+	    }
+
+        mContacts.push_back({ contact->GetFixtureA(), contact->GetFixtureB() });
+	}
+
+    const std::vector<std::pair<b2Fixture*, b2Fixture*>> &GetContacts() const
+    {
+        return mContacts;
+    }
+
+    void Clear()
+    {
+        mContacts.clear();
+    }
+
+private:
+    std::vector<std::pair<b2Fixture*, b2Fixture*>> mContacts;
+};
+
+PhysicsServer::PhysicsServer() : mRoomBounds(nullptr), mFieldBoundSensors(nullptr), mBall(nullptr)
+{}
 
 PhysicsServer::~PhysicsServer()
 {
-    mWorld.reset();
+    EndGame();
 }
 
 void PhysicsServer::SetGameProperties(const PhysicsGameProperties &properties)
@@ -47,8 +83,12 @@ void PhysicsServer::BeginGame(const PhysicsGameInitInfo &info)
 {
     assert(info.robotsTeamA.size() == info.robotsTeamB.size());
     assert(!mWorld);
+    assert(!mContactListener);
 
     mWorld = std::make_shared<b2World>(b2Vec2(0, 0));
+
+    mContactListener = std::make_shared<PhysicsContactListener>();
+    mWorld->SetContactListener(mContactListener.get());
 
     const float roomFriction = 0.5f;
     const float roomRestitution = 0.5f;
@@ -260,6 +300,9 @@ void PhysicsServer::SetFieldFriction(b2Body *target, float maxForceMult, float m
 void PhysicsServer::GameStep(float dt)
 {
     assert(mWorld);
+    assert(mContactListener);
+
+    mContactListener->Clear();
 
     int32 velocityIterations = 8;
     int32 positionIterations = 3;
@@ -305,6 +348,7 @@ void PhysicsServer::UpdateMotorsPower(int robotId, float leftMotorForce, float r
 void PhysicsServer::GetCurrentGameState(PhysicsGameState &state) const
 {
     assert(mWorld);
+    assert(mContactListener);
     
     state.robots.resize(mRobots.size());
 
@@ -330,12 +374,116 @@ void PhysicsServer::GetCurrentGameState(PhysicsGameState &state) const
         state.robots[id] = s;
     }
 
-    // TODO: collisions info
-    //state.collisions. ;
+    const auto &cs = mContactListener->GetContacts();
+
+    for (const auto &c : cs)
+    {
+        b2Body *bodyA = c.first->GetBody();
+        b2Body *bodyB = c.second->GetBody();
+
+        if (IsBall(bodyA) || IsBall(bodyB))
+        {
+            if (IsGoal(bodyA) || IsGoal(bodyB))
+            {
+                state.ballCollision = PhysicsGameState::BallCollisionType::WithGoal;
+            }
+            else if (IsBounds(bodyA) || IsBounds(bodyB))
+            {
+                state.ballCollision = PhysicsGameState::BallCollisionType::OutOfBounds;
+            }
+            else
+            {
+                state.ballCollision = PhysicsGameState::BallCollisionType::None;
+            }
+
+            continue;
+        }
+
+        int robotA, robotB;
+
+        bool isRobotA = TryGetRobotByBody(bodyA, robotA);
+        bool isRobotB = TryGetRobotByBody(bodyB, robotB);
+
+        if (isRobotA && isRobotB)
+        {
+            bool wasAdded = false;
+
+            for (const auto &r : state.robotCollisions)
+            {
+                if ((r.robotIdA == robotA && r.robotIdB == robotB) ||
+                    (r.robotIdA == robotB && r.robotIdB == robotA))
+                {
+                    wasAdded = true;
+                    break;
+                }
+            }
+
+            if (wasAdded)
+            {
+                continue;
+            }
+
+            PhysicsGameState::RobotCollisionInfo info = {};
+            info.robotIdA = robotA;
+            info.robotIdB = robotB;
+
+            state.robotCollisions.push_back(info);
+
+            continue;
+        }
+
+        if (isRobotA)
+        {
+            if (IsBounds(bodyB))
+            {
+                state.outOfBoundsRobots.push_back(robotA);
+            }
+        }
+
+        if (isRobotB)
+        {
+            if (IsBounds(bodyA))
+            {
+                state.outOfBoundsRobots.push_back(robotB);
+            }
+        }
+    }
+}
+
+bool PhysicsServer::IsBounds(b2Body *body) const
+{
+    return body == mFieldBoundSensors || body == mRoomBounds;
+}
+
+bool PhysicsServer::IsGoal(b2Body *body) const
+{
+    // TODO
+    return false;
+}
+
+bool PhysicsServer::IsBall(b2Body *body) const
+{
+    return body == mBall;
+}
+
+bool PhysicsServer::TryGetRobotByBody(b2Body *body, int &outId) const
+{
+    for (const auto &r : mRobots)
+    {
+        if (r.second == body)
+        {
+            outId = r.first;
+            return true;
+        }
+    }
+
+    outId = -1;
+    return false;
 }
 
 void PhysicsServer::EndGame()
 {
+    mContactListener.reset();
     mWorld.reset();
 
     mRoomBounds = nullptr;
