@@ -24,6 +24,8 @@
 
 #include <physics/PhysicsServer.hpp>
 
+#include <list>
+
 #include <box2d/box2d.h>
 #include <glm/ext/scalar_constants.hpp>
 
@@ -32,13 +34,34 @@ namespace rfsim {
 class PhysicsContactListener : public b2ContactListener
 {
 public:
-    PhysicsContactListener() = default;
-    ~PhysicsContactListener() = default;
+    PhysicsContactListener(const b2Body *fieldBoundSensors) : mFieldBoundSensors(fieldBoundSensors) {}
+    ~PhysicsContactListener() override = default;
 
     PhysicsContactListener(const PhysicsContactListener &other) = delete;
     PhysicsContactListener(PhysicsContactListener &&other) noexcept = delete;
     PhysicsContactListener & operator=(const PhysicsContactListener &other) = delete;
     PhysicsContactListener & operator=(PhysicsContactListener &&other) noexcept = delete;
+
+    // Sensor contacts are only passed to BeginContact/EndContact
+    void BeginContact(b2Contact *contact) override
+    {
+        if (mFieldBoundSensors == contact->GetFixtureA()->GetBody() || 
+            mFieldBoundSensors == contact->GetFixtureB()->GetBody())
+        {
+            mSensorContacts.emplace_back(contact->GetFixtureA(), contact->GetFixtureB());
+        }
+    }
+
+    void EndContact(b2Contact *contact) override
+    {
+        if (mFieldBoundSensors == contact->GetFixtureA()->GetBody() || 
+            mFieldBoundSensors == contact->GetFixtureB()->GetBody())
+        {
+            const std::pair<b2Fixture*, b2Fixture*> a = { contact->GetFixtureA(), contact->GetFixtureB() };
+
+            mSensorContacts.erase(std::find(mSensorContacts.begin(), mSensorContacts.end(), a));
+        }
+    }
 
     void PreSolve(b2Contact* contact, const b2Manifold* oldManifold) override
 	{
@@ -52,9 +75,17 @@ public:
         mContacts.push_back({ contact->GetFixtureA(), contact->GetFixtureB() });
 	}
 
-    const std::vector<std::pair<b2Fixture*, b2Fixture*>> &GetContacts() const
+    void GetContacts(std::vector<std::pair<b2Fixture*, b2Fixture*>> &contacts)
     {
-        return mContacts;
+        for (const auto &c : mContacts)
+        {
+            contacts.emplace_back(c);
+        }
+
+        for (const auto &c : mSensorContacts)
+        {
+            contacts.emplace_back(c);
+        }
     }
 
     void Clear()
@@ -63,7 +94,10 @@ public:
     }
 
 private:
+    const b2Body *mFieldBoundSensors;
+
     std::vector<std::pair<b2Fixture*, b2Fixture*>> mContacts;
+    std::list<std::pair<b2Fixture*, b2Fixture*>> mSensorContacts;
 };
 
 PhysicsServer::PhysicsServer() : mRoomBounds(nullptr), mFieldBoundSensors(nullptr), mBall(nullptr)
@@ -86,9 +120,6 @@ void PhysicsServer::BeginGame(const PhysicsGameInitInfo &info)
     assert(!mContactListener);
 
     mWorld = std::make_shared<b2World>(b2Vec2(0, 0));
-
-    mContactListener = std::make_shared<PhysicsContactListener>();
-    mWorld->SetContactListener(mContactListener.get());
 
     const float roomFriction = 0.5f;
     const float roomRestitution = 0.5f;
@@ -125,7 +156,7 @@ void PhysicsServer::BeginGame(const PhysicsGameInitInfo &info)
         b2BodyDef staticBodyDef = {};
         mRoomBounds = mWorld->CreateBody(&staticBodyDef);
 
-        b2EdgeShape shape;
+        b2EdgeShape shape = {};
 
         b2FixtureDef commonFixture = {};
         commonFixture.shape = &shape;
@@ -134,19 +165,19 @@ void PhysicsServer::BeginGame(const PhysicsGameInitInfo &info)
         commonFixture.restitution = roomRestitution;
 
         // left vertical
-        shape.SetTwoSided(b2Vec2(fL, fT), b2Vec2(fL, fB));
+        shape.SetTwoSided(b2Vec2(rL, rT), b2Vec2(rL, rB));
 		mRoomBounds->CreateFixture(&commonFixture);
 
         // right vertical
-        shape.SetTwoSided(b2Vec2(fR, fT), b2Vec2(fR, fB));
+        shape.SetTwoSided(b2Vec2(rR, rT), b2Vec2(rR, rB));
 		mRoomBounds->CreateFixture(&commonFixture);
 
         // top horizontal
-        shape.SetTwoSided(b2Vec2(fL, fT), b2Vec2(fR, fT));
+        shape.SetTwoSided(b2Vec2(rL, rT), b2Vec2(rR, rT));
 		mRoomBounds->CreateFixture(&commonFixture);
 
         // bottom horizontal
-        shape.SetTwoSided(b2Vec2(fL, fB), b2Vec2(fR, fB));
+        shape.SetTwoSided(b2Vec2(rL, rB), b2Vec2(rR, rB));
 		mRoomBounds->CreateFixture(&commonFixture);
     }
 
@@ -169,7 +200,7 @@ void PhysicsServer::BeginGame(const PhysicsGameInitInfo &info)
         b2BodyDef staticBodyDef = {};
         mFieldBoundSensors = mWorld->CreateBody(&staticBodyDef);
         
-        b2PolygonShape shape;
+        b2PolygonShape shape = {};
 
         b2FixtureDef commonFixture = {};
         commonFixture.shape = &shape;
@@ -189,6 +220,9 @@ void PhysicsServer::BeginGame(const PhysicsGameInitInfo &info)
         shape.SetAsBox(rWidth, bottomDiff, bottomCenter, 0);
         mFieldBoundSensors->CreateFixture(&commonFixture);
     }
+
+    mContactListener = std::make_shared<PhysicsContactListener>(mFieldBoundSensors);
+    mWorld->SetContactListener(mContactListener.get());
 
     // ball
     {
@@ -374,41 +408,44 @@ void PhysicsServer::GetCurrentGameState(PhysicsGameState &state) const
         state.robots[id] = s;
     }
 
-    const auto &cs = mContactListener->GetContacts();
+    std::vector<std::pair<b2Fixture*, b2Fixture*>> cs;
+    mContactListener->GetContacts(cs);
 
     for (const auto &c : cs)
     {
         b2Body *bodyA = c.first->GetBody();
         b2Body *bodyB = c.second->GetBody();
 
+        int robotA, robotB;
+        bool isRobotA = TryGetRobotByBody(bodyA, robotA);
+        bool isRobotB = TryGetRobotByBody(bodyB, robotB);
+
         if (IsBall(bodyA) || IsBall(bodyB))
         {
-            if (IsGoal(bodyA) || IsGoal(bodyB))
+            state.isBallInsideGoal = IsGoal(bodyA) || IsGoal(bodyB);
+            state.isBallOutOfFieldBounds =  
+                IsFieldBounds(bodyA) || IsFieldBounds(bodyB) || 
+                IsRoomBounds(bodyA) || IsRoomBounds(bodyB);
+
+            if (isRobotA)
             {
-                state.ballCollision = PhysicsGameState::BallCollisionType::WithGoal;
+                state.robotBallCollisions.push_back(robotA);
             }
-            else if (IsBounds(bodyA) || IsBounds(bodyB))
+            
+            if (isRobotB)
             {
-                state.ballCollision = PhysicsGameState::BallCollisionType::OutOfBounds;
-            }
-            else
-            {
-                state.ballCollision = PhysicsGameState::BallCollisionType::None;
+                state.robotBallCollisions.push_back(robotB);
             }
 
             continue;
         }
 
-        int robotA, robotB;
-
-        bool isRobotA = TryGetRobotByBody(bodyA, robotA);
-        bool isRobotB = TryGetRobotByBody(bodyB, robotB);
-
         if (isRobotA && isRobotB)
         {
             bool wasAdded = false;
 
-            for (const auto &r : state.robotCollisions)
+            // check if it was already added
+            for (const auto &r : state.robotRobotCollisions)
             {
                 if ((r.robotIdA == robotA && r.robotIdB == robotB) ||
                     (r.robotIdA == robotB && r.robotIdB == robotA))
@@ -427,32 +464,42 @@ void PhysicsServer::GetCurrentGameState(PhysicsGameState &state) const
             info.robotIdA = robotA;
             info.robotIdB = robotB;
 
-            state.robotCollisions.push_back(info);
+            state.robotRobotCollisions.push_back(info);
 
             continue;
         }
 
-        if (isRobotA)
-        {
-            if (IsBounds(bodyB))
-            {
-                state.outOfBoundsRobots.push_back(robotA);
-            }
-        }
-
         if (isRobotB)
         {
-            if (IsBounds(bodyA))
+            // let A be a robot
+            std::swap(bodyA, bodyB);
+            std::swap(robotA, robotB);
+            std::swap(isRobotA, isRobotB);
+        }
+
+        if (isRobotA)
+        {
+            if (IsFieldBounds(bodyB))
             {
-                state.outOfBoundsRobots.push_back(robotB);
+                state.robotFieldBoundsCollisions.push_back(robotA);
+            }
+
+            if (IsRoomBounds(bodyB))
+            {
+                state.robotRoomBoundsCollisions.push_back(robotA);
             }
         }
     }
 }
 
-bool PhysicsServer::IsBounds(b2Body *body) const
+bool PhysicsServer::IsRoomBounds(b2Body *body) const
 {
-    return body == mFieldBoundSensors || body == mRoomBounds;
+    return body == mRoomBounds;
+}
+
+bool PhysicsServer::IsFieldBounds(b2Body *body) const
+{
+    return body == mFieldBoundSensors;
 }
 
 bool PhysicsServer::IsGoal(b2Body *body) const

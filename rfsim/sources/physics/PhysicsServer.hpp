@@ -60,7 +60,8 @@ namespace rfsim {
     private:
         void SetFieldFriction(b2Body *target, float maxForceMult = 1.0f, float maxTorqueMult = 1.0f);
 
-        bool IsBounds(b2Body *body) const;
+        bool IsRoomBounds(b2Body *body) const;
+        bool IsFieldBounds(b2Body *body) const;
         bool IsGoal(b2Body *body) const;
         bool IsBall(b2Body *body) const;
         bool TryGetRobotByBody(b2Body *body, int &outId) const;

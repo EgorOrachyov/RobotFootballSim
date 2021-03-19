@@ -83,10 +83,10 @@ namespace rfsim {
 
 
         PhysicsGameInitInfo beginInfo = {};
-        beginInfo.fieldTopLeftBounds     = { 0, 0 };
-        beginInfo.fieldBottomRightBounds = { fieldLength,  fieldWidth };
-        beginInfo.roomTopLeftBounds      = { -1, -1 };
-        beginInfo.roomBottomRightBounds  = { fieldLength + 1, fieldWidth + 1 };
+        beginInfo.fieldTopLeftBounds     = { 0.5f, 0.5f };
+        beginInfo.fieldBottomRightBounds = { fieldLength - 0.5f,  fieldWidth - 0.5f };
+        beginInfo.roomTopLeftBounds      = { 0, 0 };
+        beginInfo.roomBottomRightBounds  = { fieldLength, fieldWidth };
 
         beginInfo.ballPosition = { fieldLength * 0.5f, fieldWidth * 0.5f };
 
@@ -156,7 +156,7 @@ namespace rfsim {
             const auto &b = physicsState.ball;
             mPainter->DrawImage({b.position.x-physicsProperties.ballRadius, b.position.y-physicsProperties.ballRadius, physicsProperties.ballRadius * 2, physicsProperties.ballRadius * 2}, b.angle, ballImg);
 
-            for (const auto &c : physicsState.robotCollisions) {
+            for (const auto &c : physicsState.robotRobotCollisions) {
                 const auto &ra = physicsState.robots[c.robotIdA];
                 const auto &rb = physicsState.robots[c.robotIdB];
                 const float size = physicsProperties.robotRadius * 4;
@@ -177,7 +177,7 @@ namespace rfsim {
                 mPainter->DrawImage(rectB, 0, hitImg);
             }
 
-            for (int id : physicsState.outOfBoundsRobots)
+            for (int id : physicsState.robotFieldBoundsCollisions)
             {
                 const auto &r = physicsState.robots[id];
                 const float size = physicsProperties.robotRadius * 4;

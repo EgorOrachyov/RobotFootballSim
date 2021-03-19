@@ -36,27 +36,27 @@ namespace rfsim {
      */
     struct PhysicsGameState {
         struct BodyState {
-            glm::vec2   position;
-            glm::vec2   velocity;
-            float       angle;
+            glm::vec2   position = {};
+            glm::vec2   velocity = {};
+            float       angle = 0;
         };
         struct RobotCollisionInfo {
-            int robotIdA;
-            int robotIdB;
-        };
-        enum class BallCollisionType {
-            None,
-            WithGoal,
-            OutOfBounds
+            int robotIdA = -1;
+            int robotIdB = -1;
         };
 
         // Index of a robot in a vector is its ID
         std::vector<BodyState> robots;
         BodyState ball;
 
-        std::vector<RobotCollisionInfo> robotCollisions;
-        std::vector<int> outOfBoundsRobots;
-        BallCollisionType ballCollision;
+        std::vector<RobotCollisionInfo> robotRobotCollisions;
+        std::vector<int> robotFieldBoundsCollisions;
+        std::vector<int> robotRoomBoundsCollisions;
+        std::vector<int> robotBallCollisions;
+
+        bool isBallInsideGoal;
+        bool isBallOutOfFieldBounds;
+        bool isBallRobotCollision;
     };
 
 }
