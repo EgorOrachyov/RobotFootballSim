@@ -61,23 +61,21 @@ namespace rfsim {
 
         // TODO: change properties to real ones
         PhysicsGameProperties physicsProperties = {};
-        {
-            physicsProperties.fieldFriction = 0.5f;
+        physicsProperties.fieldFriction = 0.5f;
 
-            physicsProperties.robotRadius = 0.1f;
-            physicsProperties.robotHeight = 0.1f;
-            physicsProperties.robotMass = 1.0f;
-            physicsProperties.robotFriction = 0.25f;
-            physicsProperties.robotRestitution = 0.1f;
-            // TODO: set correct values
-            physicsProperties.robotLeftMotorOffset = { 0, -0.8f };
-            physicsProperties.robotRightMotorOffset = { 0, 0.8f };
+        physicsProperties.robotRadius = 0.1f;
+        physicsProperties.robotHeight = 0.1f;
+        physicsProperties.robotMass = 1.0f;
+        physicsProperties.robotFriction = 0.25f;
+        physicsProperties.robotRestitution = 0.1f;
+        // TODO: set correct values
+        physicsProperties.robotLeftMotorOffset = { 0, -0.8f };
+        physicsProperties.robotRightMotorOffset = { 0, 0.8f };
 
-            physicsProperties.ballRadius = 0.05f;
-            physicsProperties.ballMass = 0.250f;
-            physicsProperties.ballFriction = 0.05f;
-            physicsProperties.ballRestitution = 0.75f;   
-        }
+        physicsProperties.ballRadius = 0.05f;
+        physicsProperties.ballMass = 0.250f;
+        physicsProperties.ballFriction = 0.05f;
+        physicsProperties.ballRestitution = 0.75f;   
 
         mPhysicsServer->SetGameProperties(physicsProperties);
 
@@ -90,8 +88,7 @@ namespace rfsim {
 
         beginInfo.ballPosition = { fieldLength * 0.5f, fieldWidth * 0.5f };
 
-        for (int i = 0; i < 6; i++)
-        {
+        for (int i = 0; i < 6; i++) {
             beginInfo.robotsTeamA.push_back({ i,     { fieldLength * 0.25f, fieldWidth * 0.5f + fieldWidth * 0.3f * ((i - 2.5f) / 2.5f) }, 0 });
             beginInfo.robotsTeamB.push_back({ i + 6, { fieldLength * 0.75f, fieldWidth * 0.5f + fieldWidth * 0.3f * ((i - 2.5f) / 2.5f) }, pi });
         }
@@ -120,8 +117,7 @@ namespace rfsim {
 
         while (!mPrimaryWindow->ShouldClose()) {
 
-            for (int i = 0; i < beginInfo.robotsTeamA.size() * 2; i++)
-            {
+            for (int i = 0; i < beginInfo.robotsTeamA.size() * 2; i++) {
                 mPhysicsServer->UpdateMotorsPower(i, 50 * (float)rand() / RAND_MAX, 50 * (float)rand() / RAND_MAX);
             }
 
@@ -177,8 +173,7 @@ namespace rfsim {
                 mPainter->DrawImage(rectB, 0, hitImg);
             }
 
-            for (int id : physicsState.robotFieldBoundsCollisions)
-            {
+            for (int id : physicsState.robotFieldBoundsCollisions) {
                 const auto &r = physicsState.robots[id];
                 const float size = physicsProperties.robotRadius * 4;
 
