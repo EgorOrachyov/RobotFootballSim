@@ -54,7 +54,7 @@ namespace rfsim {
     }
 
     int Simulator::Run() {
-        const float pi = glm::pi<float>();
+        const auto pi = glm::pi<float>();
 
         const float fieldLength = 16;
         const float fieldWidth = 9;
@@ -73,12 +73,11 @@ namespace rfsim {
         physicsProperties.robotRightMotorOffset = { 0, 0.8f };
 
         physicsProperties.ballRadius = 0.05f;
-        physicsProperties.ballMass = 0.250f;
-        physicsProperties.ballFriction = 0.05f;
+        physicsProperties.ballMass = 0.05f;
+        physicsProperties.ballFriction = 0.01f;
         physicsProperties.ballRestitution = 0.75f;   
 
         mPhysicsServer->SetGameProperties(physicsProperties);
-
 
         PhysicsGameInitInfo beginInfo = {};
         beginInfo.fieldTopLeftBounds     = { 0.5f, 0.5f };
@@ -94,7 +93,6 @@ namespace rfsim {
         }
 
         mPhysicsServer->BeginGame(beginInfo);
-
 
         auto prefix = std::string("../..");
         auto ballImg = Image::LoadFromFilePath(prefix + "/resources/sprites/ball.png");
@@ -127,8 +125,6 @@ namespace rfsim {
             mPhysicsServer->GetCurrentGameState(physicsState);
 
             mPainter->Clear();
-
-            mPainter->SetDrawArea({ 0, 0, fieldLength * 80, fieldWidth * 80 });
             mPainter->SetDrawSpace({ 0, 0, fieldLength, fieldWidth });
 
             mPainter->SetTransparentColor(noTrsp);
@@ -188,8 +184,11 @@ namespace rfsim {
 
             mPainter->Draw();
             mWindowManager->Update();
-
             frameCount++;
+
+            // Update draw area with actual window framebuffer size
+            auto areaSize = mPrimaryWindow->GetFramebufferSize();
+            mPainter->SetDrawArea({0, 0, areaSize[0], areaSize[1]});
         }
 
         mPhysicsServer->EndGame();

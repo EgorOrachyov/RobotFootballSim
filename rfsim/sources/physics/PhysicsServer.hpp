@@ -52,7 +52,6 @@ namespace rfsim {
         void SetGameProperties(const PhysicsGameProperties& properties);
         void BeginGame(const PhysicsGameInitInfo& info);
         void GameStep(float dt);
-        // TODO: define more clearly how to activate motors: through power or force
         void UpdateMotorsPower(int robotId, float leftMotorForce, float rightMotorForce);
         void GetCurrentGameState(PhysicsGameState& state) const;
         void EndGame();

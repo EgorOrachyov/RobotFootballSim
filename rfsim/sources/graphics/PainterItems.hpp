@@ -166,18 +166,7 @@ namespace rfsim {
             glm::vec3 center = glm::vec3(corner + size * 0.5f, 0.0);
 
             // angle defines clockwise rotation
-            float r[2][2] = {
-                {  cosf(angle), -sinf(angle) },
-                { +sinf(angle),  cosf(angle) }
-            };
-
-            // fill columns
-            glm::mat4 rotation = {
-                 r[0][0], r[1][0], 0, 0,
-                 r[0][1], r[1][1], 0, 0,
-                       0,       0, 1, 0, 
-                       0,       0, 0, 0
-            };
+            glm::mat4 rotation = glm::rotate(angle, glm::vec3(0.0f, 0.0f, 1.0f));
 
             for (size_t i = 0; i < count; i++) {
                 glm::vec3& p = positions[i];

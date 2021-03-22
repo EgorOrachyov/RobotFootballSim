@@ -23,11 +23,10 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 #include <physics/PhysicsServer.hpp>
-
-#include <list>
-
-#include <box2d/box2d.h>
 #include <glm/ext/scalar_constants.hpp>
+#include <box2d/box2d.h>
+#include <algorithm>
+#include <list>
 
 namespace rfsim {
 
