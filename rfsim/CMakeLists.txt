@@ -72,7 +72,7 @@ set_target_properties(rfsim PROPERTIES CXX_STANDARD 14)
 set_target_properties(rfsim PROPERTIES CXX_STANDARD_REQUIRED ON)
 
 target_link_libraries(rfsim PRIVATE glfw)
-target_link_libraries(rfsim PRIVATE libglew_shared)
+target_link_libraries(rfsim PRIVATE libglew_static)
 target_link_libraries(rfsim PRIVATE box2d)
 target_link_libraries(rfsim PRIVATE imgui)
 target_link_libraries(rfsim PRIVATE stb_image)

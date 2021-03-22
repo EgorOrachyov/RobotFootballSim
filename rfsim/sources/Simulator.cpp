@@ -23,10 +23,12 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 #include <Simulator.hpp>
-#include <graphics/PainterEngine.hpp>
-#include <graphics/WindowManager.hpp>
+
 #include <cmath>
 #include <glm/gtc/constants.hpp>
+#include <graphics/PainterEngine.hpp>
+#include <graphics/WindowManager.hpp>
+#include <physics/PhysicsServer.hpp>
 
 namespace rfsim {
 
@@ -40,59 +42,157 @@ namespace rfsim {
         mWindowManager = std::make_shared<WindowManager>();
         mPrimaryWindow = mWindowManager->CreateWindow({1280, 720}, "Robot Football Sim");
         mPainter = std::make_shared<PainterEngine>(glm::ivec4{0, 0, 1280, 720}, glm::vec4{0, 0, 1280, 720}, mPrimaryWindow);
+        mPhysicsServer = std::make_shared<PhysicsServer>();
     }
 
     Simulator::~Simulator() {
         // Release in reverse order
+        mPhysicsServer = nullptr;
         mPainter = nullptr;
         mPrimaryWindow = nullptr;
         mWindowManager = nullptr;
     }
 
     int Simulator::Run() {
-        auto prefix = std::string("../..");
-        auto robot = Image::LoadFromFilePath(prefix + "/resources/sprites/robot.png");
-        auto shadow = Image::LoadFromFilePath(prefix + "/resources/sprites/shadow.png");
-        auto field = Image::LoadFromFilePath(prefix + "/resources/sprites/play-field.png");
-        auto angle = 0.0f;
-        auto radius = glm::vec2(500, 300);
-        auto center = glm::vec2(640, 360);
-        auto offset = glm::vec2(-50, -50);
+        const float pi = glm::pi<float>();
 
-        float pi = glm::pi<float>();
-        float steps[4] = { pi * 0.0f, pi * 0.5f, pi * 1.0f, pi * 1.5f };
+        const float fieldLength = 16;
+        const float fieldWidth = 9;
+
+        // TODO: change properties to real ones
+        PhysicsGameProperties physicsProperties = {};
+        physicsProperties.fieldFriction = 0.5f;
+
+        physicsProperties.robotRadius = 0.1f;
+        physicsProperties.robotHeight = 0.1f;
+        physicsProperties.robotMass = 1.0f;
+        physicsProperties.robotFriction = 0.25f;
+        physicsProperties.robotRestitution = 0.1f;
+        // TODO: set correct values
+        physicsProperties.robotLeftMotorOffset = { 0, -0.8f };
+        physicsProperties.robotRightMotorOffset = { 0, 0.8f };
+
+        physicsProperties.ballRadius = 0.05f;
+        physicsProperties.ballMass = 0.250f;
+        physicsProperties.ballFriction = 0.05f;
+        physicsProperties.ballRestitution = 0.75f;   
+
+        mPhysicsServer->SetGameProperties(physicsProperties);
+
+
+        PhysicsGameInitInfo beginInfo = {};
+        beginInfo.fieldTopLeftBounds     = { 0.5f, 0.5f };
+        beginInfo.fieldBottomRightBounds = { fieldLength - 0.5f,  fieldWidth - 0.5f };
+        beginInfo.roomTopLeftBounds      = { 0, 0 };
+        beginInfo.roomBottomRightBounds  = { fieldLength, fieldWidth };
+
+        beginInfo.ballPosition = { fieldLength * 0.5f, fieldWidth * 0.5f };
+
+        for (int i = 0; i < 6; i++) {
+            beginInfo.robotsTeamA.push_back({ i,     { fieldLength * 0.25f, fieldWidth * 0.5f + fieldWidth * 0.3f * ((i - 2.5f) / 2.5f) }, 0 });
+            beginInfo.robotsTeamB.push_back({ i + 6, { fieldLength * 0.75f, fieldWidth * 0.5f + fieldWidth * 0.3f * ((i - 2.5f) / 2.5f) }, pi });
+        }
+
+        mPhysicsServer->BeginGame(beginInfo);
+
+
+        auto prefix = std::string("../..");
+        auto ballImg = Image::LoadFromFilePath(prefix + "/resources/sprites/ball.png");
+        auto robotImg = Image::LoadFromFilePath(prefix + "/resources/sprites/robot.png");
+        auto hitImg = Image::LoadFromFilePath(prefix + "/resources/sprites/hit.png");
+        auto outOfBoundsImg = Image::LoadFromFilePath(prefix + "/resources/sprites/out-of-bounds.png");
+        auto shadowImg = Image::LoadFromFilePath(prefix + "/resources/sprites/shadow.png");
+        auto fieldImg = Image::LoadFromFilePath(prefix + "/resources/sprites/play-field.png");
 
         auto white = glm::vec4(1.0f);
-        auto shadowColor = glm::vec4(0.1, 0.1, 0.1, 1.5f);
         auto noTrsp = glm::vec4(2.0f);
 
         mPainter->SetPenColor(white);
         mPainter->SetBrushColor(glm::vec4 {1.0f});
-        mPainter->SetClearColor(glm::vec4 {0.0f});
+        mPainter->SetClearColor(glm::vec4 {0.1f});
+
+        float dt = 1.0f / 60.0f;
+
+        uint64_t frameCount = 0;
 
         while (!mPrimaryWindow->ShouldClose()) {
-            mPainter->Clear();
 
-            mPainter->SetTransparentColor(noTrsp);
-            mPainter->DrawImage({0,0,1280,720}, 0, field);
-
-            for (float step: steps) {
-                auto a = angle + step;
-                auto pos = offset + center + radius * glm::vec2(std::cos(pi * 0.5f - a), -std::sin(pi * 0.5f - a));
-
-                mPainter->SetBrushColor(shadowColor);
-                mPainter->DrawImage({pos.x - 10, pos.y + 10, 110, 110}, 0, shadow);
-
-                mPainter->SetBrushColor(white);
-                mPainter->SetTransparentColor(white);
-                mPainter->DrawImage({pos.x, pos.y, 100, 100}, a, robot);
+            for (int i = 0; i < beginInfo.robotsTeamA.size() * 2; i++) {
+                mPhysicsServer->UpdateMotorsPower(i, 50 * (float)rand() / RAND_MAX, 50 * (float)rand() / RAND_MAX);
             }
 
-            angle += 0.015f;
+            mPhysicsServer->GameStep(dt);
+
+            PhysicsGameState physicsState;
+            mPhysicsServer->GetCurrentGameState(physicsState);
+
+            mPainter->Clear();
+
+            mPainter->SetDrawArea({ 0, 0, fieldLength * 80, fieldWidth * 80 });
+            mPainter->SetDrawSpace({ 0, 0, fieldLength, fieldWidth });
+
+            mPainter->SetTransparentColor(noTrsp);
+            mPainter->DrawImage({ 0, 0, fieldLength, fieldWidth }, 0, fieldImg);
+
+            mPainter->SetBrushColor(white);
+            mPainter->SetTransparentColor(white);
+
+            for (const auto &r: physicsState.robots) {
+                const float radius = physicsProperties.robotRadius;
+
+                const PainterEngine::Rect rect = {
+                    r.position.x - radius,
+                    r.position.y - radius,
+                    radius * 2, radius * 2
+                };
+
+                mPainter->DrawImage(rect, r.angle, robotImg);
+            }
+
+            const auto &b = physicsState.ball;
+            mPainter->DrawImage({b.position.x-physicsProperties.ballRadius, b.position.y-physicsProperties.ballRadius, physicsProperties.ballRadius * 2, physicsProperties.ballRadius * 2}, b.angle, ballImg);
+
+            for (const auto &c : physicsState.robotRobotCollisions) {
+                const auto &ra = physicsState.robots[c.robotIdA];
+                const auto &rb = physicsState.robots[c.robotIdB];
+                const float size = physicsProperties.robotRadius * 4;
+
+                const PainterEngine::Rect rectA = {
+                    ra.position.x - size / 2,
+                    ra.position.y - size / 2,
+                    size, size
+                };
+                
+                const PainterEngine::Rect rectB = {
+                    rb.position.x - size / 2,
+                    rb.position.y - size / 2,
+                    size, size
+                };
+
+                mPainter->DrawImage(rectA, 0, hitImg);
+                mPainter->DrawImage(rectB, 0, hitImg);
+            }
+
+            for (int id : physicsState.robotFieldBoundsCollisions) {
+                const auto &r = physicsState.robots[id];
+                const float size = physicsProperties.robotRadius * 4;
+
+                const PainterEngine::Rect rect = {
+                    r.position.x - size / 2,
+                    r.position.y - size / 2,
+                    size, size
+                };
+
+                mPainter->DrawImage(rect, 0, outOfBoundsImg);
+            }
 
             mPainter->Draw();
             mWindowManager->Update();
+
+            frameCount++;
         }
+
+        mPhysicsServer->EndGame();
 
         return 0;
     }

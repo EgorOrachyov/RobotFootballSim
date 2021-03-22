@@ -1,5 +1,9 @@
 # Build directories (default for clion)
 /**/*build*
 
-# IDE fiels
+# IDE files
 /**/.idea
+/**/CMakeSettings.json
+/**/x64-Debug/
+/**/x64-Release/
+/**/.vs/
