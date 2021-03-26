@@ -30,7 +30,8 @@
 #include <graphics/WindowManager.hpp>
 #include <graphics/GraphicsServer.hpp>
 #include <physics/PhysicsServer.hpp>
-#include <AlgorithmManager.hpp>
+#include <logic/AlgorithmManager.hpp>
+#include <logic/Game.hpp>
 
 namespace rfsim {
 
@@ -66,9 +67,13 @@ namespace rfsim {
         const float fieldWidth = 9;
 
         auto algo = mAlgorithmManager->Load("randommove");
+        auto game = std::make_shared<Game>();
+
+        // Team size (total x2 robots)
+        game->teamSize = 6;
 
         // todo: change properties to real ones
-        PhysicsGameProperties physicsProperties = {};
+        auto& physicsProperties = game->physicsGameProperties;
         physicsProperties.fieldFriction = 0.5f;
         physicsProperties.robotRadius = 0.2f;
         physicsProperties.robotHeight = 0.1f;
@@ -84,17 +89,23 @@ namespace rfsim {
 
         mPhysicsServer->SetGameProperties(physicsProperties);
 
-        PhysicsGameInitInfo beginInfo = {};
+        // Field settings will be fixed (but ball placement can differ)
+        auto& beginInfo = game->physicsGameInitInfo;
         beginInfo.fieldTopLeftBounds     = { 0.5f, 0.5f };
         beginInfo.fieldBottomRightBounds = { fieldLength - 0.5f,  fieldWidth - 0.5f };
         beginInfo.roomTopLeftBounds      = { 0, 0 };
         beginInfo.roomBottomRightBounds  = { fieldLength, fieldWidth };
         beginInfo.ballPosition = { fieldLength * 0.5f, fieldWidth * 0.5f };
-        for (int i = 0; i < 6; i++) {
+
+        // Initial robots placement
+        for (int i = 0; i < game->teamSize; i++) {
             beginInfo.robotsTeamA.push_back({ i,     { fieldLength * 0.25f, fieldWidth * 0.5f + fieldWidth * 0.3f * ((i - 2.5f) / 2.5f) }, 0 });
-            beginInfo.robotsTeamB.push_back({ i + 6, { fieldLength * 0.75f, fieldWidth * 0.5f + fieldWidth * 0.3f * ((i - 2.5f) / 2.5f) }, pi });
+            game->robotMotorPowerA.emplace_back(0,0);
+            beginInfo.robotsTeamB.push_back({ (int)(i + game->teamSize), { fieldLength * 0.75f, fieldWidth * 0.5f + fieldWidth * 0.3f * ((i - 2.5f) / 2.5f) }, pi });
+            game->robotMotorPowerB.emplace_back(0,0);
         }
 
+        // Graphics is exact copy of ph settings + init info
         GraphicsSceneSettings sceneSettings;
         sceneSettings.ballRadius = physicsProperties.ballRadius;
         sceneSettings.ballPosition = beginInfo.ballPosition;
@@ -108,19 +119,19 @@ namespace rfsim {
 
         mPhysicsServer->BeginGame(beginInfo);
         mGraphicsServer->BeginGame(sceneSettings);
+        algo->BeginGame(*game);
 
         float dt = 1.0f / 60.0f;
         uint64_t frameCount = 0;
 
         while (!mPrimaryWindow->ShouldClose()) {
-
-            // todo: remove (it is algo specific logic)
-            for (int i = 0; i < beginInfo.robotsTeamA.size() * 2; i++) {
-                mPhysicsServer->UpdateMotorsPower(i, 40 * (float)rand() / RAND_MAX, 70 * (float)rand() / RAND_MAX);
-            }
+            // Update loop strategy:
+            // 1) Update physics - simulate game with step (step is prev frame delta)
+            // 2) Draw game state and gui
+            // 3) Tick algorithm control (if required)
+            // 4) Update physics settings (motors power) (if required)
 
             PhysicsGameState state;
-
             mPhysicsServer->GameStep(dt);
             mPhysicsServer->GetCurrentGameState(state);
 
@@ -134,9 +145,25 @@ namespace rfsim {
             mWindowManager->Update();
             mPainter->FitToFramebufferArea();
 
+            game->physicsGameState = state;
+            algo->TickGame(*game);
+
+            for (int i = 0; i < game->teamSize; i++) {
+                auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
+                auto power = game->robotMotorPowerA[i];
+                mPhysicsServer->UpdateMotorsPower(id, power.x, power.y);
+            }
+
+            for (int i = 0; i < game->teamSize; i++) {
+                auto id = game->physicsGameInitInfo.robotsTeamB[i].id;
+                auto power = game->robotMotorPowerB[i];
+                mPhysicsServer->UpdateMotorsPower(id, power.x, power.y);
+            }
+
             frameCount++;
         }
 
+        algo->EndGame(*game);
         mGraphicsServer->EndGame();
         mPhysicsServer->EndGame();
 

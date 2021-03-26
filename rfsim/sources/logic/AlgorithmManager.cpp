@@ -22,39 +22,52 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_ALGORITHM_HPP
-#define RFSIM_ALGORITHM_HPP
-
-#include <rfsim/rfsim.h>
-#include <dynalo/dynalo.hpp>
+#include <logic/AlgorithmManager.hpp>
+#include <iostream>
+#include <cassert>
 
 namespace rfsim {
 
-    /**
-     * Wrapper for dynamically loaded algorithm
-     */
-    class Algorithm {
-    public:
-        ~Algorithm();
+    AlgorithmManager::AlgorithmManager(const std::string &prefixPath) {
+        mPrefixPath = prefixPath;
+    }
 
-        bool Init(dynalo::library& library);
-        void GetAboutInfo(std::string& info);
+    AlgorithmManager::~AlgorithmManager() {
+        mAlgorithms.clear();
+        mLibs.clear();
+    }
 
-        void BeginGame();
-        void TickGame();
-        void EndGame();
+    std::shared_ptr<Algorithm> AlgorithmManager::Load(const std::string& name) {
+        const auto SEP = "/";
+        std::string libPath = mPrefixPath + SEP + dynalo::to_native_name(name);
+        std::shared_ptr<dynalo::library> lib = std::make_shared<dynalo::library>(libPath);
 
-    private:
-        rfsim_init_type initFunction{};
-        rfsim_finalize_type finalizeFunction{};
-        rfsim_begin_game_type beginGameFunction{};
-        rfsim_tick_game_type tickGameFunction{};
-        rfsim_end_game_type endGameFunction{};
-        rfsim_algo_state algoState{};
+        std::shared_ptr<Algorithm> algo = std::make_shared<Algorithm>();
 
-        bool initialized = false;
-    };
+        if (algo->Init(*lib)) {
+            std::cout << "AlgorithmManager: load plugin: " << libPath << std::endl;
+            mAlgorithms.push_back(algo);
+            mLibs.push_back(lib);
+            return algo;
+        }
+
+        return nullptr;
+    }
+
+    std::shared_ptr<Algorithm> AlgorithmManager::GetAlgorithmAt(unsigned int i) {
+        assert(i < mAlgorithms.size());
+        return mAlgorithms[i];
+    }
+
+    void AlgorithmManager::GetAlgorithmsInfo(std::vector<std::string> &info) {
+        info.clear();
+        info.reserve(mAlgorithms.size());
+
+        for (auto& algo: mAlgorithms) {
+            std::string text;
+            algo->GetAboutInfo(text);
+            info.push_back(std::move(text));
+        }
+    }
 
 }
-
-#endif //RFSIM_ALGORITHM_HPP

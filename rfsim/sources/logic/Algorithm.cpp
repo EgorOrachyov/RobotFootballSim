@@ -22,10 +22,31 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#include <Algorithm.hpp>
+#include <logic/Algorithm.hpp>
 #include <iostream>
 
 namespace rfsim {
+
+    static rfsim_vec2 to_rfsim_vec2(const glm::vec2& v) {
+        rfsim_vec2 r;
+        r.x = v.x;
+        r.y = v.y;
+        return r;
+    }
+
+    struct rfsim_control to_rfsim_control(const glm::vec2& v) {
+        rfsim_control r;
+        r.left_motor_force = v.x;
+        r.right_motor_force = v.y;
+        return r;
+    }
+
+    static glm::vec2 to_vec2(const rfsim_control& c) {
+        glm::vec2 r;
+        r.x = c.left_motor_force;
+        r.y = c.right_motor_force;
+        return r;
+    }
 
     Algorithm::~Algorithm() {
         if (initialized) {
@@ -56,16 +77,74 @@ namespace rfsim {
         info = algoState.name;
     }
 
-    void Algorithm::BeginGame() {
+    void Algorithm::BeginGame(Game& game) {
+        auto& pII = game.physicsGameInitInfo;
+        auto& pP = game.physicsGameProperties;
 
+        rfsim_game_settings gameSettings{};
+        gameSettings.ball_radius = pP.ballRadius;
+        gameSettings.robot_radius = pP.robotRadius;
+        gameSettings.field_Size = to_rfsim_vec2(pII.roomBottomRightBounds - pII.roomTopLeftBounds);
+
+        rfsim_game_start_info startInfo{};
+        startInfo.ball.position = to_rfsim_vec2(pII.ballPosition);
+        startInfo.ball.angle = 0.0f;
+        startInfo.team_size = (int) game.teamSize;
+
+        for (int i = 0; i < game.teamSize; i++) {
+            auto& r = pII.robotsTeamA[i];
+            startInfo.team_a[i].angle = r.angle;
+            startInfo.team_a[i].position = to_rfsim_vec2(r.position);
+        }
+
+        for (int i = 0; i < game.teamSize; i++) {
+            auto& r = pII.robotsTeamB[i];
+            startInfo.team_b[i].angle = r.angle;
+            startInfo.team_b[i].position = to_rfsim_vec2(r.position);
+        }
+
+        assert(beginGameFunction(&algoState, &gameSettings, &startInfo) == rfsim_status_success);
     }
 
-    void Algorithm::TickGame() {
+    void Algorithm::TickGame(Game& game) {
+        auto& pS = game.physicsGameState;
+        auto& pII = game.physicsGameInitInfo;
 
+        rfsim_game_state_info stateInfo;
+        stateInfo.ball.position = to_rfsim_vec2(pS.ball.position);
+        stateInfo.ball.angle = pS.ball.angle;
+
+        // Set robot data and power for team A
+        for (int i = 0; i < game.teamSize; i++) {
+            auto id = pII.robotsTeamA[i].id;
+            auto& r = pS.robots[id];
+
+            stateInfo.team_a[i].angle = r.angle;
+            stateInfo.team_a[i].position = to_rfsim_vec2(r.position);
+            stateInfo.team_a_control[i] = to_rfsim_control(game.robotMotorPowerA[i]);
+        }
+
+        // Set robot data and power for team B
+        for (int i = 0; i < game.teamSize; i++) {
+            auto id = pII.robotsTeamB[i].id;
+            auto& r = pS.robots[id];
+
+            stateInfo.team_b[i].angle = r.angle;
+            stateInfo.team_b[i].position = to_rfsim_vec2(r.position);
+            stateInfo.team_b_control[i] = to_rfsim_control(game.robotMotorPowerB[i]);
+        }
+
+        assert(tickGameFunction(&algoState, &stateInfo) == rfsim_status_success);
+
+        // Copy power info
+        for (int i = 0; i < game.teamSize; i++) {
+            game.robotMotorPowerA[i] = to_vec2(stateInfo.team_a_control[i]);
+            game.robotMotorPowerB[i] = to_vec2(stateInfo.team_b_control[i]);
+        }
     }
 
-    void Algorithm::EndGame() {
-
+    void Algorithm::EndGame(Game& game) {
+        assert(endGameFunction(&algoState) == rfsim_status_success);
     }
 
 }

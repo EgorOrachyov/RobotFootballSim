@@ -22,34 +22,40 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_ALGORITHMMANAGER_HPP
-#define RFSIM_ALGORITHMMANAGER_HPP
+#ifndef RFSIM_ALGORITHM_HPP
+#define RFSIM_ALGORITHM_HPP
 
-#include <Algorithm.hpp>
+#include <logic/Game.hpp>
+#include <rfsim/rfsim.h>
 #include <dynalo/dynalo.hpp>
-#include <vector>
-#include <memory>
-#include <string>
 
 namespace rfsim {
 
-    class AlgorithmManager {
+    /**
+     * Wrapper for dynamically loaded algorithm
+     */
+    class Algorithm {
     public:
-        explicit AlgorithmManager(const std::string& prefixPath);
-        AlgorithmManager(const AlgorithmManager& other) = delete;
-        AlgorithmManager(AlgorithmManager&& other) noexcept = delete;
-        ~AlgorithmManager();
+        ~Algorithm();
 
-        std::shared_ptr<Algorithm> Load(const std::string& name);
-        std::shared_ptr<Algorithm> GetAlgorithmAt(unsigned int i);
-        void GetAlgorithmsInfo(std::vector<std::string> &info);
+        bool Init(dynalo::library& library);
+        void GetAboutInfo(std::string& info);
+
+        void BeginGame(Game& game);
+        void TickGame(Game& game);
+        void EndGame(Game& game);
 
     private:
-        std::string mPrefixPath;
-        std::vector<std::shared_ptr<Algorithm>> mAlgorithms;
-        std::vector<std::shared_ptr<dynalo::library>> mLibs;
+        rfsim_init_type initFunction{};
+        rfsim_finalize_type finalizeFunction{};
+        rfsim_begin_game_type beginGameFunction{};
+        rfsim_tick_game_type tickGameFunction{};
+        rfsim_end_game_type endGameFunction{};
+        rfsim_algo_state algoState{};
+
+        bool initialized = false;
     };
 
 }
 
-#endif //RFSIM_ALGORITHMMANAGER_HPP
+#endif //RFSIM_ALGORITHM_HPP

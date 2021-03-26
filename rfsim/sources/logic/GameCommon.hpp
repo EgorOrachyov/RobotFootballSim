@@ -22,52 +22,31 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#include <AlgorithmManager.hpp>
-#include <iostream>
-#include <cassert>
+#ifndef RFSIM_GAMECOMMON_HPP
+#define RFSIM_GAMECOMMON_HPP
+
+#include <glm/vec2.hpp>
 
 namespace rfsim {
 
-    AlgorithmManager::AlgorithmManager(const std::string &prefixPath) {
-        mPrefixPath = prefixPath;
-    }
+    struct RobotInitInfo {
+        int         id;
+        glm::vec2   position;
+        // Angle in radians
+        float       angle;
+    };
 
-    AlgorithmManager::~AlgorithmManager() {
-        mAlgorithms.clear();
-        mLibs.clear();
-    }
+    struct BodyState {
+        glm::vec2   position = {};
+        glm::vec2   velocity = {};
+        float       angle = 0;
+    };
 
-    std::shared_ptr<Algorithm> AlgorithmManager::Load(const std::string& name) {
-        const auto SEP = "/";
-        std::string libPath = mPrefixPath + SEP + dynalo::to_native_name(name);
-        std::shared_ptr<dynalo::library> lib = std::make_shared<dynalo::library>(libPath);
-
-        std::shared_ptr<Algorithm> algo = std::make_shared<Algorithm>();
-
-        if (algo->Init(*lib)) {
-            std::cout << "AlgorithmManager: load plugin: " << libPath << std::endl;
-            mAlgorithms.push_back(algo);
-            mLibs.push_back(lib);
-            return algo;
-        }
-
-        return nullptr;
-    }
-
-    std::shared_ptr<Algorithm> AlgorithmManager::GetAlgorithmAt(unsigned int i) {
-        assert(i < mAlgorithms.size());
-        return mAlgorithms[i];
-    }
-
-    void AlgorithmManager::GetAlgorithmsInfo(std::vector<std::string> &info) {
-        info.clear();
-        info.reserve(mAlgorithms.size());
-
-        for (auto& algo: mAlgorithms) {
-            std::string text;
-            algo->GetAboutInfo(text);
-            info.push_back(std::move(text));
-        }
-    }
+    struct RobotCollisionInfo {
+        int robotIdA = -1;
+        int robotIdB = -1;
+    };
 
 }
+
+#endif //RFSIM_GAMECOMMON_HPP

@@ -25,7 +25,8 @@
 #ifndef RFSIM_PHYSICSGAMESTATE_HPP
 #define RFSIM_PHYSICSGAMESTATE_HPP
 
-#include <GameCommon.hpp>
+#include <logic/GameCommon.hpp>
+#include <vector>
 
 namespace rfsim {
 

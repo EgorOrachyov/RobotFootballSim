@@ -8,9 +8,9 @@ various game strategies and game mechanics.
 
 ### Features
 
-- [ ] Dynamic algorithms loading
-- [ ] Simulated 2d physics of the game
-- [ ] 2d rendering for the football game
+- [X] Dynamic algorithms loading
+- [X] Simulated 2d physics of the game
+- [X] 2d rendering for the football game
 - [ ] Game logic and rules 
 - [ ] GUI application, widgets and menus
 

@@ -25,6 +25,10 @@
 #define RFSIM_EXPORTS
 #include <rfsim/rfsim.h>
 #include <iostream>
+#include <random>
+#include <chrono>
+
+static int teamSize = 0;
 
 RFSIM_DEFINE_FUNCTION_INIT {
     std::cout << "RandomMovement: RFSIM_DEFINE_FUNCTION_INIT" << std::endl;
@@ -33,11 +37,25 @@ RFSIM_DEFINE_FUNCTION_INIT {
 
 RFSIM_DEFINE_FUNCTION_BEGIN_GAME {
     std::cout << "RandomMovement: RFSIM_DEFINE_FUNCTION_BEGIN_GAME" << std::endl;
+    teamSize = start->team_size;
     return rfsim_status_success;
 };
 
 RFSIM_DEFINE_FUNCTION_TICK_GAME {
     std::cout << "RandomMovement: RFSIM_DEFINE_FUNCTION_TICK_GAME" << std::endl;
+    std::default_random_engine engine(std::chrono::system_clock::now().time_since_epoch().count());
+    auto dist = std::uniform_real_distribution<float>(0.0, 1.0);
+
+    for (int i = 0; i < teamSize; i++) {
+        state->team_a_control[i].left_motor_force = 70.0f * dist(engine);
+        state->team_a_control[i].right_motor_force = 45.0f * dist(engine);
+    }
+
+    for (int i = 0; i < teamSize; i++) {
+        state->team_b_control[i].left_motor_force = 50.0f * dist(engine);
+        state->team_b_control[i].right_motor_force = 65.0f * dist(engine);
+    }
+
     return rfsim_status_success;
 };
 

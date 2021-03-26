@@ -216,7 +216,7 @@ namespace rfsim {
 
             mBall = mWorld->CreateBody(&dynamicBodyDef);
 
-            const double r = (double)mProperties.ballRadius;
+            const auto r = (double)mProperties.ballRadius;
             const double ballVolume = 4.0 / 3.0 * glm::pi<double>() * r * r * r;
             assert(ballVolume > 0.0);
 

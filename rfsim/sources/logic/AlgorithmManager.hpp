@@ -22,33 +22,34 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GAMECOMMON_HPP
-#define RFSIM_GAMECOMMON_HPP
+#ifndef RFSIM_ALGORITHMMANAGER_HPP
+#define RFSIM_ALGORITHMMANAGER_HPP
 
-#include <physics/PhysicsGameState.hpp>
-#include <glm/vec2.hpp>
+#include <logic/Algorithm.hpp>
+#include <dynalo/dynalo.hpp>
 #include <vector>
+#include <memory>
+#include <string>
 
 namespace rfsim {
 
-    struct RobotInitInfo {
-        int         id;
-        glm::vec2   position;
-        // Angle in radians
-        float       angle;
-    };
+    class AlgorithmManager {
+    public:
+        explicit AlgorithmManager(const std::string& prefixPath);
+        AlgorithmManager(const AlgorithmManager& other) = delete;
+        AlgorithmManager(AlgorithmManager&& other) noexcept = delete;
+        ~AlgorithmManager();
 
-    struct BodyState {
-        glm::vec2   position = {};
-        glm::vec2   velocity = {};
-        float       angle = 0;
-    };
+        std::shared_ptr<Algorithm> Load(const std::string& name);
+        std::shared_ptr<Algorithm> GetAlgorithmAt(unsigned int i);
+        void GetAlgorithmsInfo(std::vector<std::string> &info);
 
-    struct RobotCollisionInfo {
-        int robotIdA = -1;
-        int robotIdB = -1;
+    private:
+        std::string mPrefixPath;
+        std::vector<std::shared_ptr<Algorithm>> mAlgorithms;
+        std::vector<std::shared_ptr<dynalo::library>> mLibs;
     };
 
 }
 
-#endif //RFSIM_GAMECOMMON_HPP
+#endif //RFSIM_ALGORITHMMANAGER_HPP

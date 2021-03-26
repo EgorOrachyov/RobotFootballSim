@@ -7,8 +7,7 @@ set(RFSIM_C_API
 set(RFSIM_SOURCES
         sources/Main.cpp
         sources/Simulator.cpp
-        sources/Simulator.hpp
-        sources/GameCommon.hpp sources/Algorithm.hpp sources/AlgorithmManager.cpp sources/AlgorithmManager.hpp sources/Algorithm.cpp sources/Game.hpp)
+        sources/Simulator.hpp)
 
 set(RFSIM_GRAPHICS_SOURCES
         sources/graphics/Window.cpp
@@ -47,13 +46,22 @@ set(RFSIM_PHYSICS_SOURCES
         sources/physics/PhysicsGameInitInfo.hpp
         sources/physics/PhysicsGameState.hpp)
 
+set(RFSIM_LOGIC_SOURCES
+        sources/logic/Game.hpp
+        sources/logic/GameCommon.hpp
+        sources/logic/Algorithm.cpp
+        sources/logic/Algorithm.hpp
+        sources/logic/AlgorithmManager.cpp
+        sources/logic/AlgorithmManager.hpp)
+
 add_executable(rfsim
         ${RFSIM_C_API}
         ${RFSIM_SOURCES}
         ${RFSIM_GRAPHICS_SOURCES}
         ${RFSIM_OPENGL_SOURCES}
         ${RFSIM_SHADERS}
-        ${RFSIM_PHYSICS_SOURCES})
+        ${RFSIM_PHYSICS_SOURCES}
+        ${RFSIM_LOGIC_SOURCES})
 
 target_include_directories(rfsim PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_include_directories(rfsim PRIVATE ${CMAKE_CURRENT_LIST_DIR}/sources)

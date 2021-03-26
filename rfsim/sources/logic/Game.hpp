@@ -31,10 +31,22 @@
 
 namespace rfsim {
 
+    /**
+     * @brief Game state
+     * Game specific information.
+     * This structure must be created for each new game.
+     */
     struct Game {
+        unsigned int teamSize = 0;
+        unsigned int teamScoreA = 0;
+        unsigned int teamScoreB = 0;
+
         PhysicsGameState physicsGameState;
         PhysicsGameInitInfo physicsGameInitInfo;
         PhysicsGameProperties physicsGameProperties;
+
+        std::vector<glm::vec2> robotMotorPowerA;
+        std::vector<glm::vec2> robotMotorPowerB;
     };
 
 }
