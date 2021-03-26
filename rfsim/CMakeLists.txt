@@ -14,16 +14,16 @@ set(RFSIM_GRAPHICS_SOURCES
         sources/graphics/Window.hpp
         sources/graphics/WindowManager.cpp
         sources/graphics/WindowManager.hpp
-        sources/graphics/PainterEngine.cpp
-        sources/graphics/PainterEngine.hpp
+        sources/graphics/Painter.cpp
+        sources/graphics/Painter.hpp
+        sources/graphics/PainterItems.hpp
         sources/graphics/GraphicsServer.cpp
         sources/graphics/GraphicsServer.hpp
         sources/graphics/GraphicsSettings.hpp
         sources/graphics/GraphicsGameState.hpp
         sources/graphics/GraphicsSceneSettings.hpp
         sources/graphics/Image.cpp
-        sources/graphics/Image.hpp
-        sources/graphics/PainterItems.hpp)
+        sources/graphics/Image.hpp)
 
 set(RFSIM_OPENGL_SOURCES
         sources/opengl/GLDynamicBuffer.hpp
@@ -54,6 +54,15 @@ set(RFSIM_LOGIC_SOURCES
         sources/logic/AlgorithmManager.cpp
         sources/logic/AlgorithmManager.hpp)
 
+set(RFSIM_GUI_SOURCES
+        sources/gui/GuiApplication.cpp
+        sources/gui/GuiApplication.hpp
+        sources/gui/GuiInGameMenu.cpp
+        sources/gui/GuiInGameMenu.hpp
+        sources/gui/GuiMainMenu.cpp
+        sources/gui/GuiMainMenu.hpp
+        sources/gui/GuiWidget.hpp sources/gui/GuiStyle.hpp)
+
 add_executable(rfsim
         ${RFSIM_C_API}
         ${RFSIM_SOURCES}
@@ -61,7 +70,8 @@ add_executable(rfsim
         ${RFSIM_OPENGL_SOURCES}
         ${RFSIM_SHADERS}
         ${RFSIM_PHYSICS_SOURCES}
-        ${RFSIM_LOGIC_SOURCES})
+        ${RFSIM_LOGIC_SOURCES}
+        ${RFSIM_GUI_SOURCES})
 
 target_include_directories(rfsim PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_include_directories(rfsim PRIVATE ${CMAKE_CURRENT_LIST_DIR}/sources)
@@ -85,10 +95,8 @@ endforeach()
 set_target_properties(rfsim PROPERTIES CXX_STANDARD 14)
 set_target_properties(rfsim PROPERTIES CXX_STANDARD_REQUIRED ON)
 
-target_link_libraries(rfsim PRIVATE glfw)
-target_link_libraries(rfsim PRIVATE libglew_static)
-target_link_libraries(rfsim PRIVATE box2d)
 target_link_libraries(rfsim PRIVATE imgui)
+target_link_libraries(rfsim PRIVATE box2d)
 target_link_libraries(rfsim PRIVATE stb_image)
 target_link_libraries(rfsim PRIVATE glm)
 target_link_libraries(rfsim PRIVATE dynalo)

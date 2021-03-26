@@ -22,54 +22,70 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_SIMULATOR_HPP
-#define RFSIM_SIMULATOR_HPP
+#ifndef RFSIM_GUIAPPLICATION_HPP
+#define RFSIM_GUIAPPLICATION_HPP
 
+#include <graphics/Window.hpp>
+#include <graphics/WindowManager.hpp>
+#include <graphics/Painter.hpp>
+#include <graphics/GraphicsServer.hpp>
+#include <graphics/Image.hpp>
+#include <physics/PhysicsServer.hpp>
+#include <logic/AlgorithmManager.hpp>
+#include <gui/GuiInGameMenu.hpp>
+#include <gui/GuiMainMenu.hpp>
+#include <gui/GuiStyle.hpp>
 #include <memory>
-#include <vector>
-#include <string>
 
 namespace rfsim {
 
-    /**
-     * @brief Simulator main class.
-     *
-     * Manages sub-systems, update loop, application start-up and configuration parsing.
-     */
-    class Simulator {
+    class GuiApplication {
     public:
-        /**
-         * Create the simulator class.
-         *
-         * @param argc Number of the OS native app args
-         * @param argv AActual arguments
-         */
-        Simulator(int argc, const char* const* argv);
-        ~Simulator();
+        GuiApplication(const std::shared_ptr<Window> &window,
+                       const std::shared_ptr<WindowManager> &winMan,
+                       const std::shared_ptr<Painter> &painter,
+                       const std::shared_ptr<PhysicsServer> &physics,
+                       const std::shared_ptr<GraphicsServer> &graphics,
+                       const std::shared_ptr<AlgorithmManager> &algoMan,
+                       const std::string& resPath);
 
-        /**
-         * Run the main simulator update loop.
-         * This function returns control only when user closes the application.
-         *
-         * @return 0 if simulator successfully finished.
-         */
+        ~GuiApplication() = default;
+
         int Run();
+        GuiStyle& GetStyle();
 
     private:
-        std::string mResourcesPath = "../../resources";
-        std::string mPluginsPath = ".";
-        std::vector<std::string> mArgs;
+        friend class GuiMainMenu;
+        friend class GuiInGameMenu;
 
-        std::shared_ptr<class Window> mPrimaryWindow;
-        std::shared_ptr<class WindowManager> mWindowManager;
-        std::shared_ptr<class Painter> mPainter;
-        std::shared_ptr<class GraphicsServer> mGraphicsServer;
-        std::shared_ptr<class PhysicsServer> mPhysicsServer;
-        std::shared_ptr<class AlgorithmManager> mAlgorithmManager;
+        enum class GlobalState {
+            MainMenu,
+            PrepareGame,
+            InGame,
+        };
 
-        std::shared_ptr<class GuiApplication> mApplication;
+        float mFontScale = 2.0f;
+        float mGuiScale = 2.0f;
+
+        GlobalState mState = GlobalState::MainMenu;
+        GuiStyle mStyle;
+
+        std::string mResPath;
+
+        std::shared_ptr<Window> mWindow;
+        std::shared_ptr<WindowManager> mWindowManager;
+        std::shared_ptr<Painter> mPainter;
+        std::shared_ptr<GraphicsServer> mGraphicsServer;
+        std::shared_ptr<PhysicsServer> mPhysicsServer;
+        std::shared_ptr<AlgorithmManager> mAlgorithmManager;
+
+        std::shared_ptr<GuiMainMenu> mMainMenu;
+        std::shared_ptr<GuiInGameMenu> mInGameMenu;
+
+        std::shared_ptr<Image> mMainMenuLogo;
+        std::shared_ptr<Image> mMainMenuBall;
     };
 
 }
 
-#endif //RFSIM_SIMULATOR_HPP
+#endif //RFSIM_GUIAPPLICATION_HPP

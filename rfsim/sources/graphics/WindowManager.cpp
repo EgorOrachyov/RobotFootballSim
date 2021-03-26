@@ -78,10 +78,12 @@ namespace rfsim {
         return window;
     }
 
-    void WindowManager::Update() {
+    void WindowManager::UpdateEvents() {
         // OS events
         glfwPollEvents();
+    }
 
+    void WindowManager::SwapBuffers() {
         // Swap buffers to display GL drawn logic
         for (auto& window: mWindows) {
             GLFWwindow* hnd = window->GetNativeHnd();

@@ -28,16 +28,16 @@
 #include <opengl/GLTexture.hpp>
 #include <shaders/ImageDraw.hpp>
 #include <shaders/RectDraw.hpp>
-#include <graphics/PainterEngine.hpp>
+#include <graphics/Painter.hpp>
 #include <graphics/PainterItems.hpp>
 #include <unordered_map>
 #include <utility>
 
 namespace rfsim {
 
-    using Rect = PainterEngine::Rect;
-    using Recti = PainterEngine::Recti;
-    using Color = PainterEngine::Color;
+    using Rect = Painter::Rect;
+    using Recti = Painter::Recti;
+    using Color = Painter::Color;
 
     class PainterEnginePrivate {
     public:
@@ -129,12 +129,12 @@ namespace rfsim {
             mRectDrawGeometry = std::make_shared<GLDynamicGeometry>(2, true, GL_TRIANGLES, std::move(rectDrawLayout));
         }
 
-        void AddRect(const PainterEngine::Rect& r, float angle, const PainterEngine::Palette& palette) {
+        void AddRect(const Painter::Rect& r, float angle, const Painter::Palette& palette) {
             PainterRect rect(r, angle, palette, GetNextZ());
             mRects.push_back(rect);
         }
 
-        void AddImage(const PainterEngine::Rect &target, float angle, const std::shared_ptr<Image> &i, const PainterEngine::Palette& palette) {
+        void AddImage(const Painter::Rect &target, float angle, const std::shared_ptr<Image> &i, const Painter::Palette& palette) {
             auto found = mImageTexCache.find(i.get());
             auto texture = std::shared_ptr<GLTexture>{};
 
@@ -261,7 +261,7 @@ namespace rfsim {
         std::unordered_map<Image*, std::shared_ptr<GLTexture>> mImageTexCache;
     };
 
-    PainterEngine::PainterEngine(const Recti &area, const Rect& space, std::shared_ptr<Window> target)
+    Painter::Painter(const Recti &area, const Rect& space, std::shared_ptr<Window> target)
         : mArea(area),
           mSpace(space),
           mWindow(std::move(target)) {
@@ -269,90 +269,90 @@ namespace rfsim {
         mPrivate = std::make_shared<PainterEnginePrivate>();
     }
 
-    void PainterEngine::DrawLine(const Point &from, const Point &to) {
+    void Painter::DrawLine(const Point &from, const Point &to) {
 
     }
 
-    void PainterEngine::DrawRect(const Rect &rect, float angle) {
+    void Painter::DrawRect(const Rect &rect, float angle) {
         mPrivate->AddRect(rect, angle, mPalette);
     }
 
-    void PainterEngine::DrawEllipse(const Point &center, float radiusX, float radiusY) {
+    void Painter::DrawEllipse(const Point &center, float radiusX, float radiusY) {
 
     }
 
-    void PainterEngine::DrawCircle(const Point &center, float radius) {
+    void Painter::DrawCircle(const Point &center, float radius) {
 
     }
 
-    void PainterEngine::DrawImage(const Rect &target, float angle, const std::shared_ptr<Image> &image) {
+    void Painter::DrawImage(const Rect &target, float angle, const std::shared_ptr<Image> &image) {
         mPrivate->AddImage(target, angle, image, mPalette);
     }
 
-    void PainterEngine::Clear() {
+    void Painter::Clear() {
         mPrivate->Clear();
     }
 
-    void PainterEngine::Draw() {
+    void Painter::Draw() {
         mPrivate->Draw(mArea, mSpace, mWindow, mClearColor);
     }
 
-    void PainterEngine::FitToFramebufferArea() {
+    void Painter::FitToFramebufferArea() {
         // Update draw area with actual window framebuffer size
         auto areaSize = mWindow->GetFramebufferSize();
         SetDrawArea({0, 0, areaSize[0], areaSize[1]});
     }
 
-    void PainterEngine::SetDrawArea(const Recti &area) {
+    void Painter::SetDrawArea(const Recti &area) {
         mArea = area;
     }
 
-    void PainterEngine::SetDrawSpace(const Rect &space) {
+    void Painter::SetDrawSpace(const Rect &space) {
         mSpace = space;
     }
 
-    void PainterEngine::SetPenColor(const Color &color) {
+    void Painter::SetPenColor(const Color &color) {
         mPalette.penColor = color;
     }
 
-    void PainterEngine::SetPenWidth(unsigned int width) {
+    void Painter::SetPenWidth(unsigned int width) {
         assert(width >= 1);
         mPalette.penWidth = width;
     }
 
-    void PainterEngine::SetBrushColor(const Color &color) {
+    void Painter::SetBrushColor(const Color &color) {
         mPalette.brushColor = color;
     }
 
-    void PainterEngine::SetTransparentColor(const Color &color) {
+    void Painter::SetTransparentColor(const Color &color) {
         mPalette.transparentColor = color;
     }
 
-    void PainterEngine::SetFilling(bool fill) {
+    void Painter::SetFilling(bool fill) {
         mPalette.filled = fill;
     }
 
-    void PainterEngine::SetClearColor(const Color &color) {
+    void Painter::SetClearColor(const Color &color) {
         mClearColor = color;
     }
 
-    void PainterEngine::SetDrawPalette(const Palette &palette) {
+    void Painter::SetDrawPalette(const Palette &palette) {
         mPalette = palette;
     }
 
-    const PainterEngine::Recti & PainterEngine::GetDrawArea() const {
+    const Painter::Recti & Painter::GetDrawArea() const {
         return mArea;
     }
 
-    const PainterEngine::Rect & PainterEngine::GetDrawSpace() const {
+    const Painter::Rect & Painter::GetDrawSpace() const {
         return mSpace;
     }
 
-    const PainterEngine::Palette & PainterEngine::GetDrawPalette() const {
+    const Painter::Palette & Painter::GetDrawPalette() const {
         return mPalette;
     }
 
-    const std::shared_ptr<Window> &PainterEngine::GetWindow() const {
+    const std::shared_ptr<Window> &Painter::GetWindow() const {
         return mWindow;
     }
 

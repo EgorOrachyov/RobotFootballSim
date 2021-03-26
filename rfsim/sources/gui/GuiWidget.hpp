@@ -22,54 +22,29 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_SIMULATOR_HPP
-#define RFSIM_SIMULATOR_HPP
-
-#include <memory>
-#include <vector>
-#include <string>
+#ifndef RFSIM_GUIWIDGET_HPP
+#define RFSIM_GUIWIDGET_HPP
 
 namespace rfsim {
 
-    /**
-     * @brief Simulator main class.
-     *
-     * Manages sub-systems, update loop, application start-up and configuration parsing.
-     */
-    class Simulator {
+    /** Basic ingui based widget interface (with some sim specific logic) */
+    class GuiWidget {
     public:
-        /**
-         * Create the simulator class.
-         *
-         * @param argc Number of the OS native app args
-         * @param argv AActual arguments
-         */
-        Simulator(int argc, const char* const* argv);
-        ~Simulator();
+        virtual ~GuiWidget() = default;
 
-        /**
-         * Run the main simulator update loop.
-         * This function returns control only when user closes the application.
-         *
-         * @return 0 if simulator successfully finished.
-         */
-        int Run();
+        /**  Refresh state data (called when data inside widget were changed) */
+         virtual void Refresh() = 0;
 
-    private:
-        std::string mResourcesPath = "../../resources";
-        std::string mPluginsPath = ".";
-        std::vector<std::string> mArgs;
+        /** Called when widget changes state from hidden to shown */
+        virtual void Restore() = 0;
 
-        std::shared_ptr<class Window> mPrimaryWindow;
-        std::shared_ptr<class WindowManager> mWindowManager;
-        std::shared_ptr<class Painter> mPainter;
-        std::shared_ptr<class GraphicsServer> mGraphicsServer;
-        std::shared_ptr<class PhysicsServer> mPhysicsServer;
-        std::shared_ptr<class AlgorithmManager> mAlgorithmManager;
+        /** Called each tick when widget is shown */
+        virtual void Update() = 0;
 
-        std::shared_ptr<class GuiApplication> mApplication;
+        /** Called when widget changes state from shown to hidden */
+        virtual void Hide() = 0;
     };
 
 }
 
-#endif //RFSIM_SIMULATOR_HPP
+#endif //RFSIM_GUIWIDGET_HPP

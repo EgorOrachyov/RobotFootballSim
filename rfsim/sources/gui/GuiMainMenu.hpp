@@ -22,54 +22,45 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_SIMULATOR_HPP
-#define RFSIM_SIMULATOR_HPP
+#ifndef RFSIM_GUIMAINMENU_HPP
+#define RFSIM_GUIMAINMENU_HPP
 
-#include <memory>
+#include <gui/GuiWidget.hpp>
 #include <vector>
 #include <string>
 
 namespace rfsim {
 
-    /**
-     * @brief Simulator main class.
-     *
-     * Manages sub-systems, update loop, application start-up and configuration parsing.
-     */
-    class Simulator {
+    class GuiMainMenu: public GuiWidget {
     public:
-        /**
-         * Create the simulator class.
-         *
-         * @param argc Number of the OS native app args
-         * @param argv AActual arguments
-         */
-        Simulator(int argc, const char* const* argv);
-        ~Simulator();
+        explicit GuiMainMenu(class GuiApplication& app);
+        ~GuiMainMenu() override = default;
 
-        /**
-         * Run the main simulator update loop.
-         * This function returns control only when user closes the application.
-         *
-         * @return 0 if simulator successfully finished.
-         */
-        int Run();
+        void Refresh() override;
+        void Restore() override;
+        void Update() override;
+        void Hide() override;
+
+        bool BeginGame() const;
+        bool Exit() const;
+        int GetSelectedScenarioId() const;
+        int GetSelectedAlgorithmId() const;
 
     private:
-        std::string mResourcesPath = "../../resources";
-        std::string mPluginsPath = ".";
-        std::vector<std::string> mArgs;
+        bool mBeginGame = false;
+        bool mExit = false;
 
-        std::shared_ptr<class Window> mPrimaryWindow;
-        std::shared_ptr<class WindowManager> mWindowManager;
-        std::shared_ptr<class Painter> mPainter;
-        std::shared_ptr<class GraphicsServer> mGraphicsServer;
-        std::shared_ptr<class PhysicsServer> mPhysicsServer;
-        std::shared_ptr<class AlgorithmManager> mAlgorithmManager;
+        int mSelectedScenario = -1;
+        int mSelectedAlgo = -1;
 
-        std::shared_ptr<class GuiApplication> mApplication;
+        std::vector<std::string> mScenarios;
+        std::vector<const char*> mScenariosRaw;
+        std::vector<std::string> mAlgorithms;
+        std::vector<const char*> mAlgorithmsRaw;
+
+        class GuiApplication& mApp;
     };
 
 }
 
-#endif //RFSIM_SIMULATOR_HPP
+#endif //RFSIM_GUIMAINMENU_HPP

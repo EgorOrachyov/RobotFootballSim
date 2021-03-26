@@ -23,6 +23,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 #include <graphics/GraphicsServer.hpp>
+#include <glm/gtx/norm.hpp>
 
 namespace rfsim {
 
@@ -31,7 +32,7 @@ namespace rfsim {
     static constexpr auto SHADOW_COLOR = glm::vec4(0.1, 0.1, 0.1, 1.5f);
 
     GraphicsServer::GraphicsServer(const std::shared_ptr<Window> &window,
-                                   const std::shared_ptr<PainterEngine> &painter,
+                                   const std::shared_ptr<Painter> &painter,
                                    const std::string& resPath) {
         mWindow = window;
         mPainter = painter;
@@ -106,7 +107,7 @@ namespace rfsim {
         for (const auto &r: mCurrentState.robots) {
             const auto radius = mSceneSettings.robotRadius;
 
-            const PainterEngine::Rect rect = {
+            const Painter::Rect rect = {
                 r.position.x - radius,
                 r.position.y - radius,
                 radius * 2.0f,
@@ -129,7 +130,7 @@ namespace rfsim {
             const auto &b = mCurrentState.ball;
             const auto radius = mSceneSettings.ballRadius;
 
-            const PainterEngine::Rect rect = {
+            const Painter::Rect rect = {
                     b.position.x - radius,
                     b.position.y - radius,
                     radius * 2.0f,
@@ -142,9 +143,14 @@ namespace rfsim {
                 mPainter->DrawImage(rect + glm::vec4{0,radius * 0.8,0,0}, 0, mShadowImage);
             }
 
+            // Cool hack to make ball rotate
+            float direction = b.velocity.x >= 0.0f? -1.0f: 1.0f;
+            float magnitude = glm::length(b.velocity);
+            float angle = direction * magnitude;
+
             mPainter->SetBrushColor(WHITE_COLOR);
             mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
-            mPainter->DrawImage(rect, b.angle, mBallImage);
+            mPainter->DrawImage(rect, angle, mBallImage);
         }
     }
 
@@ -154,19 +160,19 @@ namespace rfsim {
         // Draw info about collisions on top of the robots
         if (mSettings.drawCollisionInfo) {
             for (const auto &c : mCurrentState.robotRobotCollisions) {
-                const float factor = 2.0f;
+                const float factor = 1.0f;
                 const float size = mSceneSettings.robotRadius * 2 * factor;
 
                 const auto &ra = mCurrentState.robots[c.robotIdA];
                 const auto &rb = mCurrentState.robots[c.robotIdB];
 
-                const PainterEngine::Rect rectA = {
+                const Painter::Rect rectA = {
                     ra.position.x - size / 2,
                     ra.position.y - size / 2,
                     size, size
                 };
 
-                const PainterEngine::Rect rectB = {
+                const Painter::Rect rectB = {
                     rb.position.x - size / 2,
                     rb.position.y - size / 2,
                     size, size
@@ -185,7 +191,7 @@ namespace rfsim {
 
                 const auto &r = mCurrentState.robots[id];
 
-                const PainterEngine::Rect rect = {
+                const Painter::Rect rect = {
                     r.position.x - size / 2.0f,
                     r.position.y - size / 2.0f,
                     size, size

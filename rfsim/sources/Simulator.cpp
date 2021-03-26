@@ -24,14 +24,14 @@
 
 #include <Simulator.hpp>
 
-#include <cmath>
 #include <glm/gtc/constants.hpp>
-#include <graphics/PainterEngine.hpp>
+#include <graphics/Painter.hpp>
 #include <graphics/WindowManager.hpp>
 #include <graphics/GraphicsServer.hpp>
 #include <physics/PhysicsServer.hpp>
 #include <logic/AlgorithmManager.hpp>
 #include <logic/Game.hpp>
+#include <gui/GuiApplication.hpp>
 
 namespace rfsim {
 
@@ -44,14 +44,16 @@ namespace rfsim {
         // Setup main window and window manager
         mWindowManager = std::make_shared<WindowManager>();
         mPrimaryWindow = mWindowManager->CreateWindow({1280, 720}, "Robot Football Sim");
-        mPainter = std::make_shared<PainterEngine>(glm::ivec4{0, 0, 1280, 720}, glm::vec4{0, 0, 1280, 720}, mPrimaryWindow);
+        mPainter = std::make_shared<Painter>(glm::ivec4{0, 0, 1280, 720}, glm::vec4{0, 0, 1280, 720}, mPrimaryWindow);
         mGraphicsServer = std::make_shared<GraphicsServer>(mPrimaryWindow, mPainter, mResourcesPath);
         mPhysicsServer = std::make_shared<PhysicsServer>();
         mAlgorithmManager = std::make_shared<AlgorithmManager>(mPluginsPath);
+        mApplication = std::make_shared<GuiApplication>(mPrimaryWindow, mWindowManager, mPainter, mPhysicsServer, mGraphicsServer, mAlgorithmManager, mResourcesPath);
     }
 
     Simulator::~Simulator() {
         // Release in reverse order
+        mApplication = nullptr;
         mAlgorithmManager = nullptr;
         mPhysicsServer = nullptr;
         mGraphicsServer = nullptr;
@@ -61,6 +63,8 @@ namespace rfsim {
     }
 
     int Simulator::Run() {
+        return mApplication->Run();
+
         const auto pi = glm::pi<float>();
 
         const float fieldLength = 16;
@@ -142,7 +146,8 @@ namespace rfsim {
             mGraphicsServer->DrawPostUI();
             mGraphicsServer->EndDraw();
 
-            mWindowManager->Update();
+            mWindowManager->UpdateEvents();
+            mWindowManager->SwapBuffers();
             mPainter->FitToFramebufferArea();
 
             game->physicsGameState = state;

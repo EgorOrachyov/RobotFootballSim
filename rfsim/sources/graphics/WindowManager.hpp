@@ -55,7 +55,12 @@ namespace rfsim {
          *
          * @note Must be called every frame for smooth update.
          */
-        void Update();
+        void UpdateEvents();
+
+        /**
+         * Swap buffers for each active window.
+         */
+        void SwapBuffers();
 
     private:
 
