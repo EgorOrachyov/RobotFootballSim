@@ -5,8 +5,7 @@ set(RFSIM_SOURCES
         sources/Main.cpp
         sources/Simulator.cpp
         sources/Simulator.hpp
-        sources/GameState.hpp
-        )
+        sources/GameState.hpp)
 
 set(RFSIM_GRAPHICS_SOURCES
         sources/graphics/Window.cpp
@@ -18,9 +17,11 @@ set(RFSIM_GRAPHICS_SOURCES
         sources/graphics/GraphicsServer.cpp
         sources/graphics/GraphicsServer.hpp
         sources/graphics/GraphicsSettings.hpp
+        sources/graphics/GraphicsGameState.hpp
+        sources/graphics/GraphicsSceneSettings.hpp
         sources/graphics/Image.cpp
         sources/graphics/Image.hpp
-        sources/graphics/PainterItems.hpp sources/graphics/GraphicsGameState.hpp sources/graphics/GraphicsSceneSettings.hpp)
+        sources/graphics/PainterItems.hpp)
 
 set(RFSIM_OPENGL_SOURCES
         sources/opengl/GLDynamicBuffer.hpp

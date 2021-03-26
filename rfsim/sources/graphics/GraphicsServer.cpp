@@ -41,13 +41,14 @@ namespace rfsim {
         static const auto ROBOT_IMAGE_PATH = "sprites/robot.png";
         static const auto FIELD_IMAGE_PATH = "sprites/play-field.png";
         static const auto BALL_IMAGE_PATH = "sprites/ball.png";
+        static const auto BALL_IMAGE_TRSP_PATH = "sprites/soccer-ball.png";
         static const auto SHADOW_IMAGE_PATH = "sprites/shadow.png";
         static const auto ON_COLLISION_IMAGE_PATH = "sprites/hit.png";
         static const auto ON_OUT_IMAGE_PATH = "sprites/out-of-bounds.png";
 
         auto prefix = mResPath + SEP;
 
-        mBallImage = Image::LoadFromFilePath(prefix + BALL_IMAGE_PATH);
+        mBallImage = Image::LoadFromFilePath(prefix + BALL_IMAGE_TRSP_PATH);
         mFieldImage = Image::LoadFromFilePath(prefix + FIELD_IMAGE_PATH);
         mOnCollisionImage = Image::LoadFromFilePath(prefix + ON_COLLISION_IMAGE_PATH);
         mOnOutImage = Image::LoadFromFilePath(prefix + ON_OUT_IMAGE_PATH);
@@ -142,8 +143,7 @@ namespace rfsim {
             }
 
             mPainter->SetBrushColor(WHITE_COLOR);
-            mPainter->SetTransparentColor(WHITE_COLOR);
-
+            mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
             mPainter->DrawImage(rect, b.angle, mBallImage);
         }
     }

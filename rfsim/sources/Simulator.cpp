@@ -66,7 +66,7 @@ namespace rfsim {
         PhysicsGameProperties physicsProperties = {};
         physicsProperties.fieldFriction = 0.5f;
 
-        physicsProperties.robotRadius = 0.1f;
+        physicsProperties.robotRadius = 0.2f;
         physicsProperties.robotHeight = 0.1f;
         physicsProperties.robotMass = 1.0f;
         physicsProperties.robotFriction = 0.25f;
@@ -75,10 +75,10 @@ namespace rfsim {
         physicsProperties.robotLeftMotorOffset = { 0, -0.8f };
         physicsProperties.robotRightMotorOffset = { 0, 0.8f };
 
-        physicsProperties.ballRadius = 0.05f;
+        physicsProperties.ballRadius = 0.1f;
         physicsProperties.ballMass = 0.05f;
-        physicsProperties.ballFriction = 0.01f;
-        physicsProperties.ballRestitution = 0.75f;
+        physicsProperties.ballFriction = 0.005f;
+        physicsProperties.ballRestitution = 0.05f;
 
         mPhysicsServer->SetGameProperties(physicsProperties);
 
@@ -120,7 +120,7 @@ namespace rfsim {
 
             // todo: remove (it is algo specific logic)
             for (int i = 0; i < beginInfo.robotsTeamA.size() * 2; i++) {
-                mPhysicsServer->UpdateMotorsPower(i, 50 * (float)rand() / RAND_MAX, 50 * (float)rand() / RAND_MAX);
+                mPhysicsServer->UpdateMotorsPower(i, 40 * (float)rand() / RAND_MAX, 70 * (float)rand() / RAND_MAX);
             }
 
             PhysicsGameState state;

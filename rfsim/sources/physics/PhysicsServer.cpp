@@ -262,13 +262,13 @@ namespace rfsim {
                 b2Body *body = mWorld->CreateBody(&robotBodyDef);
 
                 // approximate a robot with a cylinder
-                const double r = (double)mProperties.robotRadius;
-                const double h = (double)mProperties.robotHeight;
+                const auto r = (double)mProperties.robotRadius;
+                const auto h = (double)mProperties.robotHeight;
                 const double robotVolume = glm::pi<double>() * r * r * h;
                 assert(robotVolume > 0.0);
           
                 b2CircleShape shape = {};
-                shape.m_radius = r;
+                shape.m_radius = (float) r;
 
                 b2FixtureDef fixture = {};
                 fixture.density = (float)((double)mProperties.robotMass / robotVolume);
