@@ -235,7 +235,7 @@ namespace rfsim {
         }
 
         // robots
-        const std::vector<PhysicsGameInitInfo::RobotInitInfo>* allRobots[] = {
+        const std::vector<RobotInitInfo>* allRobots[] = {
             &info.robotsTeamA,
             &info.robotsTeamB
         };
@@ -363,7 +363,7 @@ namespace rfsim {
         state.robots.resize(mRobots.size());
 
         {
-            PhysicsGameState::BodyState s = {};
+            BodyState s = {};
             s.position = ToGameCoords({ mBall->GetPosition().x, mBall->GetPosition().y });
             s.velocity = ToGameCoords({ mBall->GetLinearVelocity().x, mBall->GetLinearVelocity().y });
             s.angle = AngleToGameCoords(mBall->GetAngle());
@@ -375,7 +375,7 @@ namespace rfsim {
             int id = r.first;
             b2Body *body = r.second;
 
-            PhysicsGameState::BodyState s = {};
+            BodyState s = {};
             s.position = ToGameCoords({ body->GetPosition().x, body->GetPosition().y });
             s.velocity = ToGameCoords({ body->GetLinearVelocity().x, body->GetLinearVelocity().y });
             s.angle = AngleToGameCoords(body->GetAngle());
@@ -427,7 +427,7 @@ namespace rfsim {
                     continue;
                 }
 
-                PhysicsGameState::RobotCollisionInfo info = {};
+                RobotCollisionInfo info = {};
                 info.robotIdA = robotA;
                 info.robotIdB = robotB;
 

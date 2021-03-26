@@ -25,13 +25,61 @@
 #ifndef RFSIM_GRAPHICSSERVER_HPP
 #define RFSIM_GRAPHICSSERVER_HPP
 
+#include <graphics/Image.hpp>
+#include <graphics/Window.hpp>
+#include <graphics/PainterEngine.hpp>
+#include <graphics/GraphicsSettings.hpp>
+#include <graphics/GraphicsGameState.hpp>
+#include <graphics/GraphicsSceneSettings.hpp>
+#include <physics/PhysicsGameInitInfo.hpp>
+#include <physics/PhysicsGameProperties.hpp>
+#include <physics/PhysicsGameState.hpp>
+
 namespace rfsim {
 
+    class GraphicsServer {
+    public:
+        GraphicsServer(const std::shared_ptr<Window> &window, const std::shared_ptr<PainterEngine> &painter, const std::string& resPath);
+        ~GraphicsServer() = default;
+
+        void SetSettings(const GraphicsSettings& settings);
+        void GetSettings(GraphicsSettings& settings) const;
+
+        void BeginGame(const GraphicsSceneSettings& sceneSettings);
+        void BeginDraw(const GraphicsGameState& gameState);
+        void DrawStaticObjects();
+        void DrawDynamicObjects();
+        void DrawAuxInfo();
+        void DrawPostUI();
+        void EndDraw();
+        void EndGame();
+
+    private:
+
+        enum class State {
+            Default,
+            InGame,
+            InGameBeginDraw
+        };
+
+        State mState = State::Default;
+
+        GraphicsSettings mSettings;
+        GraphicsSceneSettings mSceneSettings;
+        GraphicsGameState mCurrentState;
+
+        std::string mResPath;
+        std::shared_ptr<Window> mWindow;
+        std::shared_ptr<PainterEngine> mPainter;
+
+        std::shared_ptr<Image> mBallImage;
+        std::shared_ptr<Image> mFieldImage;
+        std::shared_ptr<Image> mOnCollisionImage;
+        std::shared_ptr<Image> mOnOutImage;
+        std::shared_ptr<Image> mShadowImage;
+        std::vector<std::shared_ptr<Image>> mRobotImages;
+    };
+
 }
-
-class GraphicsServer {
-
-};
-
 
 #endif //RFSIM_GRAPHICSSERVER_HPP

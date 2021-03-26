@@ -25,6 +25,8 @@
 #ifndef RFSIM_PHYSICSGAMESTATE_HPP
 #define RFSIM_PHYSICSGAMESTATE_HPP
 
+#include <GameState.hpp>
+
 namespace rfsim {
 
     /**
@@ -35,16 +37,6 @@ namespace rfsim {
      * ball position, information about collisions and etc.
      */
     struct PhysicsGameState {
-        struct BodyState {
-            glm::vec2   position = {};
-            glm::vec2   velocity = {};
-            float       angle = 0;
-        };
-        struct RobotCollisionInfo {
-            int robotIdA = -1;
-            int robotIdB = -1;
-        };
-
         // Index of a robot in a vector is its ID
         std::vector<BodyState> robots;
         BodyState ball;

@@ -297,6 +297,12 @@ namespace rfsim {
         mPrivate->Draw(mArea, mSpace, mWindow, mClearColor);
     }
 
+    void PainterEngine::FitToFramebufferArea() {
+        // Update draw area with actual window framebuffer size
+        auto areaSize = mWindow->GetFramebufferSize();
+        SetDrawArea({0, 0, areaSize[0], areaSize[1]});
+    }
+
     void PainterEngine::SetDrawArea(const Recti &area) {
         mArea = area;
     }

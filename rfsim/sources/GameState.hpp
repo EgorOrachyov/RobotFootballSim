@@ -30,6 +30,24 @@
 
 namespace rfsim {
 
+    struct RobotInitInfo {
+        int         id;
+        glm::vec2   position;
+        // Angle in radians
+        float       angle;
+    };
+
+    struct BodyState {
+        glm::vec2   position = {};
+        glm::vec2   velocity = {};
+        float       angle = 0;
+    };
+
+    struct RobotCollisionInfo {
+        int robotIdA = -1;
+        int robotIdB = -1;
+    };
+
     class GameState {
     public:
         struct Robot {

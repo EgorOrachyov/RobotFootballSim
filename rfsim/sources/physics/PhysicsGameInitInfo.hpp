@@ -25,8 +25,9 @@
 #ifndef RFSIM_PHYSICSGAMEINITINFO_HPP
 #define RFSIM_PHYSICSGAMEINITINFO_HPP
 
-#include <vector>
+#include <GameState.hpp>
 #include <glm/vec2.hpp>
+#include <vector>
 
 namespace rfsim {
 
@@ -38,13 +39,6 @@ namespace rfsim {
      * and orientations.
      */
     struct PhysicsGameInitInfo {
-        struct RobotInitInfo {
-            int         id;
-            glm::vec2   position;
-            // Angle in radians
-            float       angle;
-        };
-
         glm::vec2 ballPosition;
 
         std::vector<RobotInitInfo> robotsTeamA;

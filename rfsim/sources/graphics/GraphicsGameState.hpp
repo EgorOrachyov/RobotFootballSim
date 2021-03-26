@@ -22,50 +22,15 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_SIMULATOR_HPP
-#define RFSIM_SIMULATOR_HPP
+#ifndef RFSIM_GRAPHICSGAMESTATE_HPP
+#define RFSIM_GRAPHICSGAMESTATE_HPP
 
-#include <memory>
-#include <vector>
-#include <string>
+#include <physics/PhysicsGameState.hpp>
 
 namespace rfsim {
 
-    /**
-     * @brief Simulator main class.
-     *
-     * Manages sub-systems, update loop, application start-up and configuration parsing.
-     */
-    class Simulator {
-    public:
-        /**
-         * Create the simulator class.
-         *
-         * @param argc Number of the OS native app args
-         * @param argv AActual arguments
-         */
-        Simulator(int argc, const char* const* argv);
-        ~Simulator();
-
-        /**
-         * Run the main simulator update loop.
-         * This function returns control only when user closes the application.
-         *
-         * @return 0 if simulator successfully finished.
-         */
-        int Run();
-
-    private:
-        std::string mResourcesPath = "../../resources";
-        std::vector<std::string> mArgs;
-
-        std::shared_ptr<class Window> mPrimaryWindow;
-        std::shared_ptr<class WindowManager> mWindowManager;
-        std::shared_ptr<class PainterEngine> mPainter;
-        std::shared_ptr<class GraphicsServer> mGraphicsServer;
-        std::shared_ptr<class PhysicsServer> mPhysicsServer;
-    };
+    using GraphicsGameState = PhysicsGameState;
 
 }
 
-#endif //RFSIM_SIMULATOR_HPP
+#endif //RFSIM_GRAPHICSGAMESTATE_HPP

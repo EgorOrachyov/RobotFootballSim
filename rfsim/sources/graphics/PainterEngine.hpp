@@ -113,6 +113,11 @@ namespace rfsim {
          */
         void Draw();
 
+        /**
+         * Resize Draw Area to the framebuffer size
+         */
+        void FitToFramebufferArea();
+
         void SetDrawArea(const Recti& area);
         void SetDrawSpace(const Rect& space);
         void SetPenColor(const Color& color);

@@ -17,9 +17,10 @@ set(RFSIM_GRAPHICS_SOURCES
         sources/graphics/PainterEngine.hpp
         sources/graphics/GraphicsServer.cpp
         sources/graphics/GraphicsServer.hpp
+        sources/graphics/GraphicsSettings.hpp
         sources/graphics/Image.cpp
         sources/graphics/Image.hpp
-        sources/graphics/PainterItems.hpp)
+        sources/graphics/PainterItems.hpp sources/graphics/GraphicsGameState.hpp sources/graphics/GraphicsSceneSettings.hpp)
 
 set(RFSIM_OPENGL_SOURCES
         sources/opengl/GLDynamicBuffer.hpp

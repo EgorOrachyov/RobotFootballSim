@@ -22,50 +22,34 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_SIMULATOR_HPP
-#define RFSIM_SIMULATOR_HPP
+#ifndef RFSIM_GRAPHICSSCENESETTINGS_HPP
+#define RFSIM_GRAPHICSSCENESETTINGS_HPP
 
-#include <memory>
+#include <GameState.hpp>
+#include <glm/vec2.hpp>
 #include <vector>
-#include <string>
 
 namespace rfsim {
 
-    /**
-     * @brief Simulator main class.
-     *
-     * Manages sub-systems, update loop, application start-up and configuration parsing.
-     */
-    class Simulator {
-    public:
-        /**
-         * Create the simulator class.
-         *
-         * @param argc Number of the OS native app args
-         * @param argv AActual arguments
-         */
-        Simulator(int argc, const char* const* argv);
-        ~Simulator();
+    struct GraphicsSceneSettings {
+        float robotRadius = 0.0f;
+        float ballRadius = 0.0f;
 
-        /**
-         * Run the main simulator update loop.
-         * This function returns control only when user closes the application.
-         *
-         * @return 0 if simulator successfully finished.
-         */
-        int Run();
+        glm::vec2 ballPosition;
 
-    private:
-        std::string mResourcesPath = "../../resources";
-        std::vector<std::string> mArgs;
+        std::vector<RobotInitInfo> robotsTeamA;
+        std::vector<RobotInitInfo> robotsTeamB;
 
-        std::shared_ptr<class Window> mPrimaryWindow;
-        std::shared_ptr<class WindowManager> mWindowManager;
-        std::shared_ptr<class PainterEngine> mPainter;
-        std::shared_ptr<class GraphicsServer> mGraphicsServer;
-        std::shared_ptr<class PhysicsServer> mPhysicsServer;
+        // Hard wall bounds.
+        glm::vec2 roomTopLeftBounds;
+        glm::vec2 roomBottomRightBounds;
+
+        // Field bounds, they won't be used for collision,
+        // but only for determining if a ball is out of bounds.
+        glm::vec2 fieldTopLeftBounds;
+        glm::vec2 fieldBottomRightBounds;
     };
 
 }
 
-#endif //RFSIM_SIMULATOR_HPP
+#endif //RFSIM_GRAPHICSSCENESETTINGS_HPP
