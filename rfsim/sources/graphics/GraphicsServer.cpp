@@ -67,15 +67,15 @@ namespace rfsim {
     }
 
     void GraphicsServer::BeginGame(const GraphicsSceneSettings &sceneSettings) {
-        assert(mState == State::Default);
-        mState = State::InGame;
+        assert(mState == InternalState::Default);
+        mState = InternalState::InGame;
 
         mSceneSettings = sceneSettings;
     }
 
     void GraphicsServer::BeginDraw(const GraphicsGameState& gameState) {
-        assert(mState == State::InGame);
-        mState = State::InGameBeginDraw;
+        assert(mState == InternalState::InGame);
+        mState = InternalState::InGameBeginDraw;
         mCurrentState = gameState;
 
         auto room00 = mSceneSettings.roomTopLeftBounds;
@@ -88,7 +88,7 @@ namespace rfsim {
     }
 
     void GraphicsServer::DrawStaticObjects() {
-        assert(mState == State::InGameBeginDraw);
+        assert(mState == InternalState::InGameBeginDraw);
 
         auto room00 = mSceneSettings.roomTopLeftBounds;
         auto roomWH = mSceneSettings.roomBottomRightBounds;
@@ -100,7 +100,7 @@ namespace rfsim {
     }
 
     void GraphicsServer::DrawDynamicObjects() {
-        assert(mState == State::InGameBeginDraw);
+        assert(mState == InternalState::InGameBeginDraw);
 
         // Draw robots
         for (const auto &r: mCurrentState.robots) {
@@ -149,7 +149,7 @@ namespace rfsim {
     }
 
     void GraphicsServer::DrawAuxInfo() {
-        assert(mState == State::InGameBeginDraw);
+        assert(mState == InternalState::InGameBeginDraw);
 
         // Draw info about collisions on top of the robots
         if (mSettings.drawCollisionInfo) {
@@ -197,22 +197,22 @@ namespace rfsim {
     }
 
     void GraphicsServer::DrawPostUI() {
-        assert(mState == State::InGameBeginDraw);
+        assert(mState == InternalState::InGameBeginDraw);
 
         // Draw something, what must be placed on top of the UI
     }
 
     void GraphicsServer::EndDraw() {
-        assert(mState == State::InGameBeginDraw);
-        mState = State::InGame;
+        assert(mState == InternalState::InGameBeginDraw);
+        mState = InternalState::InGame;
 
         // Commit draw
         mPainter->Draw();
     }
 
     void GraphicsServer::EndGame() {
-        assert(mState == State::InGame);
-        mState = State::Default;
+        assert(mState == InternalState::InGame);
+        mState = InternalState::Default;
     }
 
 }

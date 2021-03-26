@@ -25,7 +25,7 @@
 #ifndef RFSIM_GRAPHICSSCENESETTINGS_HPP
 #define RFSIM_GRAPHICSSCENESETTINGS_HPP
 
-#include <GameState.hpp>
+#include <GameCommon.hpp>
 #include <glm/vec2.hpp>
 #include <vector>
 

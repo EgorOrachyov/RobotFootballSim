@@ -25,7 +25,7 @@
 #ifndef RFSIM_PHYSICSGAMESTATE_HPP
 #define RFSIM_PHYSICSGAMESTATE_HPP
 
-#include <GameState.hpp>
+#include <GameCommon.hpp>
 
 namespace rfsim {
 

@@ -22,65 +22,50 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GRAPHICSSERVER_HPP
-#define RFSIM_GRAPHICSSERVER_HPP
-
-#include <graphics/Image.hpp>
-#include <graphics/Window.hpp>
-#include <graphics/PainterEngine.hpp>
-#include <graphics/GraphicsSettings.hpp>
-#include <graphics/GraphicsGameState.hpp>
-#include <graphics/GraphicsSceneSettings.hpp>
-#include <physics/PhysicsGameInitInfo.hpp>
-#include <physics/PhysicsGameProperties.hpp>
-#include <physics/PhysicsGameState.hpp>
+#include <Algorithm.hpp>
+#include <iostream>
 
 namespace rfsim {
 
-    class GraphicsServer {
-    public:
-        GraphicsServer(const std::shared_ptr<Window> &window, const std::shared_ptr<PainterEngine> &painter, const std::string& resPath);
-        GraphicsServer(const GraphicsServer& other) = delete;
-        GraphicsServer(GraphicsServer&& other) noexcept = delete;
-        ~GraphicsServer() = default;
+    Algorithm::~Algorithm() {
+        if (initialized) {
+            auto finalize = finalizeFunction;
+            auto status = finalize(&algoState);
 
-        void SetSettings(const GraphicsSettings& settings);
-        void GetSettings(GraphicsSettings& settings) const;
+            if (status != rfsim_status_success) {
+                std::cerr << "Failed to finalize algorithm context "
+                          << algoState.name << std::endl;
+            }
+        }
+    }
+    
+    bool Algorithm::Init(dynalo::library &library) {
+        initFunction = library.get_function<rfsim_status(rfsim_algo_state*)>(RFSIM_FUNCTION_INIT_NAME);
+        beginGameFunction = library.get_function<rfsim_status(rfsim_algo_state*, const rfsim_game_settings*, const rfsim_game_start_info*)>(RFSIM_FUNCTION_BEGIN_GAME_NAME);
+        tickGameFunction = library.get_function<rfsim_status(rfsim_algo_state*, rfsim_game_state_info*)>(RFSIM_FUNCTION_TICK_GAME_NAME);
+        endGameFunction = library.get_function<rfsim_status(rfsim_algo_state*)>(RFSIM_FUNCTION_END_GAME_NAME);
+        finalizeFunction = library.get_function<rfsim_status(rfsim_algo_state*)>(RFSIM_FUNCTION_FINALIZE_NAME);
 
-        void BeginGame(const GraphicsSceneSettings& sceneSettings);
-        void BeginDraw(const GraphicsGameState& gameState);
-        void DrawStaticObjects();
-        void DrawDynamicObjects();
-        void DrawAuxInfo();
-        void DrawPostUI();
-        void EndDraw();
-        void EndGame();
+        auto init = initFunction;
+        auto status = init(&algoState);
 
-    private:
-        enum class InternalState {
-            Default,
-            InGame,
-            InGameBeginDraw
-        };
+        return initialized = status == rfsim_status_success;
+    }
 
-        InternalState mState = InternalState::Default;
+    void Algorithm::GetAboutInfo(std::string &info) {
+        info = algoState.name;
+    }
 
-        GraphicsSettings mSettings;
-        GraphicsSceneSettings mSceneSettings;
-        GraphicsGameState mCurrentState;
+    void Algorithm::BeginGame() {
 
-        std::string mResPath;
-        std::shared_ptr<Window> mWindow;
-        std::shared_ptr<PainterEngine> mPainter;
+    }
 
-        std::shared_ptr<Image> mBallImage;
-        std::shared_ptr<Image> mFieldImage;
-        std::shared_ptr<Image> mOnCollisionImage;
-        std::shared_ptr<Image> mOnOutImage;
-        std::shared_ptr<Image> mShadowImage;
-        std::vector<std::shared_ptr<Image>> mRobotImages;
-    };
+    void Algorithm::TickGame() {
+
+    }
+
+    void Algorithm::EndGame() {
+
+    }
 
 }
-
-#endif //RFSIM_GRAPHICSSERVER_HPP

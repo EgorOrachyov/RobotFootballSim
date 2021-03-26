@@ -22,52 +22,31 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GAMESTATE_HPP
-#define RFSIM_GAMESTATE_HPP
+#define RFSIM_EXPORTS
+#include <rfsim/rfsim.h>
+#include <iostream>
 
-#include <glm/vec2.hpp>
-#include <vector>
+RFSIM_DEFINE_FUNCTION_INIT {
+    std::cout << "RandomMovement: RFSIM_DEFINE_FUNCTION_INIT" << std::endl;
+    return rfsim_status_success;
+};
 
-namespace rfsim {
+RFSIM_DEFINE_FUNCTION_BEGIN_GAME {
+    std::cout << "RandomMovement: RFSIM_DEFINE_FUNCTION_BEGIN_GAME" << std::endl;
+    return rfsim_status_success;
+};
 
-    struct RobotInitInfo {
-        int         id;
-        glm::vec2   position;
-        // Angle in radians
-        float       angle;
-    };
+RFSIM_DEFINE_FUNCTION_TICK_GAME {
+    std::cout << "RandomMovement: RFSIM_DEFINE_FUNCTION_TICK_GAME" << std::endl;
+    return rfsim_status_success;
+};
 
-    struct BodyState {
-        glm::vec2   position = {};
-        glm::vec2   velocity = {};
-        float       angle = 0;
-    };
+RFSIM_DEFINE_FUNCTION_END_GAME {
+    std::cout << "RandomMovement: RFSIM_DEFINE_FUNCTION_END_GAME" << std::endl;
+    return rfsim_status_success;
+};
 
-    struct RobotCollisionInfo {
-        int robotIdA = -1;
-        int robotIdB = -1;
-    };
-
-    class GameState {
-    public:
-        struct Robot {
-            glm::vec2 position{};
-            float angle = 0.0f;
-        };
-
-        struct Ball {
-            glm::vec2 position{};
-        };
-
-        unsigned int teamSize = 0;
-        unsigned int scoreTeam1 = 0;
-        unsigned int scoreTeam2 = 0;
-        std::vector<unsigned int> robotsTeam1;
-        std::vector<unsigned int> robotsTeam2;
-        std::vector<Robot> robots;
-        Ball ball;
-    };
-
-}
-
-#endif //RFSIM_GAMESTATE_HPP
+RFSIM_DEFINE_FUNCTION_FINALIZE {
+    std::cout << "RandomMovement: RFSIM_DEFINE_FUNCTION_FINALIZE" << std::endl;
+    return rfsim_status_success;
+};

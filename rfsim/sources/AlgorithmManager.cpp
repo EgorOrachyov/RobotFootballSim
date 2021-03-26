@@ -22,65 +22,52 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GRAPHICSSERVER_HPP
-#define RFSIM_GRAPHICSSERVER_HPP
-
-#include <graphics/Image.hpp>
-#include <graphics/Window.hpp>
-#include <graphics/PainterEngine.hpp>
-#include <graphics/GraphicsSettings.hpp>
-#include <graphics/GraphicsGameState.hpp>
-#include <graphics/GraphicsSceneSettings.hpp>
-#include <physics/PhysicsGameInitInfo.hpp>
-#include <physics/PhysicsGameProperties.hpp>
-#include <physics/PhysicsGameState.hpp>
+#include <AlgorithmManager.hpp>
+#include <iostream>
+#include <cassert>
 
 namespace rfsim {
 
-    class GraphicsServer {
-    public:
-        GraphicsServer(const std::shared_ptr<Window> &window, const std::shared_ptr<PainterEngine> &painter, const std::string& resPath);
-        GraphicsServer(const GraphicsServer& other) = delete;
-        GraphicsServer(GraphicsServer&& other) noexcept = delete;
-        ~GraphicsServer() = default;
+    AlgorithmManager::AlgorithmManager(const std::string &prefixPath) {
+        mPrefixPath = prefixPath;
+    }
 
-        void SetSettings(const GraphicsSettings& settings);
-        void GetSettings(GraphicsSettings& settings) const;
+    AlgorithmManager::~AlgorithmManager() {
+        mAlgorithms.clear();
+        mLibs.clear();
+    }
 
-        void BeginGame(const GraphicsSceneSettings& sceneSettings);
-        void BeginDraw(const GraphicsGameState& gameState);
-        void DrawStaticObjects();
-        void DrawDynamicObjects();
-        void DrawAuxInfo();
-        void DrawPostUI();
-        void EndDraw();
-        void EndGame();
+    std::shared_ptr<Algorithm> AlgorithmManager::Load(const std::string& name) {
+        const auto SEP = "/";
+        std::string libPath = mPrefixPath + SEP + dynalo::to_native_name(name);
+        std::shared_ptr<dynalo::library> lib = std::make_shared<dynalo::library>(libPath);
 
-    private:
-        enum class InternalState {
-            Default,
-            InGame,
-            InGameBeginDraw
-        };
+        std::shared_ptr<Algorithm> algo = std::make_shared<Algorithm>();
 
-        InternalState mState = InternalState::Default;
+        if (algo->Init(*lib)) {
+            std::cout << "AlgorithmManager: load plugin: " << libPath << std::endl;
+            mAlgorithms.push_back(algo);
+            mLibs.push_back(lib);
+            return algo;
+        }
 
-        GraphicsSettings mSettings;
-        GraphicsSceneSettings mSceneSettings;
-        GraphicsGameState mCurrentState;
+        return nullptr;
+    }
 
-        std::string mResPath;
-        std::shared_ptr<Window> mWindow;
-        std::shared_ptr<PainterEngine> mPainter;
+    std::shared_ptr<Algorithm> AlgorithmManager::GetAlgorithmAt(unsigned int i) {
+        assert(i < mAlgorithms.size());
+        return mAlgorithms[i];
+    }
 
-        std::shared_ptr<Image> mBallImage;
-        std::shared_ptr<Image> mFieldImage;
-        std::shared_ptr<Image> mOnCollisionImage;
-        std::shared_ptr<Image> mOnOutImage;
-        std::shared_ptr<Image> mShadowImage;
-        std::vector<std::shared_ptr<Image>> mRobotImages;
-    };
+    void AlgorithmManager::GetAlgorithmsInfo(std::vector<std::string> &info) {
+        info.clear();
+        info.reserve(mAlgorithms.size());
+
+        for (auto& algo: mAlgorithms) {
+            std::string text;
+            algo->GetAboutInfo(text);
+            info.push_back(std::move(text));
+        }
+    }
 
 }
-
-#endif //RFSIM_GRAPHICSSERVER_HPP

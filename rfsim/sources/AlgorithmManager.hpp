@@ -22,65 +22,34 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GRAPHICSSERVER_HPP
-#define RFSIM_GRAPHICSSERVER_HPP
+#ifndef RFSIM_ALGORITHMMANAGER_HPP
+#define RFSIM_ALGORITHMMANAGER_HPP
 
-#include <graphics/Image.hpp>
-#include <graphics/Window.hpp>
-#include <graphics/PainterEngine.hpp>
-#include <graphics/GraphicsSettings.hpp>
-#include <graphics/GraphicsGameState.hpp>
-#include <graphics/GraphicsSceneSettings.hpp>
-#include <physics/PhysicsGameInitInfo.hpp>
-#include <physics/PhysicsGameProperties.hpp>
-#include <physics/PhysicsGameState.hpp>
+#include <Algorithm.hpp>
+#include <dynalo/dynalo.hpp>
+#include <vector>
+#include <memory>
+#include <string>
 
 namespace rfsim {
 
-    class GraphicsServer {
+    class AlgorithmManager {
     public:
-        GraphicsServer(const std::shared_ptr<Window> &window, const std::shared_ptr<PainterEngine> &painter, const std::string& resPath);
-        GraphicsServer(const GraphicsServer& other) = delete;
-        GraphicsServer(GraphicsServer&& other) noexcept = delete;
-        ~GraphicsServer() = default;
+        explicit AlgorithmManager(const std::string& prefixPath);
+        AlgorithmManager(const AlgorithmManager& other) = delete;
+        AlgorithmManager(AlgorithmManager&& other) noexcept = delete;
+        ~AlgorithmManager();
 
-        void SetSettings(const GraphicsSettings& settings);
-        void GetSettings(GraphicsSettings& settings) const;
-
-        void BeginGame(const GraphicsSceneSettings& sceneSettings);
-        void BeginDraw(const GraphicsGameState& gameState);
-        void DrawStaticObjects();
-        void DrawDynamicObjects();
-        void DrawAuxInfo();
-        void DrawPostUI();
-        void EndDraw();
-        void EndGame();
+        std::shared_ptr<Algorithm> Load(const std::string& name);
+        std::shared_ptr<Algorithm> GetAlgorithmAt(unsigned int i);
+        void GetAlgorithmsInfo(std::vector<std::string> &info);
 
     private:
-        enum class InternalState {
-            Default,
-            InGame,
-            InGameBeginDraw
-        };
-
-        InternalState mState = InternalState::Default;
-
-        GraphicsSettings mSettings;
-        GraphicsSceneSettings mSceneSettings;
-        GraphicsGameState mCurrentState;
-
-        std::string mResPath;
-        std::shared_ptr<Window> mWindow;
-        std::shared_ptr<PainterEngine> mPainter;
-
-        std::shared_ptr<Image> mBallImage;
-        std::shared_ptr<Image> mFieldImage;
-        std::shared_ptr<Image> mOnCollisionImage;
-        std::shared_ptr<Image> mOnOutImage;
-        std::shared_ptr<Image> mShadowImage;
-        std::vector<std::shared_ptr<Image>> mRobotImages;
+        std::string mPrefixPath;
+        std::vector<std::shared_ptr<Algorithm>> mAlgorithms;
+        std::vector<std::shared_ptr<dynalo::library>> mLibs;
     };
 
 }
 
-#endif //RFSIM_GRAPHICSSERVER_HPP
+#endif //RFSIM_ALGORITHMMANAGER_HPP

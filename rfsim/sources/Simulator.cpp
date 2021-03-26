@@ -30,6 +30,7 @@
 #include <graphics/WindowManager.hpp>
 #include <graphics/GraphicsServer.hpp>
 #include <physics/PhysicsServer.hpp>
+#include <AlgorithmManager.hpp>
 
 namespace rfsim {
 
@@ -45,10 +46,12 @@ namespace rfsim {
         mPainter = std::make_shared<PainterEngine>(glm::ivec4{0, 0, 1280, 720}, glm::vec4{0, 0, 1280, 720}, mPrimaryWindow);
         mGraphicsServer = std::make_shared<GraphicsServer>(mPrimaryWindow, mPainter, mResourcesPath);
         mPhysicsServer = std::make_shared<PhysicsServer>();
+        mAlgorithmManager = std::make_shared<AlgorithmManager>(mPluginsPath);
     }
 
     Simulator::~Simulator() {
         // Release in reverse order
+        mAlgorithmManager = nullptr;
         mPhysicsServer = nullptr;
         mGraphicsServer = nullptr;
         mPainter = nullptr;
@@ -62,19 +65,18 @@ namespace rfsim {
         const float fieldLength = 16;
         const float fieldWidth = 9;
 
-        // TODO: change properties to real ones
+        auto algo = mAlgorithmManager->Load("randommove");
+
+        // todo: change properties to real ones
         PhysicsGameProperties physicsProperties = {};
         physicsProperties.fieldFriction = 0.5f;
-
         physicsProperties.robotRadius = 0.2f;
         physicsProperties.robotHeight = 0.1f;
         physicsProperties.robotMass = 1.0f;
         physicsProperties.robotFriction = 0.25f;
         physicsProperties.robotRestitution = 0.1f;
-        // TODO: set correct values
         physicsProperties.robotLeftMotorOffset = { 0, -0.8f };
         physicsProperties.robotRightMotorOffset = { 0, 0.8f };
-
         physicsProperties.ballRadius = 0.1f;
         physicsProperties.ballMass = 0.05f;
         physicsProperties.ballFriction = 0.005f;
@@ -87,9 +89,7 @@ namespace rfsim {
         beginInfo.fieldBottomRightBounds = { fieldLength - 0.5f,  fieldWidth - 0.5f };
         beginInfo.roomTopLeftBounds      = { 0, 0 };
         beginInfo.roomBottomRightBounds  = { fieldLength, fieldWidth };
-
         beginInfo.ballPosition = { fieldLength * 0.5f, fieldWidth * 0.5f };
-
         for (int i = 0; i < 6; i++) {
             beginInfo.robotsTeamA.push_back({ i,     { fieldLength * 0.25f, fieldWidth * 0.5f + fieldWidth * 0.3f * ((i - 2.5f) / 2.5f) }, 0 });
             beginInfo.robotsTeamB.push_back({ i + 6, { fieldLength * 0.75f, fieldWidth * 0.5f + fieldWidth * 0.3f * ((i - 2.5f) / 2.5f) }, pi });
@@ -106,14 +106,10 @@ namespace rfsim {
         sceneSettings.robotsTeamA = beginInfo.robotsTeamA;
         sceneSettings.robotsTeamB = beginInfo.robotsTeamB;
 
-        GraphicsSettings settings;
-        mGraphicsServer->SetSettings(settings);
-
         mPhysicsServer->BeginGame(beginInfo);
         mGraphicsServer->BeginGame(sceneSettings);
 
         float dt = 1.0f / 60.0f;
-
         uint64_t frameCount = 0;
 
         while (!mPrimaryWindow->ShouldClose()) {

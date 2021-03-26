@@ -22,65 +22,39 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GRAPHICSSERVER_HPP
-#define RFSIM_GRAPHICSSERVER_HPP
+#ifndef RFSIM_ALGORITHM_HPP
+#define RFSIM_ALGORITHM_HPP
 
-#include <graphics/Image.hpp>
-#include <graphics/Window.hpp>
-#include <graphics/PainterEngine.hpp>
-#include <graphics/GraphicsSettings.hpp>
-#include <graphics/GraphicsGameState.hpp>
-#include <graphics/GraphicsSceneSettings.hpp>
-#include <physics/PhysicsGameInitInfo.hpp>
-#include <physics/PhysicsGameProperties.hpp>
-#include <physics/PhysicsGameState.hpp>
+#include <rfsim/rfsim.h>
+#include <dynalo/dynalo.hpp>
 
 namespace rfsim {
 
-    class GraphicsServer {
+    /**
+     * Wrapper for dynamically loaded algorithm
+     */
+    class Algorithm {
     public:
-        GraphicsServer(const std::shared_ptr<Window> &window, const std::shared_ptr<PainterEngine> &painter, const std::string& resPath);
-        GraphicsServer(const GraphicsServer& other) = delete;
-        GraphicsServer(GraphicsServer&& other) noexcept = delete;
-        ~GraphicsServer() = default;
+        ~Algorithm();
 
-        void SetSettings(const GraphicsSettings& settings);
-        void GetSettings(GraphicsSettings& settings) const;
+        bool Init(dynalo::library& library);
+        void GetAboutInfo(std::string& info);
 
-        void BeginGame(const GraphicsSceneSettings& sceneSettings);
-        void BeginDraw(const GraphicsGameState& gameState);
-        void DrawStaticObjects();
-        void DrawDynamicObjects();
-        void DrawAuxInfo();
-        void DrawPostUI();
-        void EndDraw();
+        void BeginGame();
+        void TickGame();
         void EndGame();
 
     private:
-        enum class InternalState {
-            Default,
-            InGame,
-            InGameBeginDraw
-        };
+        rfsim_init_type initFunction{};
+        rfsim_finalize_type finalizeFunction{};
+        rfsim_begin_game_type beginGameFunction{};
+        rfsim_tick_game_type tickGameFunction{};
+        rfsim_end_game_type endGameFunction{};
+        rfsim_algo_state algoState{};
 
-        InternalState mState = InternalState::Default;
-
-        GraphicsSettings mSettings;
-        GraphicsSceneSettings mSceneSettings;
-        GraphicsGameState mCurrentState;
-
-        std::string mResPath;
-        std::shared_ptr<Window> mWindow;
-        std::shared_ptr<PainterEngine> mPainter;
-
-        std::shared_ptr<Image> mBallImage;
-        std::shared_ptr<Image> mFieldImage;
-        std::shared_ptr<Image> mOnCollisionImage;
-        std::shared_ptr<Image> mOnOutImage;
-        std::shared_ptr<Image> mShadowImage;
-        std::vector<std::shared_ptr<Image>> mRobotImages;
+        bool initialized = false;
     };
 
 }
 
-#endif //RFSIM_GRAPHICSSERVER_HPP
+#endif //RFSIM_ALGORITHM_HPP

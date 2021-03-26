@@ -22,65 +22,33 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GRAPHICSSERVER_HPP
-#define RFSIM_GRAPHICSSERVER_HPP
+#ifndef RFSIM_GAMECOMMON_HPP
+#define RFSIM_GAMECOMMON_HPP
 
-#include <graphics/Image.hpp>
-#include <graphics/Window.hpp>
-#include <graphics/PainterEngine.hpp>
-#include <graphics/GraphicsSettings.hpp>
-#include <graphics/GraphicsGameState.hpp>
-#include <graphics/GraphicsSceneSettings.hpp>
-#include <physics/PhysicsGameInitInfo.hpp>
-#include <physics/PhysicsGameProperties.hpp>
 #include <physics/PhysicsGameState.hpp>
+#include <glm/vec2.hpp>
+#include <vector>
 
 namespace rfsim {
 
-    class GraphicsServer {
-    public:
-        GraphicsServer(const std::shared_ptr<Window> &window, const std::shared_ptr<PainterEngine> &painter, const std::string& resPath);
-        GraphicsServer(const GraphicsServer& other) = delete;
-        GraphicsServer(GraphicsServer&& other) noexcept = delete;
-        ~GraphicsServer() = default;
+    struct RobotInitInfo {
+        int         id;
+        glm::vec2   position;
+        // Angle in radians
+        float       angle;
+    };
 
-        void SetSettings(const GraphicsSettings& settings);
-        void GetSettings(GraphicsSettings& settings) const;
+    struct BodyState {
+        glm::vec2   position = {};
+        glm::vec2   velocity = {};
+        float       angle = 0;
+    };
 
-        void BeginGame(const GraphicsSceneSettings& sceneSettings);
-        void BeginDraw(const GraphicsGameState& gameState);
-        void DrawStaticObjects();
-        void DrawDynamicObjects();
-        void DrawAuxInfo();
-        void DrawPostUI();
-        void EndDraw();
-        void EndGame();
-
-    private:
-        enum class InternalState {
-            Default,
-            InGame,
-            InGameBeginDraw
-        };
-
-        InternalState mState = InternalState::Default;
-
-        GraphicsSettings mSettings;
-        GraphicsSceneSettings mSceneSettings;
-        GraphicsGameState mCurrentState;
-
-        std::string mResPath;
-        std::shared_ptr<Window> mWindow;
-        std::shared_ptr<PainterEngine> mPainter;
-
-        std::shared_ptr<Image> mBallImage;
-        std::shared_ptr<Image> mFieldImage;
-        std::shared_ptr<Image> mOnCollisionImage;
-        std::shared_ptr<Image> mOnOutImage;
-        std::shared_ptr<Image> mShadowImage;
-        std::vector<std::shared_ptr<Image>> mRobotImages;
+    struct RobotCollisionInfo {
+        int robotIdA = -1;
+        int robotIdB = -1;
     };
 
 }
 
-#endif //RFSIM_GRAPHICSSERVER_HPP
+#endif //RFSIM_GAMECOMMON_HPP

@@ -57,6 +57,7 @@ namespace rfsim {
 
     private:
         std::string mResourcesPath = "../../resources";
+        std::string mPluginsPath = ".";
         std::vector<std::string> mArgs;
 
         std::shared_ptr<class Window> mPrimaryWindow;
@@ -64,6 +65,7 @@ namespace rfsim {
         std::shared_ptr<class PainterEngine> mPainter;
         std::shared_ptr<class GraphicsServer> mGraphicsServer;
         std::shared_ptr<class PhysicsServer> mPhysicsServer;
+        std::shared_ptr<class AlgorithmManager> mAlgorithmManager;
     };
 
 }

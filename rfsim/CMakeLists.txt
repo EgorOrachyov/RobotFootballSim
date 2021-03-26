@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 3.11)
 project(rfsim-app LANGUAGES CXX)
 
+set(RFSIM_C_API
+        include/rfsim/rfsim.h)
+
 set(RFSIM_SOURCES
         sources/Main.cpp
         sources/Simulator.cpp
         sources/Simulator.hpp
-        sources/GameState.hpp)
+        sources/GameCommon.hpp sources/Algorithm.hpp sources/AlgorithmManager.cpp sources/AlgorithmManager.hpp sources/Algorithm.cpp sources/Game.hpp)
 
 set(RFSIM_GRAPHICS_SOURCES
         sources/graphics/Window.cpp
@@ -45,6 +48,7 @@ set(RFSIM_PHYSICS_SOURCES
         sources/physics/PhysicsGameState.hpp)
 
 add_executable(rfsim
+        ${RFSIM_C_API}
         ${RFSIM_SOURCES}
         ${RFSIM_GRAPHICS_SOURCES}
         ${RFSIM_OPENGL_SOURCES}
@@ -79,3 +83,7 @@ target_link_libraries(rfsim PRIVATE box2d)
 target_link_libraries(rfsim PRIVATE imgui)
 target_link_libraries(rfsim PRIVATE stb_image)
 target_link_libraries(rfsim PRIVATE glm)
+target_link_libraries(rfsim PRIVATE dynalo)
+
+add_library(randommove SHARED plugins/RandomMovement.cpp)
+target_include_directories(randommove PRIVATE include)
