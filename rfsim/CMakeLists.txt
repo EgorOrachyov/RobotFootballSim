@@ -52,12 +52,18 @@ set(RFSIM_LOGIC_SOURCES
         sources/logic/Algorithm.cpp
         sources/logic/Algorithm.hpp
         sources/logic/AlgorithmManager.cpp
-        sources/logic/AlgorithmManager.hpp)
+        sources/logic/AlgorithmManager.hpp
+        sources/logic/GameManager.cpp
+        sources/logic/GameManager.hpp
+        sources/logic/GameScenario.hpp)
 
 set(RFSIM_GUI_SOURCES
         sources/gui/GuiSimulator.cpp
         sources/gui/GuiSimulator.hpp
         sources/gui/GuiStyle.hpp)
+
+set(RFSIM_SCENARIO_SOURCES
+        sources/scenario/TestScenario.hpp)
 
 add_executable(rfsim
         ${RFSIM_C_API}
@@ -67,7 +73,8 @@ add_executable(rfsim
         ${RFSIM_SHADERS}
         ${RFSIM_PHYSICS_SOURCES}
         ${RFSIM_LOGIC_SOURCES}
-        ${RFSIM_GUI_SOURCES})
+        ${RFSIM_GUI_SOURCES}
+        ${RFSIM_SCENARIO_SOURCES})
 
 target_include_directories(rfsim PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_include_directories(rfsim PRIVATE ${CMAKE_CURRENT_LIST_DIR}/sources)

@@ -22,35 +22,30 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GAME_HPP
-#define RFSIM_GAME_HPP
+#ifndef RFSIM_GAMESCENARIO_HPP
+#define RFSIM_GAMESCENARIO_HPP
 
-#include <physics/PhysicsGameState.hpp>
-#include <physics/PhysicsGameInitInfo.hpp>
-#include <physics/PhysicsGameProperties.hpp>
-#include <graphics/GraphicsSceneSettings.hpp>
+#include <logic/Game.hpp>
+#include <string>
+#include <memory>
 
 namespace rfsim {
 
-    /**
-     * @brief Game state
-     * Game specific information.
-     * This structure must be created for each new game.
-     */
-    struct Game {
-        unsigned int teamSize = 0;
-        unsigned int teamScoreA = 0;
-        unsigned int teamScoreB = 0;
+    /** Defines properties, setup and initial state of a game */
+    class GameScenario {
+    public:
+        virtual ~GameScenario() = default;
 
-        PhysicsGameState physicsGameState;
-        PhysicsGameInitInfo physicsGameInitInfo;
-        PhysicsGameProperties physicsGameProperties;
-        GraphicsSceneSettings graphicsSceneSettings;
+        /** @return Scenario name (displayed to the user) */
+        virtual std::string GetName() const = 0;
 
-        std::vector<glm::vec2> robotMotorPowerA;
-        std::vector<glm::vec2> robotMotorPowerB;
+        /** @return Scenario description (optionally displayed to the user) */
+        virtual std::string GetDescription() const = 0;
+
+        /** @return Creates new game session with initial state, physics properties and etc. */
+        virtual std::shared_ptr<Game> CreateGame() const = 0;
     };
 
 }
 
-#endif //RFSIM_GAME_HPP
+#endif //RFSIM_GAMESCENARIO_HPP

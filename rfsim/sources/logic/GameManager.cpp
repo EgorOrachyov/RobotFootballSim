@@ -22,35 +22,24 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GAME_HPP
-#define RFSIM_GAME_HPP
-
-#include <physics/PhysicsGameState.hpp>
-#include <physics/PhysicsGameInitInfo.hpp>
-#include <physics/PhysicsGameProperties.hpp>
-#include <graphics/GraphicsSceneSettings.hpp>
+#include <logic/GameManager.hpp>
 
 namespace rfsim {
 
-    /**
-     * @brief Game state
-     * Game specific information.
-     * This structure must be created for each new game.
-     */
-    struct Game {
-        unsigned int teamSize = 0;
-        unsigned int teamScoreA = 0;
-        unsigned int teamScoreB = 0;
+    void GameManager::AddScenario(const std::shared_ptr<GameScenario> &scenario) {
+        assert(scenario != nullptr);
+        mScenario.push_back(scenario);
+    }
 
-        PhysicsGameState physicsGameState;
-        PhysicsGameInitInfo physicsGameInitInfo;
-        PhysicsGameProperties physicsGameProperties;
-        GraphicsSceneSettings graphicsSceneSettings;
+    void GameManager::GetScenarioInfo(std::vector<std::string> &info) {
+        for (auto& scenario: mScenario) {
+            info.push_back(std::move(scenario->GetName()));
+        }
+    }
 
-        std::vector<glm::vec2> robotMotorPowerA;
-        std::vector<glm::vec2> robotMotorPowerB;
-    };
+    std::shared_ptr<Game> GameManager::CreateGame(unsigned int scenarioId) {
+        assert(scenarioId < mScenario.size());
+        return mScenario[scenarioId]->CreateGame();
+    }
 
 }
-
-#endif //RFSIM_GAME_HPP

@@ -27,22 +27,22 @@
 #include <iostream>
 #include <random>
 #include <chrono>
+#include <cstring>
 
 static int teamSize = 0;
 
 RFSIM_DEFINE_FUNCTION_INIT {
-    std::cout << "RandomMovement: RFSIM_DEFINE_FUNCTION_INIT" << std::endl;
+    std::strcpy(context->name, "Random Movement (testing)");
+    std::strcpy(context->description, "Random movement of the robots with nearly fixed direction");
     return rfsim_status_success;
 };
 
 RFSIM_DEFINE_FUNCTION_BEGIN_GAME {
-    std::cout << "RandomMovement: RFSIM_DEFINE_FUNCTION_BEGIN_GAME" << std::endl;
     teamSize = start->team_size;
     return rfsim_status_success;
 };
 
 RFSIM_DEFINE_FUNCTION_TICK_GAME {
-    std::cout << "RandomMovement: RFSIM_DEFINE_FUNCTION_TICK_GAME" << std::endl;
     std::default_random_engine engine(std::chrono::system_clock::now().time_since_epoch().count());
     auto dist = std::uniform_real_distribution<float>(0.0, 1.0);
 
@@ -60,11 +60,9 @@ RFSIM_DEFINE_FUNCTION_TICK_GAME {
 };
 
 RFSIM_DEFINE_FUNCTION_END_GAME {
-    std::cout << "RandomMovement: RFSIM_DEFINE_FUNCTION_END_GAME" << std::endl;
     return rfsim_status_success;
 };
 
 RFSIM_DEFINE_FUNCTION_FINALIZE {
-    std::cout << "RandomMovement: RFSIM_DEFINE_FUNCTION_FINALIZE" << std::endl;
     return rfsim_status_success;
 };

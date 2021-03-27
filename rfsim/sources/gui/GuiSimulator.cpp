@@ -23,6 +23,15 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 #include <gui/GuiSimulator.hpp>
+#include <graphics/Image.hpp>
+#include <graphics/Window.hpp>
+#include <graphics/WindowManager.hpp>
+#include <graphics/Painter.hpp>
+#include <graphics/GraphicsServer.hpp>
+#include <graphics/Image.hpp>
+#include <physics/PhysicsServer.hpp>
+#include <logic/AlgorithmManager.hpp>
+#include <logic/GameManager.hpp>
 #include <glm/gtc/constants.hpp>
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -95,18 +104,14 @@ namespace rfsim {
             if (mState == State::MainMenu) {
                 // Reset state
                 if (transition) {
+                    selectedScenario = -1;
+                    selectedAlgo = -1;
+
                     algorithms.clear();
                     scenarios.clear();
 
                     mAlgorithmManager->GetAlgorithmsInfo(algorithms);
-
-                    // todo: scenario man
-                    scenarios.emplace_back("scenario 1");
-                    scenarios.emplace_back("scenario 2");
-                    scenarios.emplace_back("scenario 3");
-                    scenarios.emplace_back("scenario 4");
-                    scenarios.emplace_back("scenario 5");
-                    scenarios.emplace_back("scenario 6");
+                    mGameManager->GetScenarioInfo(scenarios);
 
                     scenariosRaw.clear();
                     scenariosRaw.reserve(scenarios.size());
@@ -151,23 +156,18 @@ namespace rfsim {
 
                 ImGui::ListBox("Game scenario", &selectedScenario, scenariosRaw.data(), scenariosRaw.size());
                 ImGui::ListBox("Algorithm", &selectedAlgo, algorithmsRaw.data(), algorithmsRaw.size());
+                ImGui::NewLine();
 
                 ImGui::PushStyleColor(ImGuiCol_Button, style.greenColor);
                 beginGame = ImGui::Button("Start", ImVec2(200, 0));
-
                 ImGui::SameLine();
-
                 ImGui::PushStyleColor(ImGuiCol_Button, style.redColor);
                 exit = ImGui::Button("Exit", ImVec2(200, 0));
 
                 ImGui::PopStyleColor(2);
-
-                ImGui::NewLine();
-                ImGui::Text("Robot Football Simulator (c)");
-
                 ImGui::End();
 
-                if (beginGame) {
+                if (beginGame && selectedScenario >= 0 && selectedAlgo >= 0) {
                     mState = State::PrepareGame;
                     transition = true;
                 }

@@ -25,13 +25,6 @@
 #ifndef RFSIM_GUISIMULATOR_HPP
 #define RFSIM_GUISIMULATOR_HPP
 
-#include <graphics/Window.hpp>
-#include <graphics/WindowManager.hpp>
-#include <graphics/Painter.hpp>
-#include <graphics/GraphicsServer.hpp>
-#include <graphics/Image.hpp>
-#include <physics/PhysicsServer.hpp>
-#include <logic/AlgorithmManager.hpp>
 #include <gui/GuiStyle.hpp>
 #include <Simulator.hpp>
 #include <memory>
@@ -81,8 +74,8 @@ namespace rfsim {
         State mState = State::MainMenu;
 
         // For main menu animated logo
-        std::shared_ptr<Image> mMainMenuLogo;
-        std::shared_ptr<Image> mMainMenuBall;
+        std::shared_ptr<class Image> mMainMenuLogo;
+        std::shared_ptr<class Image> mMainMenuBall;
     };
 
 }

@@ -22,35 +22,37 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GAME_HPP
-#define RFSIM_GAME_HPP
+#ifndef RFSIM_GAMEMANAGER_HPP
+#define RFSIM_GAMEMANAGER_HPP
 
-#include <physics/PhysicsGameState.hpp>
-#include <physics/PhysicsGameInitInfo.hpp>
-#include <physics/PhysicsGameProperties.hpp>
-#include <graphics/GraphicsSceneSettings.hpp>
+#include <logic/Game.hpp>
+#include <logic/GameScenario.hpp>
+#include <vector>
 
 namespace rfsim {
 
     /**
-     * @brief Game state
-     * Game specific information.
-     * This structure must be created for each new game.
+     * @brief Game sessions manager
+     *
+     * Manages game scenarios and creates game sessions with selected scenarios.
      */
-    struct Game {
-        unsigned int teamSize = 0;
-        unsigned int teamScoreA = 0;
-        unsigned int teamScoreB = 0;
+    class GameManager {
+    public:
+        GameManager() = default;
+        GameManager(const GameManager& other) = delete;
+        GameManager(GameManager&& other) noexcept = delete;
+        ~GameManager() = default;
 
-        PhysicsGameState physicsGameState;
-        PhysicsGameInitInfo physicsGameInitInfo;
-        PhysicsGameProperties physicsGameProperties;
-        GraphicsSceneSettings graphicsSceneSettings;
+        void AddScenario(const std::shared_ptr<GameScenario> &scenario);
+        void GetScenarioInfo(std::vector<std::string> &info);
+        std::shared_ptr<Game> CreateGame(unsigned int scenarioId);
 
-        std::vector<glm::vec2> robotMotorPowerA;
-        std::vector<glm::vec2> robotMotorPowerB;
+    private:
+        std::vector<std::shared_ptr<GameScenario>> mScenario;
     };
 
 }
 
-#endif //RFSIM_GAME_HPP
+
+
+#endif //RFSIM_GAMEMANAGER_HPP
