@@ -296,6 +296,40 @@ namespace rfsim {
                     ImGui::PopStyleColor(4);
                     ImGui::End();
                 }
+
+                // Draw debug info window if required
+                if (menuBar.showDebugRobotInfo) {
+                    ImGui::Begin("Debug Info");
+
+                    auto& ball = game->physicsGameState.ball;
+                    ImGui::Text("Ball: pos=(x=%f m,y=%f m) vel=(x=%f m/s, y=%f m/s)",
+                                ball.position.x, ball.position.y, ball.velocity.x, ball.velocity.y);
+                    ImGui::Separator();
+
+                    ImGui::Text("Team A");
+                    for (int i = 0; i < game->teamSize; i++) {
+                        auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
+                        auto& r = game->physicsGameState.robots[id];
+                        auto& p = game->robotMotorPowerA[i];
+
+                        ImGui::Text(" - Robot [%i]: pos=(x=%f m,y=%f m) vel=(x=%f m/s, y=%f m/s) angle=(%f rad) power=(left %f H, right %f H)",
+                                    id, r.position.x, r.position.y, r.velocity.x, r.velocity.y, r.angle, p.x, p.y);
+                    }
+                    ImGui::Separator();
+
+                    ImGui::Text("Team B");
+                    for (int i = 0; i < game->teamSize; i++) {
+                        auto id = game->physicsGameInitInfo.robotsTeamB[i].id;
+                        auto& r = game->physicsGameState.robots[id];
+                        auto& p = game->robotMotorPowerB[i];
+
+                        ImGui::Text(" - Robot [%i]: pos=(x=%f m,y=%f m) vel=(x=%f m/s, y=%f m/s) angle=(%f rad) power=(left %f H, right %f H)",
+                                    id, r.position.x, r.position.y, r.velocity.x, r.velocity.y, r.angle, p.x, p.y);
+                    }
+                    ImGui::Separator();
+
+                    ImGui::End();
+                }
             }
             else if (mState == State::EndGame) {
                 algo->EndGame(*game);

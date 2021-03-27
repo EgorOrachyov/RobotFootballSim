@@ -50,6 +50,9 @@ namespace rfsim {
 
         // Popup graphics settings
         if (ImGui::BeginPopup("Settings")) {
+            ImGui::Checkbox("Display Robot Debug Info", &showDebugRobotInfo);
+
+            ImGui::Separator();
             ImGui::Checkbox("Display Collision Info", &graphicsSettings.drawCollisionInfo);
             ImGui::Checkbox("Display Out Info", &graphicsSettings.drawOutInfo);
 
