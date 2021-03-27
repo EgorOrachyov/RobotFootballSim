@@ -60,7 +60,7 @@ namespace rfsim {
         mWindows.clear();
     }
 
-    std::shared_ptr<class Window> WindowManager::CreateWindow(const glm::ivec2 &size, const std::string &title) {
+    std::shared_ptr<class Window> WindowManager::CreateNewWindow(const glm::ivec2 &size, const std::string &title) {
         GLFWwindow* hnd = glfwCreateWindow(size.x, size.y, title.c_str(), nullptr, nullptr);
 
         auto window = std::make_shared<Window>(hnd);

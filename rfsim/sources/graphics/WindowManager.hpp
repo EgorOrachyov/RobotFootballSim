@@ -47,7 +47,7 @@ namespace rfsim {
          *
          * @return Window object
          */
-        std::shared_ptr<class Window> CreateWindow(const glm::ivec2& size, const std::string& title);
+        std::shared_ptr<class Window> CreateNewWindow(const glm::ivec2& size, const std::string& title);
 
         /**
          * Updates windowing system.

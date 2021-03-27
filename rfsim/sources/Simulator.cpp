@@ -43,7 +43,7 @@ namespace rfsim {
 
         // Setup main window and window manager
         mWindowManager = std::make_shared<WindowManager>();
-        mPrimaryWindow = mWindowManager->CreateWindow({1280, 720}, "Robot Football Sim");
+        mPrimaryWindow = mWindowManager->CreateNewWindow({1280, 720}, "Robot Football Sim");
         mPainter = std::make_shared<PainterEngine>(glm::ivec4{0, 0, 1280, 720}, glm::vec4{0, 0, 1280, 720}, mPrimaryWindow);
         mGraphicsServer = std::make_shared<GraphicsServer>(mPrimaryWindow, mPainter, mResourcesPath);
         mPhysicsServer = std::make_shared<PhysicsServer>();
