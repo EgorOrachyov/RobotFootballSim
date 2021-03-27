@@ -22,21 +22,64 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GUISTYLE_HPP
-#define RFSIM_GUISTYLE_HPP
+#ifndef RFSIM_SCENARIOCOMMON_HPP
+#define RFSIM_SCENARIOCOMMON_HPP
 
-#include <imgui.h>
+#include <physics/PhysicsGameProperties.hpp>
+#include <physics/PhysicsGameInitInfo.hpp>
+#include <graphics/GraphicsSceneSettings.hpp>
+#include <glm/vec2.hpp>
 
 namespace rfsim {
 
-    struct GuiStyle {
-        ImVec4 greenColor = ImVec4(ImColor(24, 237, 123));
-        ImVec4 yellowColor = ImVec4(ImColor(255, 208, 79));
-        ImVec4 redColor = ImVec4(ImColor(189, 35, 15));
-        ImVec4 violetColor = ImVec4(ImColor(188, 107, 255));
-        ImVec4 clearColor = ImVec4(ImColor(255, 255, 255));
+    class ScenarioCommon {
+    public:
+
+        static const unsigned int DEFAULT_TEAM_SIZE = 6;
+
+        static glm::vec2 GetDefaultFieldSize() {
+            return {9.0f, 6.0f};
+        }
+
+        static glm::vec2 GetDefaultFieldBorderOffset() {
+            return { 0.5f, 0.5f };
+        }
+
+        static PhysicsGameProperties GetDefaultPhysicsProperties() {
+            PhysicsGameProperties pp;
+            pp.fieldFriction = 0.5f;
+            pp.robotRadius = 0.15f;
+            pp.robotHeight = 0.1f;
+            pp.robotMass = 1.0f;
+            pp.robotFriction = 0.25f;
+            pp.robotRestitution = 0.1f;
+            pp.robotLeftMotorOffset = {0, -0.8f };
+            pp.robotRightMotorOffset = {0, 0.8f };
+            pp.ballRadius = 0.08f;
+            pp.ballMass = 0.05f;
+            pp.ballFriction = 0.005f;
+            pp.ballRestitution = 0.05f;
+
+            return pp;
+        }
+
+        static GraphicsSceneSettings GetDefaultSceneSettingsFromPhysics(const PhysicsGameProperties& pp, const PhysicsGameInitInfo& bi) {
+            GraphicsSceneSettings ss;
+            ss.ballRadius = pp.ballRadius;
+            ss.ballPosition = bi.ballPosition;
+            ss.robotRadius = pp.robotRadius;
+            ss.fieldTopLeftBounds = bi.fieldTopLeftBounds;
+            ss.fieldBottomRightBounds = bi.fieldBottomRightBounds;
+            ss.roomTopLeftBounds = bi.roomTopLeftBounds;
+            ss.roomBottomRightBounds = bi.roomBottomRightBounds;
+            ss.robotsTeamA = bi.robotsTeamA;
+            ss.robotsTeamB = bi.robotsTeamB;
+
+            return ss;
+        }
+
     };
 
 }
 
-#endif //RFSIM_GUISTYLE_HPP
+#endif //RFSIM_SCENARIOCOMMON_HPP

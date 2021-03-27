@@ -71,13 +71,10 @@ namespace rfsim {
         ImGui_ImplOpenGL3_Init(glsl_version);
 
         // Global simulator state
-        float dt;
-        float t = 0.0f;
         GuiMenuBar menuBar;
         GameState gameState;
         std::shared_ptr<Game> game;
         std::shared_ptr<Algorithm> algo;
-        std::string algoName;
 
         // This is main menu related data
         bool needRefresh = true;
@@ -89,6 +86,11 @@ namespace rfsim {
         std::vector<const char*> scenariosRaw;
         std::vector<std::string> algorithms;
         std::vector<const char*> algorithmsRaw;
+
+        // In-game
+        float dt;
+        float t = 0.0f;
+        bool needRestart = false;
 
         while (!mPrimaryWindow->ShouldClose() && !exit) {
             mWindowManager->UpdateEvents();
@@ -187,7 +189,6 @@ namespace rfsim {
                 mPhysicsServer->BeginGame(game->physicsGameInitInfo);
                 mGraphicsServer->BeginGame(game->graphicsSceneSettings);
                 algo->BeginGame(*game);
-                algo->GetAboutInfo(algoName);
 
                 t = 0.0f;
 
@@ -244,6 +245,7 @@ namespace rfsim {
                 // Draw Control window
                 {
                     ImGui::Begin("Control Window", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+
                     ImGui::BeginGroup();
                     ImGui::Text("Simulation:");
                     ImGui::Text(" - Time: %.2f sec", t);
@@ -252,11 +254,28 @@ namespace rfsim {
                     ImGui::Text(" - Score: %u : %u", game->teamScoreA, game->teamScoreB);
                     ImGui::EndGroup();
 
-                    ImGui::NewLine();
+                    ImGui::Separator();
+
+                    ImGui::BeginGroup();
+                    ImGui::Text("Targets:");
+                    ImGui::Text(" - Scenario: %s", scenariosRaw[selectedScenario]);
+                    ImGui::Text(" - Algorithm: %s", algorithmsRaw[selectedAlgo]);
+                    ImGui::EndGroup();
+
+                    ImGui::Separator();
 
                     ImGui::PushStyleColor(ImGuiCol_Button, mStyle.redColor);
                     if (ImGui::Button("Quit Game", ImVec2(200, 0))) {
                         gameState = GameState::Finished;
+                        mState = State::EndGame;
+                    }
+
+                    ImGui::SameLine();
+
+                    ImGui::PushStyleColor(ImGuiCol_Button, mStyle.violetColor);
+                    if (ImGui::Button("Restart", ImVec2(200, 0))) {
+                        gameState = GameState::Finished;
+                        needRestart = true;
                         mState = State::EndGame;
                     }
 
@@ -274,7 +293,7 @@ namespace rfsim {
                         gameState = GameState::Paused;
                     }
 
-                    ImGui::PopStyleColor(3);
+                    ImGui::PopStyleColor(4);
                     ImGui::End();
                 }
             }
@@ -286,7 +305,13 @@ namespace rfsim {
                 game = nullptr;
                 algo = nullptr;
 
-                mState = State::MainMenu;
+                if (needRestart) {
+                    mState = State::BeginGame;
+                    needRestart = false;
+                }
+                else {
+                    mState = State::MainMenu;
+                }
             }
 
             // Rendering

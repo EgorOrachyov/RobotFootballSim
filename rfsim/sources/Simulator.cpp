@@ -32,7 +32,8 @@
 #include <logic/AlgorithmManager.hpp>
 #include <logic/GameManager.hpp>
 
-#include <scenario/TestScenario.hpp>
+#include <scenario/Scrum.hpp>
+#include <scenario/Duel.hpp>
 
 namespace rfsim {
 
@@ -54,7 +55,9 @@ namespace rfsim {
         // todo: Load from config
         // This is default algorithm and scenario (does not change order)
         mAlgorithmManager->Load("randommove");
-        mGameManager->AddScenario(std::make_shared<TestScenario>());
+        mAlgorithmManager->Load("followmove");
+        mGameManager->AddScenario(std::make_shared<Scrum>());
+        mGameManager->AddScenario(std::make_shared<Duel>());
     }
 
     Simulator::~Simulator() {

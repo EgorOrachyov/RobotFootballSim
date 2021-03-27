@@ -65,7 +65,8 @@ set(RFSIM_GUI_SOURCES
         sources/gui/GuiMenuBar.hpp)
 
 set(RFSIM_SCENARIO_SOURCES
-        sources/scenario/TestScenario.hpp)
+        sources/scenario/Scrum.hpp
+        sources/scenario/ScenarioCommon.hpp sources/scenario/Duel.hpp)
 
 add_executable(rfsim
         ${RFSIM_C_API}
@@ -108,3 +109,8 @@ target_link_libraries(rfsim PRIVATE dynalo)
 
 add_library(randommove SHARED plugins/RandomMovement.cpp)
 target_include_directories(randommove PRIVATE include)
+target_link_libraries(randommove glm)
+
+add_library(followmove SHARED plugins/BallFollowMovement.cpp)
+target_include_directories(followmove PRIVATE include)
+target_link_libraries(followmove glm)

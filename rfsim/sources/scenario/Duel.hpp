@@ -22,19 +22,21 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_TESTSCENARIO_HPP
-#define RFSIM_TESTSCENARIO_HPP
+#ifndef RFSIM_DUEL_HPP
+#define RFSIM_DUEL_HPP
 
 #include <logic/GameScenario.hpp>
+#include <scenario/ScenarioCommon.hpp>
+#include <glm/gtc/constants.hpp>
 
 namespace rfsim {
 
-    class TestScenario: public GameScenario {
+    class Duel: public GameScenario {
     public:
-        ~TestScenario() override = default;
+        ~Duel() override = default;
 
         std::string GetName() const override {
-            return "Test Scenario";
+            return "Duel (test)";
         }
 
         std::string GetDescription() const override {
@@ -46,54 +48,35 @@ namespace rfsim {
 
             // Some constants
             const auto pi = glm::pi<float>();
-            const float fieldLength = 16;
-            const float fieldWidth = 9;
+            const auto fieldSize = ScenarioCommon::GetDefaultFieldSize();
+            const auto fieldBorder = ScenarioCommon::GetDefaultFieldBorderOffset();
+            const float fieldWidth = fieldSize.x;
+            const float fieldHeight = fieldSize.y;
 
             // Team size (total x2 robots)
-            game->teamSize = 6;
+            game->teamSize = 1;
 
-            // todo: change properties to real ones
             auto& physicsProperties = game->physicsGameProperties;
-            physicsProperties.fieldFriction = 0.5f;
-            physicsProperties.robotRadius = 0.2f;
-            physicsProperties.robotHeight = 0.1f;
-            physicsProperties.robotMass = 1.0f;
-            physicsProperties.robotFriction = 0.25f;
-            physicsProperties.robotRestitution = 0.1f;
-            physicsProperties.robotLeftMotorOffset = { 0, -0.8f };
-            physicsProperties.robotRightMotorOffset = { 0, 0.8f };
-            physicsProperties.ballRadius = 0.1f;
-            physicsProperties.ballMass = 0.05f;
-            physicsProperties.ballFriction = 0.005f;
-            physicsProperties.ballRestitution = 0.05f;
+            physicsProperties = ScenarioCommon::GetDefaultPhysicsProperties();
 
             // Field settings will be fixed (but ball placement can differ)
             auto& beginInfo = game->physicsGameInitInfo;
-            beginInfo.fieldTopLeftBounds     = { 0.5f, 0.5f };
-            beginInfo.fieldBottomRightBounds = { fieldLength - 0.5f,  fieldWidth - 0.5f };
+            beginInfo.fieldTopLeftBounds     = { fieldBorder.x, fieldBorder.y };
+            beginInfo.fieldBottomRightBounds = {fieldWidth - fieldBorder.x, fieldHeight - fieldBorder.y };
             beginInfo.roomTopLeftBounds      = { 0, 0 };
-            beginInfo.roomBottomRightBounds  = { fieldLength, fieldWidth };
-            beginInfo.ballPosition = { fieldLength * 0.5f, fieldWidth * 0.5f };
+            beginInfo.roomBottomRightBounds  = {fieldWidth, fieldHeight };
+            beginInfo.ballPosition = {fieldWidth * 0.5f, fieldHeight * 0.5f };
 
             // Initial robots placement
-            for (int i = 0; i < game->teamSize; i++) {
-                beginInfo.robotsTeamA.push_back({ i,     { fieldLength * 0.25f, fieldWidth * 0.5f + fieldWidth * 0.3f * ((i - 2.5f) / 2.5f) }, 0 });
-                game->robotMotorPowerA.emplace_back(0,0);
-                beginInfo.robotsTeamB.push_back({ (int)(i + game->teamSize), { fieldLength * 0.75f, fieldWidth * 0.5f + fieldWidth * 0.3f * ((i - 2.5f) / 2.5f) }, pi });
-                game->robotMotorPowerB.emplace_back(0,0);
-            }
+            beginInfo.robotsTeamA.push_back(RobotInitInfo{0, {fieldWidth * 0.5f - 2.0f, fieldHeight * 0.5f}, 0.0f});
+            game->robotMotorPowerA.emplace_back(0,0);
+
+            beginInfo.robotsTeamB.push_back(RobotInitInfo{1, {fieldWidth * 0.5f + 2.0f, fieldHeight * 0.5f}, pi});
+            game->robotMotorPowerB.emplace_back(0,0);
 
             // Graphics is exact copy of ph settings + init info
             auto& sceneSettings = game->graphicsSceneSettings;
-            sceneSettings.ballRadius = physicsProperties.ballRadius;
-            sceneSettings.ballPosition = beginInfo.ballPosition;
-            sceneSettings.robotRadius = physicsProperties.robotRadius;
-            sceneSettings.fieldTopLeftBounds = beginInfo.fieldTopLeftBounds;
-            sceneSettings.fieldBottomRightBounds = beginInfo.fieldBottomRightBounds;
-            sceneSettings.roomTopLeftBounds = beginInfo.roomTopLeftBounds;
-            sceneSettings.roomBottomRightBounds = beginInfo.roomBottomRightBounds;
-            sceneSettings.robotsTeamA = beginInfo.robotsTeamA;
-            sceneSettings.robotsTeamB = beginInfo.robotsTeamB;
+            sceneSettings = ScenarioCommon::GetDefaultSceneSettingsFromPhysics(physicsProperties, beginInfo);
 
             return game;
         }
@@ -101,4 +84,4 @@ namespace rfsim {
 
 }
 
-#endif //RFSIM_TESTSCENARIO_HPP
+#endif //RFSIM_DUEL_HPP
