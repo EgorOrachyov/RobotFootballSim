@@ -71,12 +71,15 @@ namespace rfsim {
         ImGui_ImplOpenGL3_Init(glsl_version);
 
         // Global simulator state
+        float dt;
+        float t = 0.0f;
         GuiMenuBar menuBar;
+        GameState gameState;
         std::shared_ptr<Game> game;
         std::shared_ptr<Algorithm> algo;
+        std::string algoName;
 
         // This is main menu related data
-        float dt = 0.0f;
         bool needRefresh = true;
         bool beginGame;
         bool exit = false;
@@ -184,8 +187,16 @@ namespace rfsim {
                 mPhysicsServer->BeginGame(game->physicsGameInitInfo);
                 mGraphicsServer->BeginGame(game->graphicsSceneSettings);
                 algo->BeginGame(*game);
+                algo->GetAboutInfo(algoName);
+
+                t = 0.0f;
+
+                PhysicsGameState state;
+                mPhysicsServer->GetCurrentGameState(state);
+                game->physicsGameState = state;
 
                 mState = State::InGame;
+                gameState = GameState::Paused;
             }
             else if (mState == State::InGame) {
                 // Update loop strategy:
@@ -194,35 +205,78 @@ namespace rfsim {
                 // 3) Tick algorithm control (if required)
                 // 4) Update physics settings (motors power) (if required)
 
-                PhysicsGameState state;
-                mPhysicsServer->GameStep(dt);
-                mPhysicsServer->GetCurrentGameState(state);
+                // Update sim delta time
+                dt = 1.0f / ImGui::GetIO().Framerate;
+                dt = dt > (1.0f / 30.f)? 1.0f / 30.0f: dt;
+
+                if (gameState == GameState::Running) {
+                    t += dt;
+
+                    PhysicsGameState state;
+                    mPhysicsServer->GameStep(dt);
+                    mPhysicsServer->GetCurrentGameState(state);
+
+                    game->physicsGameState = state;
+                    algo->TickGame(*game);
+
+                    for (int i = 0; i < game->teamSize; i++) {
+                        auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
+                        auto power = game->robotMotorPowerA[i];
+                        mPhysicsServer->UpdateMotorsPower(id, power.x, power.y);
+                    }
+
+                    for (int i = 0; i < game->teamSize; i++) {
+                        auto id = game->physicsGameInitInfo.robotsTeamB[i].id;
+                        auto power = game->robotMotorPowerB[i];
+                        mPhysicsServer->UpdateMotorsPower(id, power.x, power.y);
+                    }
+                }
 
                 mPainter->FitToFramebufferArea();
 
-                mGraphicsServer->BeginDraw(state);
+                mGraphicsServer->BeginDraw(game->physicsGameState);
                 mGraphicsServer->DrawStaticObjects();
                 mGraphicsServer->DrawDynamicObjects();
                 mGraphicsServer->DrawAuxInfo();
                 mGraphicsServer->DrawPostUI();
                 mGraphicsServer->EndDraw();
 
-                game->physicsGameState = state;
-                algo->TickGame(*game);
+                // Draw Control window
+                {
+                    ImGui::Begin("Control Window", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+                    ImGui::BeginGroup();
+                    ImGui::Text("Simulation:");
+                    ImGui::Text(" - Time: %.2f sec", t);
+                    ImGui::Text(" - Framerate: %.2f ms (%.2f)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                    ImGui::Text(" - Status: %s", GameStateToStr(gameState));
+                    ImGui::Text(" - Score: %u : %u", game->teamScoreA, game->teamScoreB);
+                    ImGui::EndGroup();
 
-                for (int i = 0; i < game->teamSize; i++) {
-                    auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
-                    auto power = game->robotMotorPowerA[i];
-                    mPhysicsServer->UpdateMotorsPower(id, power.x, power.y);
+                    ImGui::NewLine();
+
+                    ImGui::PushStyleColor(ImGuiCol_Button, mStyle.redColor);
+                    if (ImGui::Button("Quit Game", ImVec2(200, 0))) {
+                        gameState = GameState::Finished;
+                        mState = State::EndGame;
+                    }
+
+                    ImGui::SameLine();
+
+                    ImGui::PushStyleColor(ImGuiCol_Button, mStyle.greenColor);
+                    if (ImGui::Button("Play", ImVec2(200, 0)) && gameState != GameState::Finished) {
+                        gameState = GameState::Running;
+                    }
+
+                    ImGui::SameLine();
+
+                    ImGui::PushStyleColor(ImGuiCol_Button, mStyle.yellowColor);
+                    if (ImGui::Button("Pause", ImVec2(200, 0)) && gameState == GameState::Running) {
+                        gameState = GameState::Paused;
+                    }
+
+                    ImGui::PopStyleColor(3);
+                    ImGui::End();
                 }
-
-                for (int i = 0; i < game->teamSize; i++) {
-                    auto id = game->physicsGameInitInfo.robotsTeamB[i].id;
-                    auto power = game->robotMotorPowerB[i];
-                    mPhysicsServer->UpdateMotorsPower(id, power.x, power.y);
-                }
-
-                dt = 1.0f / ImGui::GetIO().Framerate;
             }
             else if (mState == State::EndGame) {
                 algo->EndGame(*game);
@@ -231,6 +285,8 @@ namespace rfsim {
 
                 game = nullptr;
                 algo = nullptr;
+
+                mState = State::MainMenu;
             }
 
             // Rendering
@@ -249,5 +305,19 @@ namespace rfsim {
 
         return 0;
     }
+
+    const char * GuiSimulator::GameStateToStr(GameState state) {
+        switch (state) {
+            case GameState::Running:
+                return "Running";
+            case GameState::Finished:
+                return "Finished";
+            case GameState::Paused:
+                return "Paused";
+            default:
+                return "(unknown)";
+        }
+    }
+
 
 }

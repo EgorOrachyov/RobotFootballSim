@@ -57,6 +57,7 @@ namespace rfsim {
         int Run() override;
 
     private:
+
         friend class GuiMainMenu;
         friend class GuiInGameMenu;
 
@@ -66,6 +67,14 @@ namespace rfsim {
             InGame,
             EndGame
         };
+
+        enum class GameState {
+            Paused,
+            Running,
+            Finished
+        };
+
+        static const char* GameStateToStr(GameState state);
 
         // Scale options for hdpi displays
         float mFontScale = 2.0f;

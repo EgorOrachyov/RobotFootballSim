@@ -31,6 +31,7 @@ namespace rfsim {
 
     struct GuiStyle {
         ImVec4 greenColor = ImVec4(ImColor(24, 237, 123));
+        ImVec4 yellowColor = ImVec4(ImColor(255, 208, 79));
         ImVec4 redColor = ImVec4(ImColor(189, 35, 15));
         ImVec4 clearColor = ImVec4(ImColor(255, 255, 255));
     };
