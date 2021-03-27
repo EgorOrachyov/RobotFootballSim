@@ -23,12 +23,11 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 #include <gui/GuiSimulator.hpp>
+#include <gui/GuiMenuBar.hpp>
 #include <graphics/Image.hpp>
-#include <graphics/Window.hpp>
 #include <graphics/WindowManager.hpp>
 #include <graphics/Painter.hpp>
 #include <graphics/GraphicsServer.hpp>
-#include <graphics/Image.hpp>
 #include <physics/PhysicsServer.hpp>
 #include <logic/AlgorithmManager.hpp>
 #include <logic/GameManager.hpp>
@@ -72,9 +71,12 @@ namespace rfsim {
         ImGui_ImplOpenGL3_Init(glsl_version);
 
         // Global simulator state
-        bool transition = true;
+        GuiMenuBar menuBar;
+        std::shared_ptr<Game> game;
+        std::shared_ptr<Algorithm> algo;
 
         // This is main menu related data
+        bool needRefresh = true;
         bool beginGame;
         bool exit = false;
         int selectedScenario = -1;
@@ -85,25 +87,20 @@ namespace rfsim {
         std::vector<const char*> algorithmsRaw;
 
         while (!mPrimaryWindow->ShouldClose() && !exit) {
-
             mWindowManager->UpdateEvents();
-
-            auto size = mPrimaryWindow->GetFramebufferSize();
-            auto aspect = (float) size.x / (float) size.y;
-
-            mPainter->SetDrawArea({0, 0, size});
-            mPainter->SetDrawSpace({0, 0, aspect, 1});
-            mPainter->SetClearColor({mStyle.clearColor.x, mStyle.clearColor.y, mStyle.clearColor.z, mStyle.clearColor.w});
-            mPainter->Clear();
 
             // Start the Dear ImGui frame
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
+            // Draw main menu
+            menuBar.Update();
+            exit |= menuBar.quit;
+
             if (mState == State::MainMenu) {
                 // Reset state
-                if (transition) {
+                if (needRefresh) {
                     selectedScenario = -1;
                     selectedAlgo = -1;
 
@@ -125,7 +122,7 @@ namespace rfsim {
                     for (auto& a: algorithms)
                         algorithmsRaw.push_back(a.data());
 
-                    transition = false;
+                    needRefresh = false;
                 }
 
                 // Draw animated background logo
@@ -134,6 +131,13 @@ namespace rfsim {
                     static float angle = 0.0f;
                     static float step = 0.01f;
 
+                    auto size = mPrimaryWindow->GetFramebufferSize();
+                    auto aspect = (float) size.x / (float) size.y;
+
+                    mPainter->Clear();
+                    mPainter->SetDrawArea({0, 0, size});
+                    mPainter->SetDrawSpace({0, 0, aspect, 1});
+                    mPainter->SetClearColor({mStyle.clearColor.x, mStyle.clearColor.y, mStyle.clearColor.z, mStyle.clearColor.w});
                     mPainter->SetBrushColor(glm::vec4 {1.0f});
                     mPainter->SetTransparentColor(glm::vec4{2.0f});
                     mPainter->DrawImage({0.45, 0.4, 0.7, 0.2}, 0.0f, mMainMenuLogo);
@@ -144,8 +148,6 @@ namespace rfsim {
                 }
 
                 // Draw menu widget
-                auto& style = mStyle;
-
                 ImGui::Begin("Main Menu");
 
                 ImGui::Text("How to start a new game:");
@@ -158,23 +160,27 @@ namespace rfsim {
                 ImGui::ListBox("Algorithm", &selectedAlgo, algorithmsRaw.data(), algorithmsRaw.size());
                 ImGui::NewLine();
 
-                ImGui::PushStyleColor(ImGuiCol_Button, style.greenColor);
-                beginGame = ImGui::Button("Start", ImVec2(200, 0));
+                ImGui::PushStyleColor(ImGuiCol_Button, mStyle.redColor);
+                exit |= ImGui::Button("Quit", ImVec2(200, 0));
                 ImGui::SameLine();
-                ImGui::PushStyleColor(ImGuiCol_Button, style.redColor);
-                exit = ImGui::Button("Exit", ImVec2(200, 0));
+                ImGui::PushStyleColor(ImGuiCol_Button, mStyle.greenColor);
+                beginGame = ImGui::Button("Start", ImVec2(200, 0));
 
                 ImGui::PopStyleColor(2);
                 ImGui::End();
 
                 if (beginGame && selectedScenario >= 0 && selectedAlgo >= 0) {
                     mState = State::PrepareGame;
-                    transition = true;
+                    needRefresh = true;
                 }
             }
+            else if (mState == State::PrepareGame) {
+                game = mGameManager->CreateGame(selectedScenario);
+                algo = mAlgorithmManager->GetAlgorithmAt(selectedAlgo);
+                mState = State::InGame;
+            }
+            else if (mState == State::InGame) {
 
-            if (mState == State::PrepareGame) {
-                mState = State::MainMenu;
             }
 
             // Rendering
@@ -182,6 +188,7 @@ namespace rfsim {
             mPainter->Draw();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+            // Now we are ready to present images
             mWindowManager->SwapBuffers();
         }
 

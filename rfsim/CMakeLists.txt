@@ -60,7 +60,7 @@ set(RFSIM_LOGIC_SOURCES
 set(RFSIM_GUI_SOURCES
         sources/gui/GuiSimulator.cpp
         sources/gui/GuiSimulator.hpp
-        sources/gui/GuiStyle.hpp)
+        sources/gui/GuiStyle.hpp sources/gui/GuiMenuBar.cpp sources/gui/GuiMenuBar.hpp)
 
 set(RFSIM_SCENARIO_SOURCES
         sources/scenario/TestScenario.hpp)
