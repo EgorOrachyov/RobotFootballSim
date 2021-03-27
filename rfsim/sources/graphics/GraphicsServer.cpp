@@ -96,7 +96,7 @@ namespace rfsim {
         auto size = roomWH - room00;
 
         mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
-        mPainter->SetBrushColor(WHITE_COLOR);
+        mPainter->SetBrushColor({mSettings.fieldCustomColor, 1.0f});
         mPainter->DrawImage({room00, size}, 0, mFieldImage);
     }
 
@@ -117,7 +117,7 @@ namespace rfsim {
             if (mSettings.drawShadows) {
                 mPainter->SetBrushColor(mSettings.shadowIntensity * SHADOW_COLOR);
                 mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
-                mPainter->DrawImage(rect + glm::vec4{0,radius * 0.7,0,0}, 0, mShadowImage);
+                mPainter->DrawImage(rect + glm::vec4{mSettings.sunPosition * radius,radius * 0.7,0,0}, 0, mShadowImage);
             }
 
             mPainter->SetBrushColor(WHITE_COLOR);
@@ -140,7 +140,7 @@ namespace rfsim {
             if (mSettings.drawShadows) {
                 mPainter->SetBrushColor(mSettings.shadowIntensity * SHADOW_COLOR);
                 mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
-                mPainter->DrawImage(rect + glm::vec4{0,radius * 0.8,0,0}, 0, mShadowImage);
+                mPainter->DrawImage(rect + glm::vec4{mSettings.sunPosition * radius,radius * 0.8,0,0}, 0, mShadowImage);
             }
 
             // Cool hack to make ball rotate

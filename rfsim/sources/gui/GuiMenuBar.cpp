@@ -58,7 +58,11 @@ namespace rfsim {
 
             if (graphicsSettings.drawShadows) {
                 ImGui::SliderFloat("Shadow Intensity", &graphicsSettings.shadowIntensity, 0.0f, 1.0f);
+                ImGui::SliderFloat("Sun Position", &graphicsSettings.sunPosition, -0.2f, 0.2f);
             }
+
+            ImGui::Separator();
+            ImGui::ColorEdit3("Field Color", &graphicsSettings.fieldCustomColor[0]);
 
             if (ImGui::Button("Close")) {
                 mShowGraphicsSettings = false;

@@ -38,8 +38,9 @@ namespace rfsim {
         bool drawCollisionInfo = true;
         bool drawShadows = true;
         float shadowIntensity = 1.0f;
-        float fieldColorIntensity = 1.0f;
+        float sunPosition = 0.0f;
         glm::vec3 backgroundColor = {0, 0, 0};
+        glm::vec3 fieldCustomColor = { 1.0f, 1.0f, 1.0f };
     };
 
 }

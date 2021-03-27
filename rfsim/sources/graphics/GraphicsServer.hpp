@@ -57,6 +57,7 @@ namespace rfsim {
         void EndGame();
 
     private:
+
         enum class InternalState {
             Default,
             InGame,
