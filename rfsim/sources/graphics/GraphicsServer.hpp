@@ -27,7 +27,7 @@
 
 #include <graphics/Image.hpp>
 #include <graphics/Window.hpp>
-#include <graphics/PainterEngine.hpp>
+#include <graphics/Painter.hpp>
 #include <graphics/GraphicsSettings.hpp>
 #include <graphics/GraphicsGameState.hpp>
 #include <graphics/GraphicsSceneSettings.hpp>
@@ -39,7 +39,7 @@ namespace rfsim {
 
     class GraphicsServer {
     public:
-        GraphicsServer(const std::shared_ptr<Window> &window, const std::shared_ptr<PainterEngine> &painter, const std::string& resPath);
+        GraphicsServer(const std::shared_ptr<Window> &window, const std::shared_ptr<Painter> &painter, const std::string& resPath);
         GraphicsServer(const GraphicsServer& other) = delete;
         GraphicsServer(GraphicsServer&& other) noexcept = delete;
         ~GraphicsServer() = default;
@@ -71,7 +71,7 @@ namespace rfsim {
 
         std::string mResPath;
         std::shared_ptr<Window> mWindow;
-        std::shared_ptr<PainterEngine> mPainter;
+        std::shared_ptr<Painter> mPainter;
 
         std::shared_ptr<Image> mBallImage;
         std::shared_ptr<Image> mFieldImage;

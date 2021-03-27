@@ -22,54 +22,72 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_WINDOWMANAGER_HPP
-#define RFSIM_WINDOWMANAGER_HPP
+#ifndef RFSIM_GUISIMULATOR_HPP
+#define RFSIM_GUISIMULATOR_HPP
 
-#include <graphics/Window.hpp>
+#include <gui/GuiStyle.hpp>
+#include <Simulator.hpp>
 #include <memory>
-#include <vector>
 
 namespace rfsim {
 
     /**
-     * Wrapper for GLFW windowing logic.
+     * @brief Simulator with GUI
+     *
+     * This is an extension to base simulator with graphical user interface based on imgui library.
+     * This is a solid class, which encapsulates all drawn GUI elements for simplicity.
      */
-    class WindowManager {
+    class GuiSimulator: public Simulator {
     public:
-        WindowManager();
-        ~WindowManager();
+        /**
+         * Setup simulator class.
+         *
+         * @param argc Number of command line arguments
+         * @param argv Array of arguments
+         */
+        GuiSimulator(int argc, const char* const* argv);
+        ~GuiSimulator() override = default;
 
         /**
-         * Creates native OS window with specified properties.
+         * Run simulator application.
+         * This function returns when user closes simulator application.
          *
-         * @param size Window size in abstract units
-         * @param title Window title displayed to the user
-         *
-         * @return Window object
+         * @return Status code
          */
-        std::shared_ptr<class Window> CreateNewWindow(const glm::ivec2& size, const std::string& title);
-
-        /**
-         * Updates windowing system.
-         * Queries user input, updates elements states.
-         *
-         * @note Must be called every frame for smooth update.
-         */
-        void UpdateEvents();
-
-        /**
-         * Swap buffers for each active window.
-         */
-        void SwapBuffers();
+        int Run() override;
 
     private:
 
-        /** Error callback for glfw */
-        static void ErrorCallback(int errorCode, const char *description);
+        friend class GuiMainMenu;
+        friend class GuiInGameMenu;
 
-        std::vector<std::shared_ptr<class Window>> mWindows;
+        enum class State {
+            MainMenu,
+            BeginGame,
+            InGame,
+            EndGame
+        };
+
+        enum class GameState {
+            Paused,
+            Running,
+            Finished
+        };
+
+        static const char* GameStateToStr(GameState state);
+
+        // Scale options for hdpi displays
+        float mFontScale = 2.0f;
+        float mGuiScale = 2.0f;
+
+        GuiStyle mStyle;
+        State mState = State::MainMenu;
+
+        // For main menu animated logo
+        std::shared_ptr<class Image> mMainMenuLogo;
+        std::shared_ptr<class Image> mMainMenuBall;
     };
 
 }
 
-#endif //RFSIM_WINDOWMANAGER_HPP
+#endif //RFSIM_GUISIMULATOR_HPP

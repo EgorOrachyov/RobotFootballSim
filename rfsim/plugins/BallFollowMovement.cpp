@@ -24,16 +24,19 @@
 
 #define RFSIM_EXPORTS
 #include <rfsim/rfsim.h>
+#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
 #include <iostream>
 #include <random>
 #include <chrono>
 #include <cstring>
+#include <cmath>
 
 static int teamSize = 0;
 
 RFSIM_DEFINE_FUNCTION_INIT {
-    std::strcpy(context->name, "Random Movement (testing)");
-    std::strcpy(context->description, "Random movement of the robots with nearly fixed direction");
+    std::strcpy(context->name, "Ball Follow Movement (testing)");
+    std::strcpy(context->description, "Movement to follow ball and hit it (does not avoids collisions)");
     return rfsim_status_success;
 };
 
@@ -45,15 +48,40 @@ RFSIM_DEFINE_FUNCTION_BEGIN_GAME {
 RFSIM_DEFINE_FUNCTION_TICK_GAME {
     std::default_random_engine engine(std::chrono::system_clock::now().time_since_epoch().count());
     auto dist = std::uniform_real_distribution<float>(0.0, 1.0);
+    auto basePowerA = 30.0f;
+    auto basePowerB = 31.0f;
+
+    auto& b = state->ball;
+    auto bp = glm::vec2(b.position.x, b.position.y);
 
     for (int i = 0; i < teamSize; i++) {
-        state->team_a_control[i].left_motor_force = 70.0f * dist(engine);
-        state->team_a_control[i].right_motor_force = 45.0f * dist(engine);
+        auto &r = state->team_a[i];
+        auto rp = glm::vec2(r.position.x, r.position.y);
+        auto a = r.angle;
+        auto rd = glm::vec2(std::cos(a), std::sin(a));
+        auto bd = bp - rp;
+
+        auto dotRdBd = glm::dot(rd, bd) / glm::length(rd) / glm::length(bd);
+        auto d = glm::length(bd) + 1.0f;
+        auto left = (d + dotRdBd) * dist(engine);
+        auto right = (d) * dist(engine);
+
+        state->team_a_control[i] = {left * basePowerA, right * basePowerA};
     }
 
     for (int i = 0; i < teamSize; i++) {
-        state->team_b_control[i].left_motor_force = 50.0f * dist(engine);
-        state->team_b_control[i].right_motor_force = 65.0f * dist(engine);
+        auto &r = state->team_b[i];
+        auto rp = glm::vec2(r.position.x, r.position.y);
+        auto a = r.angle;
+        auto rd = glm::vec2(std::cos(a), std::sin(a));
+        auto bd = bp - rp;
+
+        auto dotRdBd = glm::dot(rd, bd) / glm::length(rd) / glm::length(bd);
+        auto d = glm::length(bd) + 1.0f;
+        auto left = (d + dotRdBd) * dist(engine);
+        auto right = (d) * dist(engine);
+
+        state->team_b_control[i] = {left * basePowerB, right * basePowerB};
     }
 
     return rfsim_status_success;

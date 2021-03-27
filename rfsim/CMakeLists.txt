@@ -14,16 +14,16 @@ set(RFSIM_GRAPHICS_SOURCES
         sources/graphics/Window.hpp
         sources/graphics/WindowManager.cpp
         sources/graphics/WindowManager.hpp
-        sources/graphics/PainterEngine.cpp
-        sources/graphics/PainterEngine.hpp
+        sources/graphics/Painter.cpp
+        sources/graphics/Painter.hpp
+        sources/graphics/PainterItems.hpp
         sources/graphics/GraphicsServer.cpp
         sources/graphics/GraphicsServer.hpp
         sources/graphics/GraphicsSettings.hpp
         sources/graphics/GraphicsGameState.hpp
         sources/graphics/GraphicsSceneSettings.hpp
         sources/graphics/Image.cpp
-        sources/graphics/Image.hpp
-        sources/graphics/PainterItems.hpp)
+        sources/graphics/Image.hpp)
 
 set(RFSIM_OPENGL_SOURCES
         sources/opengl/GLDynamicBuffer.hpp
@@ -52,7 +52,21 @@ set(RFSIM_LOGIC_SOURCES
         sources/logic/Algorithm.cpp
         sources/logic/Algorithm.hpp
         sources/logic/AlgorithmManager.cpp
-        sources/logic/AlgorithmManager.hpp)
+        sources/logic/AlgorithmManager.hpp
+        sources/logic/GameManager.cpp
+        sources/logic/GameManager.hpp
+        sources/logic/GameScenario.hpp)
+
+set(RFSIM_GUI_SOURCES
+        sources/gui/GuiSimulator.cpp
+        sources/gui/GuiSimulator.hpp
+        sources/gui/GuiStyle.hpp
+        sources/gui/GuiMenuBar.cpp
+        sources/gui/GuiMenuBar.hpp)
+
+set(RFSIM_SCENARIO_SOURCES
+        sources/scenario/Scrum.hpp
+        sources/scenario/ScenarioCommon.hpp sources/scenario/Duel.hpp)
 
 add_executable(rfsim
         ${RFSIM_C_API}
@@ -61,7 +75,9 @@ add_executable(rfsim
         ${RFSIM_OPENGL_SOURCES}
         ${RFSIM_SHADERS}
         ${RFSIM_PHYSICS_SOURCES}
-        ${RFSIM_LOGIC_SOURCES})
+        ${RFSIM_LOGIC_SOURCES}
+        ${RFSIM_GUI_SOURCES}
+        ${RFSIM_SCENARIO_SOURCES})
 
 target_include_directories(rfsim PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_include_directories(rfsim PRIVATE ${CMAKE_CURRENT_LIST_DIR}/sources)
@@ -85,13 +101,16 @@ endforeach()
 set_target_properties(rfsim PROPERTIES CXX_STANDARD 14)
 set_target_properties(rfsim PROPERTIES CXX_STANDARD_REQUIRED ON)
 
-target_link_libraries(rfsim PRIVATE glfw)
-target_link_libraries(rfsim PRIVATE libglew_static)
-target_link_libraries(rfsim PRIVATE box2d)
 target_link_libraries(rfsim PRIVATE imgui)
+target_link_libraries(rfsim PRIVATE box2d)
 target_link_libraries(rfsim PRIVATE stb_image)
 target_link_libraries(rfsim PRIVATE glm)
 target_link_libraries(rfsim PRIVATE dynalo)
 
 add_library(randommove SHARED plugins/RandomMovement.cpp)
 target_include_directories(randommove PRIVATE include)
+target_link_libraries(randommove glm)
+
+add_library(followmove SHARED plugins/BallFollowMovement.cpp)
+target_include_directories(followmove PRIVATE include)
+target_link_libraries(followmove glm)

@@ -26,9 +26,16 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 add_subdirectory(deps/box2d)
 
 message(STATUS "Add imgui as library for GUI elements")
-add_library(imgui INTERFACE)
-target_include_directories(imgui INTERFACE deps/imgui)
-target_include_directories(imgui INTERFACE deps/imgui/backends)
+add_library(imgui STATIC
+    deps/imgui/imgui.cpp
+    deps/imgui/imgui_draw.cpp
+    deps/imgui/imgui_tables.cpp
+    deps/imgui/imgui_widgets.cpp
+    deps/imgui/backends/imgui_impl_glfw.cpp
+    deps/imgui/backends/imgui_impl_opengl3.cpp)
+target_include_directories(imgui PUBLIC deps/imgui)
+target_link_libraries(imgui PUBLIC glfw)
+target_link_libraries(imgui PUBLIC libglew_static)
 
 message(STATUS "Add stb image for image data processing")
 add_subdirectory(deps/stb)

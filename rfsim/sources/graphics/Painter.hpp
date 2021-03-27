@@ -22,8 +22,8 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_PAINTERENGINE_HPP
-#define RFSIM_PAINTERENGINE_HPP
+#ifndef RFSIM_PAINTER_HPP
+#define RFSIM_PAINTER_HPP
 
 #include <graphics/Image.hpp>
 #include <graphics/Window.hpp>
@@ -47,7 +47,7 @@ namespace rfsim {
      *        |
      *     originY+h
      */
-    class PainterEngine {
+    class Painter {
     public:
         using Size = glm::vec2;
         using Point = glm::vec2;
@@ -70,10 +70,10 @@ namespace rfsim {
          * @param space Virtual coordinates space mapped to the screen.
          * @param target Target window for drawing.
          */
-        PainterEngine(const Recti& area, const Rect& space, std::shared_ptr<Window> target);
-        PainterEngine(const PainterEngine& engine) = delete;
-        PainterEngine(PainterEngine&& engine) noexcept = delete;
-        ~PainterEngine() = default;
+        Painter(const Recti& area, const Rect& space, std::shared_ptr<Window> target);
+        Painter(const Painter& engine) = delete;
+        Painter(Painter&& engine) noexcept = delete;
+        ~Painter() = default;
 
         void DrawLine(const Point& from, const Point& to);
 
@@ -144,4 +144,4 @@ namespace rfsim {
 
 }
 
-#endif //RFSIM_PAINTERENGINE_HPP
+#endif //RFSIM_PAINTER_HPP

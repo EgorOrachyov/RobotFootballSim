@@ -22,54 +22,37 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_WINDOWMANAGER_HPP
-#define RFSIM_WINDOWMANAGER_HPP
+#ifndef RFSIM_GAMEMANAGER_HPP
+#define RFSIM_GAMEMANAGER_HPP
 
-#include <graphics/Window.hpp>
-#include <memory>
+#include <logic/Game.hpp>
+#include <logic/GameScenario.hpp>
 #include <vector>
 
 namespace rfsim {
 
     /**
-     * Wrapper for GLFW windowing logic.
+     * @brief Game sessions manager
+     *
+     * Manages game scenarios and creates game sessions with selected scenarios.
      */
-    class WindowManager {
+    class GameManager {
     public:
-        WindowManager();
-        ~WindowManager();
+        GameManager() = default;
+        GameManager(const GameManager& other) = delete;
+        GameManager(GameManager&& other) noexcept = delete;
+        ~GameManager() = default;
 
-        /**
-         * Creates native OS window with specified properties.
-         *
-         * @param size Window size in abstract units
-         * @param title Window title displayed to the user
-         *
-         * @return Window object
-         */
-        std::shared_ptr<class Window> CreateNewWindow(const glm::ivec2& size, const std::string& title);
-
-        /**
-         * Updates windowing system.
-         * Queries user input, updates elements states.
-         *
-         * @note Must be called every frame for smooth update.
-         */
-        void UpdateEvents();
-
-        /**
-         * Swap buffers for each active window.
-         */
-        void SwapBuffers();
+        void AddScenario(const std::shared_ptr<GameScenario> &scenario);
+        void GetScenarioInfo(std::vector<std::string> &info);
+        std::shared_ptr<Game> CreateGame(unsigned int scenarioId);
 
     private:
-
-        /** Error callback for glfw */
-        static void ErrorCallback(int errorCode, const char *description);
-
-        std::vector<std::shared_ptr<class Window>> mWindows;
+        std::vector<std::shared_ptr<GameScenario>> mScenario;
     };
 
 }
 
-#endif //RFSIM_WINDOWMANAGER_HPP
+
+
+#endif //RFSIM_GAMEMANAGER_HPP

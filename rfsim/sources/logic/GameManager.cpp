@@ -22,54 +22,24 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_WINDOWMANAGER_HPP
-#define RFSIM_WINDOWMANAGER_HPP
-
-#include <graphics/Window.hpp>
-#include <memory>
-#include <vector>
+#include <logic/GameManager.hpp>
 
 namespace rfsim {
 
-    /**
-     * Wrapper for GLFW windowing logic.
-     */
-    class WindowManager {
-    public:
-        WindowManager();
-        ~WindowManager();
+    void GameManager::AddScenario(const std::shared_ptr<GameScenario> &scenario) {
+        assert(scenario != nullptr);
+        mScenario.push_back(scenario);
+    }
 
-        /**
-         * Creates native OS window with specified properties.
-         *
-         * @param size Window size in abstract units
-         * @param title Window title displayed to the user
-         *
-         * @return Window object
-         */
-        std::shared_ptr<class Window> CreateNewWindow(const glm::ivec2& size, const std::string& title);
+    void GameManager::GetScenarioInfo(std::vector<std::string> &info) {
+        for (auto& scenario: mScenario) {
+            info.push_back(std::move(scenario->GetName()));
+        }
+    }
 
-        /**
-         * Updates windowing system.
-         * Queries user input, updates elements states.
-         *
-         * @note Must be called every frame for smooth update.
-         */
-        void UpdateEvents();
-
-        /**
-         * Swap buffers for each active window.
-         */
-        void SwapBuffers();
-
-    private:
-
-        /** Error callback for glfw */
-        static void ErrorCallback(int errorCode, const char *description);
-
-        std::vector<std::shared_ptr<class Window>> mWindows;
-    };
+    std::shared_ptr<Game> GameManager::CreateGame(unsigned int scenarioId) {
+        assert(scenarioId < mScenario.size());
+        return mScenario[scenarioId]->CreateGame();
+    }
 
 }
-
-#endif //RFSIM_WINDOWMANAGER_HPP

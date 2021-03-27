@@ -28,6 +28,7 @@
 #include <physics/PhysicsGameState.hpp>
 #include <physics/PhysicsGameInitInfo.hpp>
 #include <physics/PhysicsGameProperties.hpp>
+#include <graphics/GraphicsSceneSettings.hpp>
 
 namespace rfsim {
 
@@ -44,6 +45,7 @@ namespace rfsim {
         PhysicsGameState physicsGameState;
         PhysicsGameInitInfo physicsGameInitInfo;
         PhysicsGameProperties physicsGameProperties;
+        GraphicsSceneSettings graphicsSceneSettings;
 
         std::vector<glm::vec2> robotMotorPowerA;
         std::vector<glm::vec2> robotMotorPowerB;

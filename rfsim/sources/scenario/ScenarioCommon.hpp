@@ -22,54 +22,64 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_WINDOWMANAGER_HPP
-#define RFSIM_WINDOWMANAGER_HPP
+#ifndef RFSIM_SCENARIOCOMMON_HPP
+#define RFSIM_SCENARIOCOMMON_HPP
 
-#include <graphics/Window.hpp>
-#include <memory>
-#include <vector>
+#include <physics/PhysicsGameProperties.hpp>
+#include <physics/PhysicsGameInitInfo.hpp>
+#include <graphics/GraphicsSceneSettings.hpp>
+#include <glm/vec2.hpp>
 
 namespace rfsim {
 
-    /**
-     * Wrapper for GLFW windowing logic.
-     */
-    class WindowManager {
+    class ScenarioCommon {
     public:
-        WindowManager();
-        ~WindowManager();
 
-        /**
-         * Creates native OS window with specified properties.
-         *
-         * @param size Window size in abstract units
-         * @param title Window title displayed to the user
-         *
-         * @return Window object
-         */
-        std::shared_ptr<class Window> CreateNewWindow(const glm::ivec2& size, const std::string& title);
+        static const unsigned int DEFAULT_TEAM_SIZE = 6;
 
-        /**
-         * Updates windowing system.
-         * Queries user input, updates elements states.
-         *
-         * @note Must be called every frame for smooth update.
-         */
-        void UpdateEvents();
+        static glm::vec2 GetDefaultFieldSize() {
+            return {9.0f, 6.0f};
+        }
 
-        /**
-         * Swap buffers for each active window.
-         */
-        void SwapBuffers();
+        static glm::vec2 GetDefaultFieldBorderOffset() {
+            return { 0.5f, 0.5f };
+        }
 
-    private:
+        static PhysicsGameProperties GetDefaultPhysicsProperties() {
+            PhysicsGameProperties pp;
+            pp.fieldFriction = 0.5f;
+            pp.robotRadius = 0.15f;
+            pp.robotHeight = 0.1f;
+            pp.robotMass = 1.0f;
+            pp.robotFriction = 0.25f;
+            pp.robotRestitution = 0.1f;
+            pp.robotLeftMotorOffset = {0, -0.8f };
+            pp.robotRightMotorOffset = {0, 0.8f };
+            pp.ballRadius = 0.08f;
+            pp.ballMass = 0.05f;
+            pp.ballFriction = 0.005f;
+            pp.ballRestitution = 0.05f;
 
-        /** Error callback for glfw */
-        static void ErrorCallback(int errorCode, const char *description);
+            return pp;
+        }
 
-        std::vector<std::shared_ptr<class Window>> mWindows;
+        static GraphicsSceneSettings GetDefaultSceneSettingsFromPhysics(const PhysicsGameProperties& pp, const PhysicsGameInitInfo& bi) {
+            GraphicsSceneSettings ss;
+            ss.ballRadius = pp.ballRadius;
+            ss.ballPosition = bi.ballPosition;
+            ss.robotRadius = pp.robotRadius;
+            ss.fieldTopLeftBounds = bi.fieldTopLeftBounds;
+            ss.fieldBottomRightBounds = bi.fieldBottomRightBounds;
+            ss.roomTopLeftBounds = bi.roomTopLeftBounds;
+            ss.roomBottomRightBounds = bi.roomBottomRightBounds;
+            ss.robotsTeamA = bi.robotsTeamA;
+            ss.robotsTeamB = bi.robotsTeamB;
+
+            return ss;
+        }
+
     };
 
 }
 
-#endif //RFSIM_WINDOWMANAGER_HPP
+#endif //RFSIM_SCENARIOCOMMON_HPP

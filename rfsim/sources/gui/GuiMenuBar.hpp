@@ -22,54 +22,27 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_WINDOWMANAGER_HPP
-#define RFSIM_WINDOWMANAGER_HPP
+#ifndef RFSIM_GUIMENUBAR_HPP
+#define RFSIM_GUIMENUBAR_HPP
 
-#include <graphics/Window.hpp>
-#include <memory>
-#include <vector>
+#include <graphics/GraphicsSettings.hpp>
 
 namespace rfsim {
 
-    /**
-     * Wrapper for GLFW windowing logic.
-     */
-    class WindowManager {
+    class GuiMenuBar {
     public:
-        WindowManager();
-        ~WindowManager();
+        void Update();
 
-        /**
-         * Creates native OS window with specified properties.
-         *
-         * @param size Window size in abstract units
-         * @param title Window title displayed to the user
-         *
-         * @return Window object
-         */
-        std::shared_ptr<class Window> CreateNewWindow(const glm::ivec2& size, const std::string& title);
-
-        /**
-         * Updates windowing system.
-         * Queries user input, updates elements states.
-         *
-         * @note Must be called every frame for smooth update.
-         */
-        void UpdateEvents();
-
-        /**
-         * Swap buffers for each active window.
-         */
-        void SwapBuffers();
+    public:
+        // In game graphics
+        GraphicsSettings graphicsSettings;
+        bool quit = false;
 
     private:
-
-        /** Error callback for glfw */
-        static void ErrorCallback(int errorCode, const char *description);
-
-        std::vector<std::shared_ptr<class Window>> mWindows;
+        bool mShowAbout = false;
+        bool mShowGraphicsSettings = false;
     };
 
 }
 
-#endif //RFSIM_WINDOWMANAGER_HPP
+#endif //RFSIM_GUIMENUBAR_HPP

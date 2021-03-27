@@ -22,54 +22,30 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_WINDOWMANAGER_HPP
-#define RFSIM_WINDOWMANAGER_HPP
+#ifndef RFSIM_GAMESCENARIO_HPP
+#define RFSIM_GAMESCENARIO_HPP
 
-#include <graphics/Window.hpp>
+#include <logic/Game.hpp>
+#include <string>
 #include <memory>
-#include <vector>
 
 namespace rfsim {
 
-    /**
-     * Wrapper for GLFW windowing logic.
-     */
-    class WindowManager {
+    /** Defines properties, setup and initial state of a game */
+    class GameScenario {
     public:
-        WindowManager();
-        ~WindowManager();
+        virtual ~GameScenario() = default;
 
-        /**
-         * Creates native OS window with specified properties.
-         *
-         * @param size Window size in abstract units
-         * @param title Window title displayed to the user
-         *
-         * @return Window object
-         */
-        std::shared_ptr<class Window> CreateNewWindow(const glm::ivec2& size, const std::string& title);
+        /** @return Scenario name (displayed to the user) */
+        virtual std::string GetName() const = 0;
 
-        /**
-         * Updates windowing system.
-         * Queries user input, updates elements states.
-         *
-         * @note Must be called every frame for smooth update.
-         */
-        void UpdateEvents();
+        /** @return Scenario description (optionally displayed to the user) */
+        virtual std::string GetDescription() const = 0;
 
-        /**
-         * Swap buffers for each active window.
-         */
-        void SwapBuffers();
-
-    private:
-
-        /** Error callback for glfw */
-        static void ErrorCallback(int errorCode, const char *description);
-
-        std::vector<std::shared_ptr<class Window>> mWindows;
+        /** @return Creates new game session with initial state, physics properties and etc. */
+        virtual std::shared_ptr<Game> CreateGame() const = 0;
     };
 
 }
 
-#endif //RFSIM_WINDOWMANAGER_HPP
+#endif //RFSIM_GAMESCENARIO_HPP

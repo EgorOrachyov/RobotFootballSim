@@ -22,54 +22,21 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_WINDOWMANAGER_HPP
-#define RFSIM_WINDOWMANAGER_HPP
+#ifndef RFSIM_GUISTYLE_HPP
+#define RFSIM_GUISTYLE_HPP
 
-#include <graphics/Window.hpp>
-#include <memory>
-#include <vector>
+#include <imgui.h>
 
 namespace rfsim {
 
-    /**
-     * Wrapper for GLFW windowing logic.
-     */
-    class WindowManager {
-    public:
-        WindowManager();
-        ~WindowManager();
-
-        /**
-         * Creates native OS window with specified properties.
-         *
-         * @param size Window size in abstract units
-         * @param title Window title displayed to the user
-         *
-         * @return Window object
-         */
-        std::shared_ptr<class Window> CreateNewWindow(const glm::ivec2& size, const std::string& title);
-
-        /**
-         * Updates windowing system.
-         * Queries user input, updates elements states.
-         *
-         * @note Must be called every frame for smooth update.
-         */
-        void UpdateEvents();
-
-        /**
-         * Swap buffers for each active window.
-         */
-        void SwapBuffers();
-
-    private:
-
-        /** Error callback for glfw */
-        static void ErrorCallback(int errorCode, const char *description);
-
-        std::vector<std::shared_ptr<class Window>> mWindows;
+    struct GuiStyle {
+        ImVec4 greenColor = ImVec4(ImColor(24, 237, 123));
+        ImVec4 yellowColor = ImVec4(ImColor(255, 208, 79));
+        ImVec4 redColor = ImVec4(ImColor(189, 35, 15));
+        ImVec4 violetColor = ImVec4(ImColor(188, 107, 255));
+        ImVec4 clearColor = ImVec4(ImColor(255, 255, 255));
     };
 
 }
 
-#endif //RFSIM_WINDOWMANAGER_HPP
+#endif //RFSIM_GUISTYLE_HPP

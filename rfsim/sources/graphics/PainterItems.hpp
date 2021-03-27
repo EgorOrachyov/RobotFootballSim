@@ -29,19 +29,19 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <opengl/GLTexture.hpp>
 #include <opengl/GLDynamicGeometry.hpp>
-#include <graphics/PainterEngine.hpp>
+#include <graphics/Painter.hpp>
 
 namespace rfsim {
 
     struct PainterItem {
-        PainterEngine::Color penColor;
-        PainterEngine::Color brushColor;
-        PainterEngine::Color transparentColor;
+        Painter::Color penColor;
+        Painter::Color brushColor;
+        Painter::Color transparentColor;
         bool filled;
         unsigned int penWidth;
         int zOrder;
 
-        PainterItem(const PainterEngine::Palette& palette, int z) {
+        PainterItem(const Painter::Palette& palette, int z) {
             penColor = palette.penColor;
             brushColor = palette.brushColor;
             transparentColor = palette.transparentColor;
@@ -52,11 +52,11 @@ namespace rfsim {
     };
 
     struct PainterRect: public PainterItem {
-        PainterEngine::Rect rect;
+        Painter::Rect rect;
         float angle;
 
-        PainterRect(const PainterEngine::Rect& r, float a,
-                    const PainterEngine::Palette& palette, int z)
+        PainterRect(const Painter::Rect& r, float a,
+                    const Painter::Palette& palette, int z)
             : PainterItem(palette, z) {
             rect = r;
             angle = a;
@@ -198,8 +198,8 @@ namespace rfsim {
         std::shared_ptr<GLTexture> image;
 
         PainterImage(const std::shared_ptr<GLTexture> &i,
-                     const PainterEngine::Rect& r, float a,
-                     const PainterEngine::Palette& palette, int z)
+                     const Painter::Rect& r, float a,
+                     const Painter::Palette& palette, int z)
                 : PainterRect(r, a, palette, z) {
             image = i;
         }
