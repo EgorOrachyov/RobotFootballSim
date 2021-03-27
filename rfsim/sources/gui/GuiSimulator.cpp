@@ -76,6 +76,7 @@ namespace rfsim {
         std::shared_ptr<Algorithm> algo;
 
         // This is main menu related data
+        float dt = 0.0f;
         bool needRefresh = true;
         bool beginGame;
         bool exit = false;
@@ -88,6 +89,7 @@ namespace rfsim {
 
         while (!mPrimaryWindow->ShouldClose() && !exit) {
             mWindowManager->UpdateEvents();
+            mGraphicsServer->SetSettings(menuBar.graphicsSettings);
 
             // Start the Dear ImGui frame
             ImGui_ImplOpenGL3_NewFrame();
@@ -170,17 +172,65 @@ namespace rfsim {
                 ImGui::End();
 
                 if (beginGame && selectedScenario >= 0 && selectedAlgo >= 0) {
-                    mState = State::PrepareGame;
+                    mState = State::BeginGame;
                     needRefresh = true;
                 }
             }
-            else if (mState == State::PrepareGame) {
+            else if (mState == State::BeginGame) {
                 game = mGameManager->CreateGame(selectedScenario);
                 algo = mAlgorithmManager->GetAlgorithmAt(selectedAlgo);
+
+                mPhysicsServer->SetGameProperties(game->physicsGameProperties);
+                mPhysicsServer->BeginGame(game->physicsGameInitInfo);
+                mGraphicsServer->BeginGame(game->graphicsSceneSettings);
+                algo->BeginGame(*game);
+
                 mState = State::InGame;
             }
             else if (mState == State::InGame) {
+                // Update loop strategy:
+                // 1) Update physics - simulate game with step (step is prev frame delta)
+                // 2) Draw game state and gui
+                // 3) Tick algorithm control (if required)
+                // 4) Update physics settings (motors power) (if required)
 
+                PhysicsGameState state;
+                mPhysicsServer->GameStep(dt);
+                mPhysicsServer->GetCurrentGameState(state);
+
+                mPainter->FitToFramebufferArea();
+
+                mGraphicsServer->BeginDraw(state);
+                mGraphicsServer->DrawStaticObjects();
+                mGraphicsServer->DrawDynamicObjects();
+                mGraphicsServer->DrawAuxInfo();
+                mGraphicsServer->DrawPostUI();
+                mGraphicsServer->EndDraw();
+
+                game->physicsGameState = state;
+                algo->TickGame(*game);
+
+                for (int i = 0; i < game->teamSize; i++) {
+                    auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
+                    auto power = game->robotMotorPowerA[i];
+                    mPhysicsServer->UpdateMotorsPower(id, power.x, power.y);
+                }
+
+                for (int i = 0; i < game->teamSize; i++) {
+                    auto id = game->physicsGameInitInfo.robotsTeamB[i].id;
+                    auto power = game->robotMotorPowerB[i];
+                    mPhysicsServer->UpdateMotorsPower(id, power.x, power.y);
+                }
+
+                dt = 1.0f / ImGui::GetIO().Framerate;
+            }
+            else if (mState == State::EndGame) {
+                algo->EndGame(*game);
+                mGraphicsServer->EndGame();
+                mPhysicsServer->EndGame();
+
+                game = nullptr;
+                algo = nullptr;
             }
 
             // Rendering

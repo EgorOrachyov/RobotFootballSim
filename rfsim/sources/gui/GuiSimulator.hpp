@@ -62,8 +62,9 @@ namespace rfsim {
 
         enum class State {
             MainMenu,
-            PrepareGame,
+            BeginGame,
             InGame,
+            EndGame
         };
 
         // Scale options for hdpi displays
