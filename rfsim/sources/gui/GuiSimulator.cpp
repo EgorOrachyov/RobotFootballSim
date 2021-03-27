@@ -22,41 +22,24 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#include <gui/GuiApplication.hpp>
+#include <gui/GuiSimulator.hpp>
 #include <glm/gtc/constants.hpp>
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
-#include <iostream>
+#include <memory>
 
 namespace rfsim {
 
-    GuiApplication::GuiApplication(const std::shared_ptr<Window> &window,
-                                   const std::shared_ptr<WindowManager> &winMan,
-                                   const std::shared_ptr<Painter> &painter,
-                                   const std::shared_ptr<PhysicsServer> &physics,
-                                   const std::shared_ptr<GraphicsServer> &graphics,
-                                   const std::shared_ptr<AlgorithmManager> &algoMan,
-                                   const std::string& resPath) {
-
-        mWindow = window;
-        mWindowManager = winMan;
-        mPainter = painter;
-        mPhysicsServer = physics;
-        mGraphicsServer = graphics;
-        mAlgorithmManager = algoMan;
-
-        mResPath = resPath;
-
+    GuiSimulator::GuiSimulator(int argc, const char* const* argv) : Simulator(argc, argv) {
         const auto SEP = "/";
-        const auto prefix = resPath + SEP + "sprites" + SEP;
+        const auto prefix = mResourcesPath + SEP + "sprites" + SEP;
 
         mMainMenuLogo = Image::LoadFromFilePath(prefix + "main-menu-logo.png");
         mMainMenuBall = Image::LoadFromFilePath(prefix + "soccer-ball.png");
     }
 
-    int GuiApplication::Run() {
-        // Setup imgui
+    int GuiSimulator::Run() {
 #if defined(__APPLE__)
         // GL 3.2 + GLSL 150
         const char* glsl_version = "#version 150";
@@ -65,6 +48,7 @@ namespace rfsim {
         const char* glsl_version = "#version 130";
 #endif
 
+        // Setup imgui
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
 
@@ -75,19 +59,27 @@ namespace rfsim {
         style.ScaleAllSizes(mGuiScale);
 
         ImGui::StyleColorsDark();
-        ImGui_ImplGlfw_InitForOpenGL(mWindow->GetNativeHnd(), true);
+        ImGui_ImplGlfw_InitForOpenGL(mPrimaryWindow->GetNativeHnd(), true);
         ImGui_ImplOpenGL3_Init(glsl_version);
 
-        mMainMenu = std::make_shared<GuiMainMenu>(*this);
-        mMainMenu->Refresh();
+        // Global simulator state
+        bool transition = true;
 
-        bool explicitlyExit = false;
+        // This is main menu related data
+        bool beginGame;
+        bool exit = false;
+        int selectedScenario = -1;
+        int selectedAlgo = -1;
+        std::vector<std::string> scenarios;
+        std::vector<const char*> scenariosRaw;
+        std::vector<std::string> algorithms;
+        std::vector<const char*> algorithmsRaw;
 
-        while (!mWindow->ShouldClose() && !explicitlyExit) {
+        while (!mPrimaryWindow->ShouldClose() && !exit) {
 
             mWindowManager->UpdateEvents();
 
-            auto size = mWindow->GetFramebufferSize();
+            auto size = mPrimaryWindow->GetFramebufferSize();
             auto aspect = (float) size.x / (float) size.y;
 
             mPainter->SetDrawArea({0, 0, size});
@@ -100,7 +92,37 @@ namespace rfsim {
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            if (mState == GlobalState::MainMenu) {
+            if (mState == State::MainMenu) {
+                // Reset state
+                if (transition) {
+                    algorithms.clear();
+                    scenarios.clear();
+
+                    mAlgorithmManager->GetAlgorithmsInfo(algorithms);
+
+                    // todo: scenario man
+                    scenarios.emplace_back("scenario 1");
+                    scenarios.emplace_back("scenario 2");
+                    scenarios.emplace_back("scenario 3");
+                    scenarios.emplace_back("scenario 4");
+                    scenarios.emplace_back("scenario 5");
+                    scenarios.emplace_back("scenario 6");
+
+                    scenariosRaw.clear();
+                    scenariosRaw.reserve(scenarios.size());
+
+                    for (auto& s: scenarios)
+                        scenariosRaw.push_back(s.data());
+
+                    algorithmsRaw.clear();
+                    algorithmsRaw.reserve(algorithms.size());
+
+                    for (auto& a: algorithms)
+                        algorithmsRaw.push_back(a.data());
+
+                    transition = false;
+                }
+
                 // Draw animated background logo
                 {
                     static const auto pi = glm::pi<float>();
@@ -117,20 +139,42 @@ namespace rfsim {
                 }
 
                 // Draw menu widget
-                mMainMenu->Update();
+                auto& style = mStyle;
 
-                if (mMainMenu->BeginGame()) {
-                    mState = GlobalState::PrepareGame;
-                }
+                ImGui::Begin("Main Menu");
 
-                if (mMainMenu->Exit()) {
-                    explicitlyExit = true;
+                ImGui::Text("How to start a new game:");
+                ImGui::Text(" - 1. Select the game scenario");
+                ImGui::Text(" - 2. Select the algorithm used to control robots");
+                ImGui::Text(" - 3. Press start button");
+                ImGui::NewLine();
+
+                ImGui::ListBox("Game scenario", &selectedScenario, scenariosRaw.data(), scenariosRaw.size());
+                ImGui::ListBox("Algorithm", &selectedAlgo, algorithmsRaw.data(), algorithmsRaw.size());
+
+                ImGui::PushStyleColor(ImGuiCol_Button, style.greenColor);
+                beginGame = ImGui::Button("Start", ImVec2(200, 0));
+
+                ImGui::SameLine();
+
+                ImGui::PushStyleColor(ImGuiCol_Button, style.redColor);
+                exit = ImGui::Button("Exit", ImVec2(200, 0));
+
+                ImGui::PopStyleColor(2);
+
+                ImGui::NewLine();
+                ImGui::Text("Robot Football Simulator (c)");
+
+                ImGui::End();
+
+                if (beginGame) {
+                    mState = State::PrepareGame;
+                    transition = true;
                 }
             }
 
-            if (mState == GlobalState::PrepareGame) {
-
-                mState = GlobalState::MainMenu;
+            if (mState == State::PrepareGame) {
+                mState = State::MainMenu;
             }
 
             // Rendering
@@ -147,10 +191,6 @@ namespace rfsim {
         ImGui::DestroyContext();
 
         return 0;
-    }
-
-    GuiStyle& GuiApplication::GetStyle() {
-        return mStyle;
     }
 
 }

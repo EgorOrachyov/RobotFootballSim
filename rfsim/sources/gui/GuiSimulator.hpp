@@ -22,15 +22,69 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GUIINGAMEMENU_HPP
-#define RFSIM_GUIINGAMEMENU_HPP
+#ifndef RFSIM_GUISIMULATOR_HPP
+#define RFSIM_GUISIMULATOR_HPP
+
+#include <graphics/Window.hpp>
+#include <graphics/WindowManager.hpp>
+#include <graphics/Painter.hpp>
+#include <graphics/GraphicsServer.hpp>
+#include <graphics/Image.hpp>
+#include <physics/PhysicsServer.hpp>
+#include <logic/AlgorithmManager.hpp>
+#include <gui/GuiStyle.hpp>
+#include <Simulator.hpp>
+#include <memory>
 
 namespace rfsim {
 
-    class GuiInGameMenu {
+    /**
+     * @brief Simulator with GUI
+     *
+     * This is an extension to base simulator with graphical user interface based on imgui library.
+     * This is a solid class, which encapsulates all drawn GUI elements for simplicity.
+     */
+    class GuiSimulator: public Simulator {
+    public:
+        /**
+         * Setup simulator class.
+         *
+         * @param argc Number of command line arguments
+         * @param argv Array of arguments
+         */
+        GuiSimulator(int argc, const char* const* argv);
+        ~GuiSimulator() override = default;
 
+        /**
+         * Run simulator application.
+         * This function returns when user closes simulator application.
+         *
+         * @return Status code
+         */
+        int Run() override;
+
+    private:
+        friend class GuiMainMenu;
+        friend class GuiInGameMenu;
+
+        enum class State {
+            MainMenu,
+            PrepareGame,
+            InGame,
+        };
+
+        // Scale options for hdpi displays
+        float mFontScale = 2.0f;
+        float mGuiScale = 2.0f;
+
+        GuiStyle mStyle;
+        State mState = State::MainMenu;
+
+        // For main menu animated logo
+        std::shared_ptr<Image> mMainMenuLogo;
+        std::shared_ptr<Image> mMainMenuBall;
     };
 
 }
 
-#endif //RFSIM_GUIINGAMEMENU_HPP
+#endif //RFSIM_GUISIMULATOR_HPP

@@ -55,13 +55,9 @@ set(RFSIM_LOGIC_SOURCES
         sources/logic/AlgorithmManager.hpp)
 
 set(RFSIM_GUI_SOURCES
-        sources/gui/GuiApplication.cpp
-        sources/gui/GuiApplication.hpp
-        sources/gui/GuiInGameMenu.cpp
-        sources/gui/GuiInGameMenu.hpp
-        sources/gui/GuiMainMenu.cpp
-        sources/gui/GuiMainMenu.hpp
-        sources/gui/GuiWidget.hpp sources/gui/GuiStyle.hpp)
+        sources/gui/GuiSimulator.cpp
+        sources/gui/GuiSimulator.hpp
+        sources/gui/GuiStyle.hpp)
 
 add_executable(rfsim
         ${RFSIM_C_API}

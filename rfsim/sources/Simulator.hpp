@@ -45,7 +45,7 @@ namespace rfsim {
          * @param argv AActual arguments
          */
         Simulator(int argc, const char* const* argv);
-        ~Simulator();
+        virtual ~Simulator();
 
         /**
          * Run the main simulator update loop.
@@ -53,9 +53,9 @@ namespace rfsim {
          *
          * @return 0 if simulator successfully finished.
          */
-        int Run();
+        virtual int Run();
 
-    private:
+    protected:
         std::string mResourcesPath = "../../resources";
         std::string mPluginsPath = ".";
         std::vector<std::string> mArgs;
@@ -66,8 +66,6 @@ namespace rfsim {
         std::shared_ptr<class GraphicsServer> mGraphicsServer;
         std::shared_ptr<class PhysicsServer> mPhysicsServer;
         std::shared_ptr<class AlgorithmManager> mAlgorithmManager;
-
-        std::shared_ptr<class GuiApplication> mApplication;
     };
 
 }

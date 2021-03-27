@@ -22,9 +22,9 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#include <Simulator.hpp>
+#include <gui/GuiSimulator.hpp>
 
 int main(int argc, const char* const* argv) {
-    rfsim::Simulator simulator(argc, argv);
+    rfsim::GuiSimulator simulator(argc, argv);
     return simulator.Run();
 }

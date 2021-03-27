@@ -31,7 +31,6 @@
 #include <physics/PhysicsServer.hpp>
 #include <logic/AlgorithmManager.hpp>
 #include <logic/Game.hpp>
-#include <gui/GuiApplication.hpp>
 
 namespace rfsim {
 
@@ -48,12 +47,10 @@ namespace rfsim {
         mGraphicsServer = std::make_shared<GraphicsServer>(mPrimaryWindow, mPainter, mResourcesPath);
         mPhysicsServer = std::make_shared<PhysicsServer>();
         mAlgorithmManager = std::make_shared<AlgorithmManager>(mPluginsPath);
-        mApplication = std::make_shared<GuiApplication>(mPrimaryWindow, mWindowManager, mPainter, mPhysicsServer, mGraphicsServer, mAlgorithmManager, mResourcesPath);
     }
 
     Simulator::~Simulator() {
         // Release in reverse order
-        mApplication = nullptr;
         mAlgorithmManager = nullptr;
         mPhysicsServer = nullptr;
         mGraphicsServer = nullptr;
@@ -63,8 +60,6 @@ namespace rfsim {
     }
 
     int Simulator::Run() {
-        return mApplication->Run();
-
         const auto pi = glm::pi<float>();
 
         const float fieldLength = 16;
