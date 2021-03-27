@@ -218,7 +218,7 @@ namespace rfsim {
                     mPhysicsServer->GetCurrentGameState(state);
 
                     game->physicsGameState = state;
-                    algo->TickGame(*game);
+                    algo->TickGame(dt, t, *game);
 
                     for (int i = 0; i < game->teamSize; i++) {
                         auto id = game->physicsGameInitInfo.robotsTeamA[i].id;

@@ -82,6 +82,7 @@ namespace rfsim {
         algo->BeginGame(*game);
 
         float dt = 1.0f / 60.0f;
+        float t = 0.0f;
         uint64_t frameCount = 0;
 
         while (!mPrimaryWindow->ShouldClose()) {
@@ -107,7 +108,7 @@ namespace rfsim {
             mPainter->FitToFramebufferArea();
 
             game->physicsGameState = state;
-            algo->TickGame(*game);
+            algo->TickGame(dt, t, *game);
 
             for (int i = 0; i < game->teamSize; i++) {
                 auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
@@ -122,6 +123,7 @@ namespace rfsim {
             }
 
             frameCount++;
+            t += dt;
         }
 
         algo->EndGame(*game);

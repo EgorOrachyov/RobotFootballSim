@@ -106,11 +106,13 @@ namespace rfsim {
         assert(beginGameFunction(&algoState, &gameSettings, &startInfo) == rfsim_status_success);
     }
 
-    void Algorithm::TickGame(Game& game) {
+    void Algorithm::TickGame(float dt, float t, Game &game) {
         auto& pS = game.physicsGameState;
         auto& pII = game.physicsGameInitInfo;
 
         rfsim_game_state_info stateInfo;
+        stateInfo.dt = dt;
+        stateInfo.t = t;
         stateInfo.ball.position = to_rfsim_vec2(pS.ball.position);
         stateInfo.ball.angle = pS.ball.angle;
 
