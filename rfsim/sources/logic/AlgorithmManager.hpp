@@ -41,6 +41,7 @@ namespace rfsim {
         ~AlgorithmManager();
 
         std::shared_ptr<Algorithm> Load(const std::string& name);
+        std::shared_ptr<Algorithm> LoadFromFilepath(const std::string& filepath);
         std::shared_ptr<Algorithm> GetAlgorithmAt(unsigned int i);
         void GetAlgorithmsInfo(std::vector<std::string> &info);
 

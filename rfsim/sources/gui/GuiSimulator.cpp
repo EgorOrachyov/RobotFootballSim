@@ -265,7 +265,7 @@ namespace rfsim {
                     ImGui::Separator();
 
                     ImGui::PushStyleColor(ImGuiCol_Button, mStyle.redColor);
-                    if (ImGui::Button("Quit Game", ImVec2(200, 0))) {
+                    if (ImGui::Button("To Menu", ImVec2(130, 0))) {
                         gameState = GameState::Finished;
                         mState = State::EndGame;
                     }
@@ -273,7 +273,7 @@ namespace rfsim {
                     ImGui::SameLine();
 
                     ImGui::PushStyleColor(ImGuiCol_Button, mStyle.violetColor);
-                    if (ImGui::Button("Restart", ImVec2(200, 0))) {
+                    if (ImGui::Button("Restart", ImVec2(130, 0))) {
                         gameState = GameState::Finished;
                         needRestart = true;
                         mState = State::EndGame;
@@ -282,14 +282,14 @@ namespace rfsim {
                     ImGui::SameLine();
 
                     ImGui::PushStyleColor(ImGuiCol_Button, mStyle.greenColor);
-                    if (ImGui::Button("Play", ImVec2(200, 0)) && gameState != GameState::Finished) {
+                    if (ImGui::Button("Play", ImVec2(130, 0)) && gameState != GameState::Finished) {
                         gameState = GameState::Running;
                     }
 
                     ImGui::SameLine();
 
                     ImGui::PushStyleColor(ImGuiCol_Button, mStyle.yellowColor);
-                    if (ImGui::Button("Pause", ImVec2(200, 0)) && gameState == GameState::Running) {
+                    if (ImGui::Button("Pause", ImVec2(130, 0)) && gameState == GameState::Running) {
                         gameState = GameState::Paused;
                     }
 
