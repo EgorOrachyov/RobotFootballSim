@@ -345,8 +345,8 @@ namespace rfsim {
         }
 
         b2Body *robot = mRobots[robotId];
-
-        const float dt = 1.0 / 60.0f;
+        
+        const float dt = 1 / 60.0f;
 
         // Differential Drive Robots
         // http://www.cs.columbia.edu/~allen/F17/NOTES/icckinematics.pdf
@@ -361,13 +361,17 @@ namespace rfsim {
         float Vl = leftMotorForce;
         float Vr = rightMotorForce;
 
+        float l = mProperties.robotWheelXOffset * 2;
+
         // if R is infinite (so no rotation)
         // or no distance between wheels
-        if (std::abs(Vr - Vl) < eps || mProperties.robotWheelXOffset < eps) {
+        if (std::abs(Vl - Vr) < eps || l < eps) {
             b2Vec2 dir = { cos_theta, sin_theta };
-            robot->SetTransform({ x + dir.x * dt, y + dir.y * dt }, theta);
+            float v = (std::abs(Vr) + std::abs(Vl)) / 2.0f;
+
+            robot->SetLinearVelocity(v * dir);
+            robot->SetAngularVelocity(0);
         } else {
-            float l = mProperties.robotWheelXOffset * 2;
             float R = l / 2.0f * (Vl + Vr) / (Vr - Vl);
             float w = (Vr - Vl) / l;
 
@@ -378,17 +382,16 @@ namespace rfsim {
             float x_n = x - ICC.x;
             float y_n = y - ICC.y;
 
-            // rotate by w*dt in ICC space
+            // rotate by w in ICC space
             x_n = cosf(w * dt) * x_n - sinf(w * dt) * y_n;
             y_n = sinf(w * dt) * x_n + cosf(w * dt) * y_n;
 
             // move from ICC space to world space
             x_n += ICC.x;
             y_n += ICC.y;
-
-            float theta_n = theta + w * dt;
-
-            robot->SetTransform({ x_n, y_n }, theta_n);
+            
+            robot->SetLinearVelocity(1.0f / dt * b2Vec2{ x_n - x, y_n - y });
+            robot->SetAngularVelocity(w);
         }
     }
 
