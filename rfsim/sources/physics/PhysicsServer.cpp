@@ -321,6 +321,16 @@ namespace rfsim {
         int32 velocityIterations = 8;
         int32 positionIterations = 3;
 
+        float maxSpeed = mProperties.robotMaxSpeed;
+
+        for (const auto &r : mRobots) {
+            if (r.second->GetLinearVelocity().LengthSquared() > maxSpeed * maxSpeed) {
+                b2Vec2 v = r.second->GetLinearVelocity();
+                v.Normalize();
+                r.second->SetLinearVelocity(maxSpeed * v);
+            }
+        }
+
         mWorld->Step(dt, velocityIterations, positionIterations);
     }
 
