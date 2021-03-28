@@ -24,4 +24,92 @@
 
 #include "ConfigManager.hpp"
 
+#include <fstream>
 #include "picojson/picojson.h"
+
+namespace rfsim {
+
+    ConfigManager::ConfigManager(const std::string &configFilePath) :
+        mFontScale(1.0f), mGuiScale(1.0f), mResourcesPath("../resources") {
+
+        std::ifstream configFile;
+        if (!TryToFindConfig(configFilePath, configFile)) {
+            std::cout << "Can't find config file: " << configFilePath << std::endl;
+        }
+
+        picojson::value result;
+        const std::string &err = picojson::parse(result, configFile);
+
+        if (!err.empty())
+        {
+            std::cout << "Can't parse JSON config: " << err << std::endl;
+            return;
+        }
+
+        Parse(result);
+    }
+
+    bool ConfigManager::TryToFindConfig(const std::string &configFilePath, std::ifstream &result) const {
+        const std::vector<std::string> possiblePaths = {
+            configFilePath,
+            std::string("../") + configFilePath,
+            std::string("../../") + configFilePath,
+        };
+
+        for (const auto &p : possiblePaths) {
+            std::ifstream f(p);
+
+            if (f.is_open())
+            {
+                result = std::move(f);
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    void ConfigManager::Parse(const picojson::value &v) {
+        // top-level is an object
+        if (v.is<picojson::object>()) {
+            try {
+                auto obj = v.get<picojson::object>();
+                mFontScale = (float)obj["fontScale"].get<double>();
+                mGuiScale = (float)obj["guiScale"].get<double>();
+                mResourcesPath = obj["resourcesPath"].get<std::string>();
+                mPluginPathPrefix = obj["pluginPathPrefix"].get<std::string>();
+
+                const auto &arr = obj["pluginPaths"].get<picojson::array>();
+                for (const auto &p : arr) {
+                    if (p.is<std::string>()) {
+                        mPluginsPaths.push_back(p.get<std::string>());
+                    }
+                }
+            // std::map throws out_of_range, if value wasn't found
+            } catch(std::out_of_range &e) {
+                std::cout << "Error parsing JSON config." << std::endl;
+                return;
+            }
+        }
+    }
+
+    float ConfigManager::GetFontScale() const {
+        return mFontScale;
+    }
+
+    float ConfigManager::GetGuiScale() const {
+        return mGuiScale;
+    }
+
+    const std::string& ConfigManager::GetResourcesPath() const {
+        return mResourcesPath;
+    }
+
+    const std::string & ConfigManager::GetPluginPathPrefix() const {
+        return mPluginPathPrefix;
+    }
+
+    const std::vector<std::string>& ConfigManager::GetPluginsPaths() const {
+        return mPluginsPaths;
+    }
+}

@@ -31,6 +31,7 @@
 #include <physics/PhysicsServer.hpp>
 #include <logic/AlgorithmManager.hpp>
 #include <logic/GameManager.hpp>
+#include <utils/ConfigManager.hpp>
 #include <glm/gtc/constants.hpp>
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -41,7 +42,7 @@ namespace rfsim {
 
     GuiSimulator::GuiSimulator(int argc, const char* const* argv) : Simulator(argc, argv) {
         const auto SEP = "/";
-        const auto prefix = mResourcesPath + SEP + "sprites" + SEP;
+        const auto prefix = mConfigManager->GetResourcesPath() + SEP + "sprites" + SEP;
 
         mMainMenuLogo = Image::LoadFromFilePath(prefix + "main-menu-logo.png");
         mMainMenuBall = Image::LoadFromFilePath(prefix + "soccer-ball.png");

@@ -25,4 +25,49 @@
 #ifndef RFSIM_CONFIG_MANAGER_HPP
 #define RFSIM_CONFIG_MANAGER_HPP
 
+#include <string>
+#include <vector>
+
+namespace picojson {
+    class value;
+}
+
+namespace rfsim
+{
+
+    /**
+     * @brief Configuration files manager.
+     *
+     * Manages configuration parsing and getting values.
+     */
+    class ConfigManager {
+    public:
+        ConfigManager(const std::string &configFilePath);
+        ~ConfigManager() = default;
+
+        ConfigManager(const ConfigManager &other) = delete;
+        ConfigManager(ConfigManager &&other) noexcept = delete;
+        ConfigManager& operator=(const ConfigManager &other) = delete;
+        ConfigManager& operator=(ConfigManager &&other) noexcept = delete;
+
+        float GetFontScale() const;
+        float GetGuiScale() const;
+        const std::string& GetResourcesPath() const;
+        const std::string& GetPluginPathPrefix() const;
+        const std::vector<std::string>& GetPluginsPaths() const;
+
+    private:
+        bool TryToFindConfig(const std::string &configFilePath, std::ifstream &result) const;
+        void Parse(const picojson::value &v);
+
+    private:
+        float mFontScale;
+        float mGuiScale;
+        std::string mResourcesPath;
+        std::string mPluginPathPrefix;
+        std::vector<std::string> mPluginsPaths;
+    };
+
+}
+
 #endif // RFSIM_CONFIG_MANAGER_HPP
