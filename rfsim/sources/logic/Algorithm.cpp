@@ -63,7 +63,7 @@ namespace rfsim {
     bool Algorithm::Init(dynalo::library &library) {
         initFunction = library.get_function<rfsim_status(rfsim_algo_state*)>(RFSIM_FUNCTION_INIT_NAME);
         beginGameFunction = library.get_function<rfsim_status(rfsim_algo_state*, const rfsim_game_settings*, const rfsim_game_start_info*)>(RFSIM_FUNCTION_BEGIN_GAME_NAME);
-        tickGameFunction = library.get_function<rfsim_status(rfsim_algo_state*, rfsim_game_state_info*)>(RFSIM_FUNCTION_TICK_GAME_NAME);
+        tickGameFunction = library.get_function<rfsim_status(rfsim_algo_state*, rfsim_game_state_info*, float)>(RFSIM_FUNCTION_TICK_GAME_NAME);
         endGameFunction = library.get_function<rfsim_status(rfsim_algo_state*)>(RFSIM_FUNCTION_END_GAME_NAME);
         finalizeFunction = library.get_function<rfsim_status(rfsim_algo_state*)>(RFSIM_FUNCTION_FINALIZE_NAME);
 
@@ -106,7 +106,7 @@ namespace rfsim {
         assert(beginGameFunction(&algoState, &gameSettings, &startInfo) == rfsim_status_success);
     }
 
-    void Algorithm::TickGame(Game& game) {
+    void Algorithm::TickGame(Game &game, float dt) {
         auto& pS = game.physicsGameState;
         auto& pII = game.physicsGameInitInfo;
 
@@ -134,7 +134,7 @@ namespace rfsim {
             stateInfo.team_b_control[i] = to_rfsim_control(game.robotMotorPowerB[i]);
         }
 
-        assert(tickGameFunction(&algoState, &stateInfo) == rfsim_status_success);
+        assert(tickGameFunction(&algoState, &stateInfo, dt) == rfsim_status_success);
 
         // Copy power info
         for (int i = 0; i < game.teamSize; i++) {

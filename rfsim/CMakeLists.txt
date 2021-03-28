@@ -66,7 +66,9 @@ set(RFSIM_GUI_SOURCES
 
 set(RFSIM_SCENARIO_SOURCES
         sources/scenario/Scrum.hpp
-        sources/scenario/ScenarioCommon.hpp sources/scenario/Duel.hpp)
+        sources/scenario/ScenarioCommon.hpp
+        sources/scenario/Duel.hpp
+        sources/scenario/RandomScenario.hpp)
 
 add_executable(rfsim
         ${RFSIM_C_API}
@@ -114,3 +116,7 @@ target_link_libraries(randommove glm)
 add_library(followmove SHARED plugins/BallFollowMovement.cpp)
 target_include_directories(followmove PRIVATE include)
 target_link_libraries(followmove glm)
+
+add_library(dwamove SHARED plugins/DWAMovement.cpp)
+target_include_directories(dwamove PRIVATE include)
+target_link_libraries(dwamove glm)

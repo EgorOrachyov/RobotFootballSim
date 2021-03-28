@@ -32,8 +32,9 @@
 #include <logic/AlgorithmManager.hpp>
 #include <logic/GameManager.hpp>
 
-#include <scenario/Scrum.hpp>
 #include <scenario/Duel.hpp>
+#include <scenario/RandomScenario.hpp>
+#include <scenario/Scrum.hpp>
 
 namespace rfsim {
 
@@ -56,8 +57,10 @@ namespace rfsim {
         // This is default algorithm and scenario (does not change order)
         mAlgorithmManager->Load("randommove");
         mAlgorithmManager->Load("followmove");
+        mAlgorithmManager->Load("dwamove");
         mGameManager->AddScenario(std::make_shared<Scrum>());
         mGameManager->AddScenario(std::make_shared<Duel>());
+        mGameManager->AddScenario(std::make_shared<RandomScenario>());
     }
 
     Simulator::~Simulator() {
@@ -107,7 +110,7 @@ namespace rfsim {
             mPainter->FitToFramebufferArea();
 
             game->physicsGameState = state;
-            algo->TickGame(*game);
+            algo->TickGame(*game, 0);
 
             for (int i = 0; i < game->teamSize; i++) {
                 auto id = game->physicsGameInitInfo.robotsTeamA[i].id;

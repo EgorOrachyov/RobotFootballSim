@@ -32,8 +32,8 @@
 static int teamSize = 0;
 
 RFSIM_DEFINE_FUNCTION_INIT {
-    std::strcpy(context->name, "Random Movement (testing)");
-    std::strcpy(context->description, "Random movement of the robots with nearly fixed direction");
+    std::strcpy(context->name, "RandomScenario Movement (testing)");
+    std::strcpy(context->description, "RandomScenario movement of the robots with nearly fixed direction");
     return rfsim_status_success;
 };
 
