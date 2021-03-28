@@ -46,9 +46,11 @@ namespace rfsim {
         static const auto SHADOW_IMAGE_PATH = "sprites/shadow.png";
         static const auto ON_COLLISION_IMAGE_PATH = "sprites/hit.png";
         static const auto ON_OUT_IMAGE_PATH = "sprites/out-of-bounds.png";
+        static const auto TRACE_POINT_IMAGE_PATH = "sprites/trace-point.png";
 
         auto prefix = mResPath + SEP;
 
+        mRobotTraceImage = Image::LoadFromFilePath(prefix + TRACE_POINT_IMAGE_PATH);
         mBallImage = Image::LoadFromFilePath(prefix + BALL_IMAGE_TRSP_PATH);
         mFieldImage = Image::LoadFromFilePath(prefix + FIELD_IMAGE_PATH);
         mOnCollisionImage = Image::LoadFromFilePath(prefix + ON_COLLISION_IMAGE_PATH);
@@ -72,12 +74,27 @@ namespace rfsim {
         mState = InternalState::InGame;
 
         mSceneSettings = sceneSettings;
+
+        auto totalRobots = mSceneSettings.robotsTeamA.size() + mSceneSettings.robotsTeamB.size();
+        mRobotsTrace.resize(totalRobots, circular_buffer<glm::vec2>(mSettings.robotTraceLength));
+
+        for (auto& r: mSceneSettings.robotsTeamA) {
+            mRobotsTrace[r.id].push_back(r.position);
+        }
+
+        for (auto& r: mSceneSettings.robotsTeamB) {
+            mRobotsTrace[r.id].push_back(r.position);
+        }
+
+        mTime = 0;
+        mTimeLastTraceCapture = 0;
     }
 
-    void GraphicsServer::BeginDraw(const GraphicsGameState& gameState) {
+    void GraphicsServer::BeginDraw(float dt, const GraphicsGameState& gameState) {
         assert(mState == InternalState::InGame);
         mState = InternalState::InGameBeginDraw;
         mCurrentState = gameState;
+        mTime += dt;
 
         auto room00 = mSceneSettings.roomTopLeftBounds;
         auto roomWH = mSceneSettings.roomBottomRightBounds;
@@ -86,6 +103,15 @@ namespace rfsim {
         mPainter->SetClearColor({ mSettings.backgroundColor, 1.0f });
         mPainter->Clear();
         mPainter->SetDrawSpace({ room00.x, room00.y, roomWH.x, roomWH.y });
+
+        // Update robots trace
+        if (mTime >= mTimeLastTraceCapture + mSettings.robotTraceSkip) {
+            for (size_t i = 0; i < gameState.robots.size(); i++) {
+                mRobotsTrace[i].push_back(gameState.robots[i].position);
+            }
+
+            mTimeLastTraceCapture = mTime;
+        }
     }
 
     void GraphicsServer::DrawStaticObjects() {
@@ -102,6 +128,26 @@ namespace rfsim {
 
     void GraphicsServer::DrawDynamicObjects() {
         assert(mState == InternalState::InGameBeginDraw);
+
+        // Draw robots trace
+        if (mSettings.drawRobotTrace) {
+            mPainter->SetBrushColor({mSettings.traceColor, 0.8f});
+            mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
+
+            auto r = mSettings.robotTracePointRadius;
+
+            for (const auto& tr: mRobotsTrace) {
+                float factor = 0.1f;
+                float step = 0.9f / (float) mSettings.robotTraceLength;
+
+                tr.for_each([&](const glm::vec2& pos) {
+                    mPainter->SetBrushColor({mSettings.traceColor, factor});
+                    mPainter->DrawImage({pos.x - r, pos.y - r, 2.0f * r, 2.0f * r}, 0.0f, mRobotTraceImage);
+
+                    factor += step;
+                });
+            }
+        }
 
         // Draw robots
         for (const auto &r: mCurrentState.robots) {
@@ -219,6 +265,7 @@ namespace rfsim {
     void GraphicsServer::EndGame() {
         assert(mState == InternalState::InGame);
         mState = InternalState::Default;
+        mRobotsTrace.clear();
     }
 
 }

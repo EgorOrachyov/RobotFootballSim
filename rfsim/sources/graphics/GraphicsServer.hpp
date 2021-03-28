@@ -34,6 +34,7 @@
 #include <physics/PhysicsGameInitInfo.hpp>
 #include <physics/PhysicsGameProperties.hpp>
 #include <physics/PhysicsGameState.hpp>
+#include <utils/CircularBuffer.hpp>
 
 namespace rfsim {
 
@@ -48,7 +49,7 @@ namespace rfsim {
         void GetSettings(GraphicsSettings& settings) const;
 
         void BeginGame(const GraphicsSceneSettings& sceneSettings);
-        void BeginDraw(const GraphicsGameState& gameState);
+        void BeginDraw(float dt, const GraphicsGameState& gameState);
         void DrawStaticObjects();
         void DrawDynamicObjects();
         void DrawAuxInfo();
@@ -74,12 +75,18 @@ namespace rfsim {
         std::shared_ptr<Window> mWindow;
         std::shared_ptr<Painter> mPainter;
 
+        std::shared_ptr<Image> mRobotTraceImage;
         std::shared_ptr<Image> mBallImage;
         std::shared_ptr<Image> mFieldImage;
         std::shared_ptr<Image> mOnCollisionImage;
         std::shared_ptr<Image> mOnOutImage;
         std::shared_ptr<Image> mShadowImage;
         std::vector<std::shared_ptr<Image>> mRobotImages;
+
+        std::vector<circular_buffer<glm::vec2>> mRobotsTrace;
+
+        float mTime = 0;
+        float mTimeLastTraceCapture = 0;
     };
 
 }

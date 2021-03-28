@@ -34,11 +34,19 @@ namespace rfsim {
      * Configures effects and level of drawing game details.
      */
     struct GraphicsSettings {
+        bool drawRobotTrace = false;
+        int robotTraceLength = 20;
+        float robotTraceSkip = 0.1;
+        float robotTracePointRadius = 0.04;
+
         bool drawOutInfo = true;
         bool drawCollisionInfo = true;
+
         bool drawShadows = true;
         float shadowIntensity = 1.0f;
         float sunPosition = 0.0f;
+
+        glm::vec3 traceColor = {1.0f, 1.0f, 1.0f };
         glm::vec3 backgroundColor = {0, 0, 0};
         glm::vec3 fieldCustomColor = { 1.0f, 1.0f, 1.0f };
     };

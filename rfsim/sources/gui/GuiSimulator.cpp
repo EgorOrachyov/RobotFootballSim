@@ -209,16 +209,17 @@ namespace rfsim {
                 // Update sim delta time
                 dt = 1.0f / ImGui::GetIO().Framerate;
                 dt = dt > (1.0f / 30.f)? 1.0f / 30.0f: dt;
+                auto simDt = gameState == GameState::Running? dt: 0.0f;
 
                 if (gameState == GameState::Running) {
-                    t += dt;
+                    t += simDt;
 
                     PhysicsGameState state;
-                    mPhysicsServer->GameStep(dt);
+                    mPhysicsServer->GameStep(simDt);
                     mPhysicsServer->GetCurrentGameState(state);
 
                     game->physicsGameState = state;
-                    algo->TickGame(dt, t, *game);
+                    algo->TickGame(simDt, t, *game);
 
                     for (int i = 0; i < game->teamSize; i++) {
                         auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
@@ -235,7 +236,7 @@ namespace rfsim {
 
                 mPainter->FitToFramebufferArea();
 
-                mGraphicsServer->BeginDraw(game->physicsGameState);
+                mGraphicsServer->BeginDraw(simDt, game->physicsGameState);
                 mGraphicsServer->DrawStaticObjects();
                 mGraphicsServer->DrawDynamicObjects();
                 mGraphicsServer->DrawAuxInfo();
