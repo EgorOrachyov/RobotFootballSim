@@ -101,6 +101,10 @@ namespace rfsim {
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
+            // Update delta time
+            dt = 1.0f / ImGui::GetIO().Framerate;
+            dt = dt > (1.0f / 30.f)? 1.0f / 30.0f: dt;
+
             // Draw main menu
             menuBar.Update();
             exit |= menuBar.quit;
@@ -136,7 +140,7 @@ namespace rfsim {
                 {
                     static const auto pi = glm::pi<float>();
                     static float angle = 0.0f;
-                    static float step = 0.01f;
+                    static float step = 1.0f;
 
                     auto size = mPrimaryWindow->GetFramebufferSize();
                     auto aspect = (float) size.x / (float) size.y;
@@ -150,7 +154,7 @@ namespace rfsim {
                     mPainter->DrawImage({0.45, 0.4, 0.7, 0.2}, 0.0f, mMainMenuLogo);
                     mPainter->DrawImage({1.17, 0.42, 0.16, 0.16}, angle, mMainMenuBall);
 
-                    angle += step;
+                    angle += step * dt;
                     angle = angle > 2.0f * pi? angle - 2.0f * pi: angle;
                 }
 
@@ -206,9 +210,6 @@ namespace rfsim {
                 // 3) Tick algorithm control (if required)
                 // 4) Update physics settings (motors power) (if required)
 
-                // Update sim delta time
-                dt = 1.0f / ImGui::GetIO().Framerate;
-                dt = dt > (1.0f / 30.f)? 1.0f / 30.0f: dt;
                 auto simDt = gameState == GameState::Running? dt: 0.0f;
 
                 if (gameState == GameState::Running) {
