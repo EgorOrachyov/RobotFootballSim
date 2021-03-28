@@ -346,7 +346,7 @@ namespace rfsim {
         };
 
         for (int i = 0; i < 2; i++) {
-            if (forces[i] > eps) {
+            if (std::abs(forces[i]) > eps) {
                 const b2Vec2 localMotorPos = { motorPositions[i].x, motorPositions[i].y };
                 const b2Vec2 worldMotorPos = robot->GetWorldPoint(localMotorPos);
                 const b2Vec2 worldForce = { dir.x * forces[i], dir.y * forces[i] };
