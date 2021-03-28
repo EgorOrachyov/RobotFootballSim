@@ -56,7 +56,7 @@ namespace rfsim {
             ImGui::Checkbox("Display Robots Trace", &graphicsSettings.drawRobotTrace);
 
             if (graphicsSettings.drawRobotTrace) {
-                ImGui::SliderInt("Trace Length", &graphicsSettings.robotTraceLength, 5,  20);
+                ImGui::SliderInt("Trace Length", &graphicsSettings.robotTraceLength, 5,  50);
                 ImGui::SliderFloat("Trace Sampling Period", &graphicsSettings.robotTraceSkip, 0.01f, 1.0f);
                 ImGui::SliderFloat("Trace Point Size", &graphicsSettings.robotTracePointRadius, 0.0f, 1.0f);
                 ImGui::ColorPicker3("Trace Point Color", &graphicsSettings.traceColor[0]);
