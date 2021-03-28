@@ -314,7 +314,7 @@ namespace rfsim {
                         auto& r = game->physicsGameState.robots[id];
                         auto& p = game->robotMotorPowerA[i];
 
-                        ImGui::Text(" - Robot [%i]: pos=(x=%f m,y=%f m) vel=(x=%f m/s, y=%f m/s) angle=(%f rad) power=(left %f H, right %f H)",
+                        ImGui::Text(" - Robot [%i]: pos=(x=%f m,y=%f m) vel=(x=%f m/s, y=%f m/s) angle=(%f rad) power=(left %f N, right %f N)",
                                     id, r.position.x, r.position.y, r.velocity.x, r.velocity.y, r.angle, p.x, p.y);
                     }
                     ImGui::Separator();
@@ -325,7 +325,7 @@ namespace rfsim {
                         auto& r = game->physicsGameState.robots[id];
                         auto& p = game->robotMotorPowerB[i];
 
-                        ImGui::Text(" - Robot [%i]: pos=(x=%f m,y=%f m) vel=(x=%f m/s, y=%f m/s) angle=(%f rad) power=(left %f H, right %f H)",
+                        ImGui::Text(" - Robot [%i]: pos=(x=%f m,y=%f m) vel=(x=%f m/s, y=%f m/s) angle=(%f rad) power=(left %f N, right %f N)",
                                     id, r.position.x, r.position.y, r.velocity.x, r.velocity.y, r.angle, p.x, p.y);
                     }
                     ImGui::Separator();
