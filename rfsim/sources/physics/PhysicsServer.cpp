@@ -95,6 +95,7 @@ namespace rfsim {
     }
 
     void PhysicsServer::SetGameProperties(const PhysicsGameProperties &properties) {
+        assert(mProperties.robotWheelXOffset >= 0.0f);
         mProperties = properties;
     }
 
@@ -254,10 +255,9 @@ namespace rfsim {
                 const float angle = AngleToPhysicsCoords(i.angle);
 
                 b2BodyDef robotBodyDef = {};
-                robotBodyDef.type = b2_dynamicBody;
+                robotBodyDef.type = b2_kinematicBody;
                 robotBodyDef.position = { pos.x, pos.y };
                 robotBodyDef.angle = angle;
-                robotBodyDef.angularDamping = robotAngularDamping;
 
                 b2Body *body = mWorld->CreateBody(&robotBodyDef);
 
@@ -278,7 +278,7 @@ namespace rfsim {
 
                 body->CreateFixture(&fixture);
 
-                SetFieldFriction(body);
+                //SetFieldFriction(body);
 
                 mRobots[i.id] = body;
             }
@@ -340,29 +340,55 @@ namespace rfsim {
 
         const float eps = 0.001f;
 
+        if (std::abs(leftMotorForce) < eps && std::abs(rightMotorForce) < eps) {
+            return;
+        }
+
         b2Body *robot = mRobots[robotId];
 
-        // world-space direction from cos and sin of the angle
-        const b2Vec2 dir = { robot->GetTransform().q.c, robot->GetTransform().q.s } ;
+        const float dt = 1.0 / 60.0f;
 
-        const glm::vec2 motorPositions[] = {
-            ToPhysicsCoords({ mProperties.robotLeftMotorOffset.x,  mProperties.robotLeftMotorOffset.y }),
-            ToPhysicsCoords({ mProperties.robotRightMotorOffset.x, mProperties.robotRightMotorOffset.y })
-        };
+        // Differential Drive Robots
+        // http://www.cs.columbia.edu/~allen/F17/NOTES/icckinematics.pdf
 
-        const float forces[] = {
-            leftMotorForce,
-            rightMotorForce
-        };
+        float x = robot->GetTransform().p.x;
+        float y = robot->GetTransform().p.y;
 
-        for (int i = 0; i < 2; i++) {
-            if (std::abs(forces[i]) > eps) {
-                const b2Vec2 localMotorPos = { motorPositions[i].x, motorPositions[i].y };
-                const b2Vec2 worldMotorPos = robot->GetWorldPoint(localMotorPos);
-                const b2Vec2 worldForce = { dir.x * forces[i], dir.y * forces[i] };
+        float theta = robot->GetAngle();
+        float cos_theta = robot->GetTransform().q.c;
+        float sin_theta = robot->GetTransform().q.s;
 
-                robot->ApplyForce(worldForce, worldMotorPos, true);            
-            }
+        float Vl = leftMotorForce;
+        float Vr = rightMotorForce;
+
+        // if R is infinite (so no rotation)
+        // or no distance between wheels
+        if (std::abs(Vr - Vl) < eps || mProperties.robotWheelXOffset < eps) {
+            b2Vec2 dir = { cos_theta, sin_theta };
+            robot->SetTransform({ x + dir.x * dt, y + dir.y * dt }, theta);
+        } else {
+            float l = mProperties.robotWheelXOffset * 2;
+            float R = l / 2.0f * (Vl + Vr) / (Vr - Vl);
+            float w = (Vr - Vl) / l;
+
+            // Instantaneous Center of Curvature
+            b2Vec2 ICC = { x - R * sin_theta, y + R * cos_theta };
+
+            // move ICC to origin
+            float x_n = x - ICC.x;
+            float y_n = y - ICC.y;
+
+            // rotate by w*dt in ICC space
+            x_n = cosf(w * dt) * x_n - sinf(w * dt) * y_n;
+            y_n = sinf(w * dt) * x_n + cosf(w * dt) * y_n;
+
+            // move from ICC space to world space
+            x_n += ICC.x;
+            y_n += ICC.y;
+
+            float theta_n = theta + w * dt;
+
+            robot->SetTransform({ x_n, y_n }, theta_n);
         }
     }
 

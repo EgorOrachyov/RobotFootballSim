@@ -44,10 +44,8 @@ namespace rfsim {
         float robotFriction = 0.0f;
         float robotRestitution = 0.0f;
         float robotMaxSpeed = 0.0f;
-        // Positions of motors relative to a robot center.
-        // Robot's rotation angle is 0.
-        glm::vec2 robotLeftMotorOffset = {};
-        glm::vec2 robotRightMotorOffset = {};
+        // Offset for left and right wheels from the center.
+        float robotWheelXOffset = 0.0f;
 
         float ballRadius = 0.0f;
         float ballMass = 0.0f;

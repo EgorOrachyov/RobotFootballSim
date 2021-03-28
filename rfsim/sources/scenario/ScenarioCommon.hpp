@@ -54,8 +54,7 @@ namespace rfsim {
             pp.robotFriction = 0.25f;
             pp.robotRestitution = 0.1f;
             pp.robotMaxSpeed = 100.0f;
-            pp.robotLeftMotorOffset = {0, -0.8f };
-            pp.robotRightMotorOffset = {0, 0.8f };
+            pp.robotWheelXOffset = 0.15f;
             pp.ballRadius = 0.08f;
             pp.ballMass = 0.05f;
             pp.ballFriction = 0.005f;
