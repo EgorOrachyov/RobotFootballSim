@@ -103,7 +103,8 @@ namespace rfsim {
             startInfo.team_b[i].position = to_rfsim_vec2(r.position);
         }
 
-        assert(beginGameFunction(&algoState, &gameSettings, &startInfo) == rfsim_status_success);
+        rfsim_status r = beginGameFunction(&algoState, &gameSettings, &startInfo);
+        assert(r == rfsim_status_success);
     }
 
     void Algorithm::TickGame(float dt, float t, Game &game) {
@@ -136,7 +137,8 @@ namespace rfsim {
             stateInfo.team_b_control[i] = to_rfsim_control(game.robotMotorPowerB[i]);
         }
 
-        assert(tickGameFunction(&algoState, &stateInfo) == rfsim_status_success);
+        rfsim_status r = tickGameFunction(&algoState, &stateInfo);
+        assert(r == rfsim_status_success);
 
         // Copy power info
         for (int i = 0; i < game.teamSize; i++) {
@@ -146,7 +148,8 @@ namespace rfsim {
     }
 
     void Algorithm::EndGame(Game& game) {
-        assert(endGameFunction(&algoState) == rfsim_status_success);
+        rfsim_status r = endGameFunction(&algoState);
+        assert(r == rfsim_status_success);
     }
 
 }
