@@ -62,10 +62,10 @@ namespace rfsim {
         ImGui::CreateContext();
 
         auto& io = ImGui::GetIO();
-        io.FontGlobalScale *= mFontScale;
+        io.FontGlobalScale *= mConfigManager->GetFontScale();
 
         auto& style = ImGui::GetStyle();
-        style.ScaleAllSizes(mGuiScale);
+        style.ScaleAllSizes(mConfigManager->GetGuiScale());
 
         ImGui::StyleColorsDark();
         ImGui_ImplGlfw_InitForOpenGL(mPrimaryWindow->GetNativeHnd(), true);
@@ -162,13 +162,11 @@ namespace rfsim {
                 // Draw menu widget
                 ImGui::Begin("Main Menu");
 
-                ImGui::Text("How to start a new game:");
                 ImGui::Text(" - 1. Select the game scenario");
-                ImGui::Text(" - 2. Select the algorithm used to control robots");
-                ImGui::Text(" - 3. Press start button");
+                ImGui::ListBox("Game scenario", &selectedScenario, scenariosRaw.data(), scenariosRaw.size());
                 ImGui::NewLine();
 
-                ImGui::ListBox("Game scenario", &selectedScenario, scenariosRaw.data(), scenariosRaw.size());
+                ImGui::Text(" - 2. Select the algorithm used to control robots");
                 ImGui::ListBox("Algorithm", &selectedAlgo, algorithmsRaw.data(), algorithmsRaw.size());
                 ImGui::NewLine();
 
