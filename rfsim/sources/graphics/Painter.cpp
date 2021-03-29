@@ -216,7 +216,7 @@ namespace rfsim {
                     size_t similar = 0;
 
                     // Count number of images with the same GL texture (the same object in memory)
-                    while (mImages[currentImage].image == mImages[currentImage + similar].image && (currentImage + similar) < imagesCount)
+                    while ((currentImage + similar) < imagesCount && mImages[currentImage].image == mImages[currentImage + similar].image)
                         similar += 1;
 
 

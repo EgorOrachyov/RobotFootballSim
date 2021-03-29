@@ -54,6 +54,7 @@ namespace rfsim {
             configFilePath,
             std::string("../") + configFilePath,
             std::string("../../") + configFilePath,
+            std::string("../../../") + configFilePath,
         };
 
         for (const auto &p : possiblePaths) {
