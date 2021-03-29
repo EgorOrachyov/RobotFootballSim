@@ -37,6 +37,7 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 #include <memory>
+#include <iostream>
 
 namespace rfsim {
 
@@ -210,6 +211,8 @@ namespace rfsim {
 
                 if (gameState == GameState::Running) {
                     t += simDt;
+
+                    std::cout << simDt << std::endl;
 
                     PhysicsGameState state;
                     mPhysicsServer->GameStep(simDt);

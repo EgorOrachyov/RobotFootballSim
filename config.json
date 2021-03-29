@@ -4,7 +4,7 @@
     "resourcesPath": "../resources",
     "pluginPathPrefix": ".",
     "pluginPaths": [
-        "followmove",
-        "randommove"
+        "randommove",
+        "followmove"
     ]
 }

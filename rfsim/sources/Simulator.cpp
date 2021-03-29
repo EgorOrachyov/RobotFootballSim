@@ -59,6 +59,12 @@ namespace rfsim {
         for (const auto &a : mConfigManager->GetPluginsPaths()) {
             mAlgorithmManager->Load(a);
         }
+
+        // User defined plugins
+        for (const auto& p: mConfigManager->GetUserPluginsPaths()) {
+            mAlgorithmManager->LoadFromFilepath(p);
+        }
+
         mGameManager->AddScenario(std::make_shared<Scrum>());
         mGameManager->AddScenario(std::make_shared<Duel>());
     }
@@ -72,6 +78,7 @@ namespace rfsim {
         mPainter = nullptr;
         mPrimaryWindow = nullptr;
         mWindowManager = nullptr;
+        mConfigManager = nullptr;
     }
 
     int Simulator::Run() {
