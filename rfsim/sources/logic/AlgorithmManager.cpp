@@ -44,7 +44,14 @@ namespace rfsim {
     }
 
     std::shared_ptr<Algorithm> AlgorithmManager::LoadFromFilepath(const std::string &filepath) {
-        std::shared_ptr<dynalo::library> lib = std::make_shared<dynalo::library>(filepath);
+        std::shared_ptr<dynalo::library> lib;
+
+        try {
+            lib = std::make_shared<dynalo::library>(filepath);
+        } catch (std::runtime_error &e) {
+            std::cout << "AlgorithmManager: couldn't load plugin \"" << filepath << "\": " << e.what() << std::endl;
+            return nullptr;
+        }
 
         std::shared_ptr<Algorithm> algo = std::make_shared<Algorithm>();
 
