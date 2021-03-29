@@ -33,6 +33,7 @@
 #include <cmath>
 
 static int teamSize = 0;
+static std::vector<std::pair<float, float>> *vrand;
 
 RFSIM_DEFINE_FUNCTION_INIT {
     std::strcpy(context->name, "Ball Follow Movement (testing)");
@@ -42,14 +43,21 @@ RFSIM_DEFINE_FUNCTION_INIT {
 
 RFSIM_DEFINE_FUNCTION_BEGIN_GAME {
     teamSize = start->team_size;
+    vrand = new std::vector<std::pair<float, float>>(teamSize);
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> distr(0.4f, 0.6f);
+    for (int i = 0; i < teamSize; i++) {
+        (*vrand)[i] = { distr(gen), distr(gen) };
+    }
+
     return rfsim_status_success;
 };
 
 RFSIM_DEFINE_FUNCTION_TICK_GAME {
-    std::default_random_engine engine(std::chrono::system_clock::now().time_since_epoch().count());
-    auto dist = std::uniform_real_distribution<float>(0.0, 1.0);
-    auto basePowerA = 1.0f;
-    auto basePowerB = 1.1f;
+    auto baseVelA = 1.0f;
+    auto baseVelB = 1.1f;
 
     auto& b = state->ball;
     auto bp = glm::vec2(b.position.x, b.position.y);
@@ -63,10 +71,10 @@ RFSIM_DEFINE_FUNCTION_TICK_GAME {
 
         auto dotRdBd = glm::dot(rd, bd) / glm::length(rd) / glm::length(bd);
         auto d = glm::length(bd) + 1.0f;
-        auto left = (d + dotRdBd) * dist(engine);
-        auto right = (d) * dist(engine);
+        auto left = (d + dotRdBd) * (*vrand)[i].first;
+        auto right = d * (*vrand)[i].second;
 
-        state->team_a_control[i] = {left * basePowerA, right * basePowerA};
+        state->team_a_control[i] = {left * baseVelA, right * baseVelA};
     }
 
     for (int i = 0; i < teamSize; i++) {
@@ -78,16 +86,19 @@ RFSIM_DEFINE_FUNCTION_TICK_GAME {
 
         auto dotRdBd = glm::dot(rd, bd) / glm::length(rd) / glm::length(bd);
         auto d = glm::length(bd) + 1.0f;
-        auto left = (d + dotRdBd) * dist(engine);
-        auto right = (d) * dist(engine);
+        auto left = (d + dotRdBd) * (*vrand)[i].first;
+        auto right = d * (*vrand)[i].second;
 
-        state->team_b_control[i] = {left * basePowerB, right * basePowerB};
+        state->team_b_control[i] = {left * baseVelB, right * baseVelB};
     }
 
     return rfsim_status_success;
 };
 
 RFSIM_DEFINE_FUNCTION_END_GAME {
+    delete vrand;
+    vrand = nullptr;
+
     return rfsim_status_success;
 };
 
