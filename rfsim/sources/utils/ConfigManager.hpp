@@ -42,7 +42,7 @@ namespace rfsim
      */
     class ConfigManager {
     public:
-        ConfigManager(const std::string &configFilePath);
+        explicit ConfigManager(const std::string &configFilePath);
         ~ConfigManager() = default;
 
         ConfigManager(const ConfigManager &other) = delete;

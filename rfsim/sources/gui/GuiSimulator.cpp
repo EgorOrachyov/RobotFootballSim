@@ -170,13 +170,10 @@ namespace rfsim {
                 ImGui::ListBox("Algorithm", &selectedAlgo, algorithmsRaw.data(), algorithmsRaw.size());
                 ImGui::NewLine();
 
-                ImGui::PushStyleColor(ImGuiCol_Button, mStyle.redColor);
-                exit |= ImGui::Button("Quit", ImVec2(200, 0));
-                ImGui::SameLine();
                 ImGui::PushStyleColor(ImGuiCol_Button, mStyle.greenColor);
-                beginGame = ImGui::Button("Start", ImVec2(200, 0));
+                beginGame = ImGui::Button("Start", ImVec2(300, 0));
 
-                ImGui::PopStyleColor(2);
+                ImGui::PopStyleColor(1);
                 ImGui::End();
 
                 if (beginGame && selectedScenario >= 0 && selectedAlgo >= 0) {
