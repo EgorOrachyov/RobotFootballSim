@@ -42,7 +42,7 @@ namespace rfsim {
         }
 
         static glm::vec2 GetDefaultFieldBorderOffset() {
-            return { 0.5f, 0.5f };
+            return { 0.1f, 0.2f };
         }
 
         static PhysicsGameProperties GetDefaultPhysicsProperties() {

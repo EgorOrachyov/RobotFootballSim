@@ -26,7 +26,6 @@
 #include <rfsim/rfsim.h>
 #include <iostream>
 #include <random>
-#include <chrono>
 #include <cstring>
 
 static int teamSize = 0;
@@ -54,13 +53,13 @@ RFSIM_DEFINE_FUNCTION_BEGIN_GAME {
 
 RFSIM_DEFINE_FUNCTION_TICK_GAME {
     for (int i = 0; i < teamSize; i++) {
-        state->team_a_control[i].left_wheel_velocity = (*vrand)[i].first * 1.25f;
+        state->team_a_control[i].left_wheel_velocity = (*vrand)[i].first * 1.1f;
         state->team_a_control[i].right_wheel_velocity = (*vrand)[i].second *  1.0f;
     }
 
     for (int i = 0; i < teamSize; i++) {
         state->team_b_control[i].left_wheel_velocity = (*vrand)[i].first * 1.0f;
-        state->team_b_control[i].right_wheel_velocity = (*vrand)[i].second * 1.25f;
+        state->team_b_control[i].right_wheel_velocity = (*vrand)[i].second * 1.1f;
     }
 
     return rfsim_status_success;

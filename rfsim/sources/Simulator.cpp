@@ -60,11 +60,6 @@ namespace rfsim {
             mAlgorithmManager->Load(a);
         }
 
-        // User defined plugins
-        for (const auto& p: mConfigManager->GetUserPluginsPaths()) {
-            mAlgorithmManager->LoadFromFilepath(p);
-        }
-
         mGameManager->AddScenario(std::make_shared<Scrum>());
         mGameManager->AddScenario(std::make_shared<Duel>());
     }
