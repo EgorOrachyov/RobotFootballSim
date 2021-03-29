@@ -30,6 +30,8 @@
 
 namespace rfsim {
 
+    constexpr float PHYSICS_FIXED_DT = 1.0f / 60.0f;
+
     class PhysicsContactListener : public b2ContactListener {
     public:
         PhysicsContactListener(const b2Body *fieldBoundSensors) : mFieldBoundSensors(fieldBoundSensors) {}
@@ -88,7 +90,7 @@ namespace rfsim {
         std::list<std::pair<b2Fixture*, b2Fixture*>> mSensorContacts;
     };
 
-    PhysicsServer::PhysicsServer() : mRoomBounds(nullptr), mFieldBoundSensors(nullptr), mBall(nullptr) {}
+    PhysicsServer::PhysicsServer() : dtAccumulated(0), mRoomBounds(nullptr), mFieldBoundSensors(nullptr), mBall(nullptr) {}
 
     PhysicsServer::~PhysicsServer() {
         EndGame();
@@ -316,22 +318,28 @@ namespace rfsim {
         assert(mWorld);
         assert(mContactListener);
 
-        mContactListener->Clear();
+        dtAccumulated += dt;
 
-        int32 velocityIterations = 8;
-        int32 positionIterations = 3;
+        while (dtAccumulated >= PHYSICS_FIXED_DT) {
+            mContactListener->Clear();
 
-        float maxSpeed = mProperties.robotMaxSpeed;
+            int32 velocityIterations = 8;
+            int32 positionIterations = 3;
 
-        for (const auto &r : mRobots) {
-            if (r.second->GetLinearVelocity().LengthSquared() > maxSpeed * maxSpeed) {
-                b2Vec2 v = r.second->GetLinearVelocity();
-                v.Normalize();
-                r.second->SetLinearVelocity(maxSpeed * v);
+            float maxSpeed = mProperties.robotMaxSpeed;
+
+            for (const auto &r : mRobots) {
+                if (r.second->GetLinearVelocity().LengthSquared() > maxSpeed * maxSpeed) {
+                    b2Vec2 v = r.second->GetLinearVelocity();
+                    v.Normalize();
+                    r.second->SetLinearVelocity(maxSpeed * v);
+                }
             }
-        }
 
-        mWorld->Step(dt, velocityIterations, positionIterations);
+            mWorld->Step(PHYSICS_FIXED_DT, velocityIterations, positionIterations);
+
+            dtAccumulated -= PHYSICS_FIXED_DT;
+        }
     }
 
     void PhysicsServer::UpdateWheelVelocities(int robotId, float leftWheelVelocity, float rightWheelVelocity) {
@@ -346,7 +354,7 @@ namespace rfsim {
 
         b2Body *robot = mRobots[robotId];
         
-        const float dt = 1 / 60.0f;
+        const float dt = PHYSICS_FIXED_DT;
 
         // Differential Drive Robots
         // http://www.cs.columbia.edu/~allen/F17/NOTES/icckinematics.pdf

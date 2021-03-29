@@ -73,6 +73,8 @@ namespace rfsim {
         static float AngleToGameCoords(float angle);
 
     private:
+        float dtAccumulated;
+
         std::shared_ptr<b2World> mWorld;
         std::shared_ptr<PhysicsContactListener> mContactListener;
 
