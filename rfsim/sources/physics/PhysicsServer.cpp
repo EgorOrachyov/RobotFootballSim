@@ -255,7 +255,7 @@ namespace rfsim {
                 const float angle = AngleToPhysicsCoords(i.angle);
 
                 b2BodyDef robotBodyDef = {};
-                robotBodyDef.type = b2_kinematicBody;
+                robotBodyDef.type = b2_dynamicBody;
                 robotBodyDef.position = { pos.x, pos.y };
                 robotBodyDef.angle = angle;
 
