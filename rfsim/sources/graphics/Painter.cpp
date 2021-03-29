@@ -54,7 +54,7 @@ namespace rfsim {
 
             mImageDrawShader = std::make_shared<GLShader>(vertex, fragment);
 
-            GLGeometryLayout imageDrawLayout(3);
+            GLGeometryLayout imageDrawLayout(5);
             {
                 imageDrawLayout[0].location = 0;
                 imageDrawLayout[0].bufferId = 0;
@@ -74,11 +74,27 @@ namespace rfsim {
 
                 imageDrawLayout[2].location = 2;
                 imageDrawLayout[2].bufferId = 1;
-                imageDrawLayout[2].stride = 4 * sizeof(float);
+                imageDrawLayout[2].stride = (4 + 4 + 1) * sizeof(float);
                 imageDrawLayout[2].offset = 0;
                 imageDrawLayout[2].baseType = GL_FLOAT;
                 imageDrawLayout[2].components = 4;
-                imageDrawLayout[2].perInstance = true;
+                imageDrawLayout[2].perInstance = false;
+
+                imageDrawLayout[3].location = 3;
+                imageDrawLayout[3].bufferId = 1;
+                imageDrawLayout[3].stride = (4 + 4 + 1) * sizeof(float);
+                imageDrawLayout[3].offset = (4) * sizeof(float);
+                imageDrawLayout[3].baseType = GL_FLOAT;
+                imageDrawLayout[3].components = 4;
+                imageDrawLayout[3].perInstance = false;
+
+                imageDrawLayout[4].location = 4;
+                imageDrawLayout[4].bufferId = 1;
+                imageDrawLayout[4].stride = (4 + 4 + 1) * sizeof(float);
+                imageDrawLayout[4].offset = (4 + 4) * sizeof(float);
+                imageDrawLayout[4].baseType = GL_FLOAT;
+                imageDrawLayout[4].components = 1;
+                imageDrawLayout[4].perInstance = false;
             }
 
             mImageDrawGeometry = std::make_shared<GLDynamicGeometry>(2, true, GL_TRIANGLES, std::move(imageDrawLayout));
@@ -156,7 +172,7 @@ namespace rfsim {
         }
 
         void Prepare() {
-
+            // Empty for now
         }
 
         void Draw(const Recti& area, const Rect& space, const std::shared_ptr<Window> &target, const Color& clearColor) {
@@ -184,60 +200,91 @@ namespace rfsim {
             glm::mat4 proj = glm::ortho(space.x, space.x + space.z, space.y, space.y + space.w, 0.0f, (float) -mFarZ);
 
             // Draw images separately
-            // todo: batch draw commands with the same image
-
-            mImageDrawShader->Bind();
-            for (const auto& image: mImages) {
+            // Batch images with the same texture
+            // (suppose, that the user wants good performance)
+            {
                 static const std::string IMAGE_TEXTURE = "imageTexture";
                 static const std::string TRANSPARENT_COLOR = "transparentColor";
                 static const std::string IS_SRGB = "isSRGB";
 
-                size_t indicesToDraw = 0;
+                mImageDrawShader->Bind();
 
-                mImageDrawGeometry->ClearGeometry();
-                image.PrepareImage(*mImageDrawGeometry, indicesToDraw);
-                mImageDrawGeometry->UpdateResource();
+                size_t imagesCount = mImages.size();
+                size_t currentImage = 0;
+
+                while (currentImage < imagesCount) {
+                    size_t similar = 0;
+
+                    // Count number of images with the same GL texture (the same object in memory)
+                    while (mImages[currentImage].image == mImages[currentImage + similar].image && (currentImage + similar) < imagesCount)
+                        similar += 1;
 
 
-                mImageDrawShader->SetMatrix4(PROJ_VIEW, proj);
-                mImageDrawShader->SetVec2(AREA_SIZE, areaSize);
-                mImageDrawShader->SetTexture(IMAGE_TEXTURE, image.image, 0);
-                mImageDrawShader->SetVec4(TRANSPARENT_COLOR, image.transparentColor);
-                mImageDrawShader->SetBool(IS_SRGB, image.image->IsSRGB());
+                    size_t totalIndicesToDraw = 0;
+                    size_t totalVerticesToDraw = 0;
 
-                assert(indicesToDraw);
+                    mImageDrawGeometry->ClearGeometry();
 
-                mImageDrawGeometry->Bind();
-                mImageDrawGeometry->Draw(6, 1);
-                mImageDrawGeometry->Unbind();
+                    // Batch images
+                    for (size_t i = currentImage; i < currentImage + similar; i++) {
+                        size_t indicesToDraw = 0;
+                        size_t verticesToDraw = 0;
+
+                        mImages[i].PrepareImage(*mImageDrawGeometry, totalVerticesToDraw, indicesToDraw, verticesToDraw);
+
+                        assert(indicesToDraw);
+                        assert(verticesToDraw);
+
+                        totalIndicesToDraw += indicesToDraw;
+                        totalVerticesToDraw += verticesToDraw;
+                    }
+
+                    auto& image = mImages[currentImage];
+
+                    mImageDrawShader->SetMatrix4(PROJ_VIEW, proj);
+                    mImageDrawShader->SetVec2(AREA_SIZE, areaSize);
+                    mImageDrawShader->SetTexture(IMAGE_TEXTURE, image.image, 0);
+
+                    mImageDrawGeometry->UpdateResource();
+
+                    mImageDrawGeometry->Bind();
+                    mImageDrawGeometry->Draw(totalIndicesToDraw, 1);
+                    mImageDrawGeometry->Unbind();
+
+                    currentImage += similar;
+                }
+
+                mImageDrawShader->Unbind();
             }
-            mImageDrawShader->Unbind();
 
             // Draw all rects in batch fashion
             // Params are packed into vertex attributes
+            {
+                mRectDrawShader->Bind();
+                mRectDrawGeometry->ClearGeometry();
+                size_t totalIndicesToDraw = 0;
+                size_t totalVerticesToDraw = 0;
+                for (const auto& rect: mRects) {
+                    size_t indicesToDraw = 0;
+                    size_t verticesToDraw = 0;
 
-            mRectDrawShader->Bind();
-            mRectDrawGeometry->ClearGeometry();
-            size_t totalIndicesToDraw = 0;
-            size_t totalVerticesToDraw = 0;
-            for (const auto& rect: mRects) {
-                size_t indicesToDraw = 0;
-                size_t verticesToDraw = 0;
+                    rect.PrepareRect(*mRectDrawGeometry, totalVerticesToDraw, indicesToDraw, verticesToDraw);
 
-                rect.PrepareRect(*mRectDrawGeometry, totalVerticesToDraw, indicesToDraw, verticesToDraw);
+                    assert(indicesToDraw);
+                    assert(verticesToDraw);
 
-                assert(indicesToDraw);
-                assert(verticesToDraw);
-                totalIndicesToDraw += indicesToDraw;
-                totalVerticesToDraw += verticesToDraw;
+                    totalIndicesToDraw += indicesToDraw;
+                    totalVerticesToDraw += verticesToDraw;
+                }
+
+                mRectDrawGeometry->UpdateResource();
+                mRectDrawShader->SetMatrix4(PROJ_VIEW, proj);
+                mRectDrawShader->SetVec2(AREA_SIZE, areaSize);
+                mRectDrawGeometry->Bind();
+                mRectDrawGeometry->Draw(totalIndicesToDraw, 1);
+                mRectDrawGeometry->Unbind();
+                mRectDrawShader->Unbind();
             }
-            mRectDrawGeometry->UpdateResource();
-            mRectDrawShader->SetMatrix4(PROJ_VIEW, proj);
-            mRectDrawShader->SetVec2(AREA_SIZE, areaSize);
-            mRectDrawGeometry->Bind();
-            mRectDrawGeometry->Draw(totalIndicesToDraw, 1);
-            mRectDrawGeometry->Unbind();
-            mRectDrawShader->Unbind();
         }
 
         void Clear() {

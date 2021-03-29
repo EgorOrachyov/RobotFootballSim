@@ -41,13 +41,16 @@ message(STATUS "Add stb image for image data processing")
 add_subdirectory(deps/stb)
 
 message(STATUS "Add dynalo as cross-platform shared lib loader")
-add_subdirectory(deps/dynalo)
+add_subdirectory(deps/dynalo2)
 
 message(STATUS "Add glm for 3d math functions")
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(BUILD_STATIC_LIBS OFF CACHE BOOL "" FORCE)
 add_subdirectory(deps/glm)
 target_include_directories(glm INTERFACE deps/glm)
+
+message(STATUS "Add picojson for parsing config files")
+add_subdirectory(deps/picojson)
 
 
 # Copy resources files into binary dir

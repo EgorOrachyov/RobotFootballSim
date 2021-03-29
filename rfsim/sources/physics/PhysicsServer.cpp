@@ -30,6 +30,8 @@
 
 namespace rfsim {
 
+    constexpr float PHYSICS_FIXED_DT = 1.0f / 60.0f;
+
     class PhysicsContactListener : public b2ContactListener {
     public:
         PhysicsContactListener(const b2Body *fieldBoundSensors) : mFieldBoundSensors(fieldBoundSensors) {}
@@ -88,13 +90,14 @@ namespace rfsim {
         std::list<std::pair<b2Fixture*, b2Fixture*>> mSensorContacts;
     };
 
-    PhysicsServer::PhysicsServer() : mRoomBounds(nullptr), mFieldBoundSensors(nullptr), mBall(nullptr) {}
+    PhysicsServer::PhysicsServer() : dtAccumulated(0), mRoomBounds(nullptr), mFieldBoundSensors(nullptr), mBall(nullptr) {}
 
     PhysicsServer::~PhysicsServer() {
         EndGame();
     }
 
     void PhysicsServer::SetGameProperties(const PhysicsGameProperties &properties) {
+        assert(mProperties.robotWheelXOffset >= 0.0f);
         mProperties = properties;
     }
 
@@ -257,7 +260,6 @@ namespace rfsim {
                 robotBodyDef.type = b2_dynamicBody;
                 robotBodyDef.position = { pos.x, pos.y };
                 robotBodyDef.angle = angle;
-                robotBodyDef.angularDamping = robotAngularDamping;
 
                 b2Body *body = mWorld->CreateBody(&robotBodyDef);
 
@@ -278,7 +280,7 @@ namespace rfsim {
 
                 body->CreateFixture(&fixture);
 
-                SetFieldFriction(body);
+                //SetFieldFriction(body);
 
                 mRobots[i.id] = body;
             }
@@ -316,43 +318,88 @@ namespace rfsim {
         assert(mWorld);
         assert(mContactListener);
 
-        mContactListener->Clear();
+        dtAccumulated += dt;
 
-        int32 velocityIterations = 8;
-        int32 positionIterations = 3;
+        while (dtAccumulated >= PHYSICS_FIXED_DT) {
+            mContactListener->Clear();
 
-        mWorld->Step(dt, velocityIterations, positionIterations);
+            int32 velocityIterations = 8;
+            int32 positionIterations = 3;
+
+            float maxSpeed = mProperties.robotMaxSpeed;
+
+            for (const auto &r : mRobots) {
+                if (r.second->GetLinearVelocity().LengthSquared() > maxSpeed * maxSpeed) {
+                    b2Vec2 v = r.second->GetLinearVelocity();
+                    v.Normalize();
+                    r.second->SetLinearVelocity(maxSpeed * v);
+                }
+            }
+
+            mWorld->Step(PHYSICS_FIXED_DT, velocityIterations, positionIterations);
+
+            dtAccumulated -= PHYSICS_FIXED_DT;
+        }
     }
 
-    void PhysicsServer::UpdateMotorsPower(int robotId, float leftMotorForce, float rightMotorForce) {
+    void PhysicsServer::UpdateWheelVelocities(int robotId, float leftWheelVelocity, float rightWheelVelocity) {
         assert(mWorld);
         assert(mRobots.find(robotId) != mRobots.end());
 
         const float eps = 0.001f;
 
+        if (std::abs(leftWheelVelocity) < eps && std::abs(rightWheelVelocity) < eps) {
+            return;
+        }
+
         b2Body *robot = mRobots[robotId];
+        
+        const float dt = PHYSICS_FIXED_DT;
 
-        // world-space direction from cos and sin of the angle
-        const b2Vec2 dir = { robot->GetTransform().q.c, robot->GetTransform().q.s } ;
+        // Differential Drive Robots
+        // http://www.cs.columbia.edu/~allen/F17/NOTES/icckinematics.pdf
 
-        const glm::vec2 motorPositions[] = {
-            ToPhysicsCoords({ mProperties.robotLeftMotorOffset.x,  mProperties.robotLeftMotorOffset.y }),
-            ToPhysicsCoords({ mProperties.robotRightMotorOffset.x, mProperties.robotRightMotorOffset.y })
-        };
+        float x = robot->GetTransform().p.x;
+        float y = robot->GetTransform().p.y;
 
-        const float forces[] = {
-            leftMotorForce,
-            rightMotorForce
-        };
+        float theta = robot->GetAngle();
+        float cos_theta = robot->GetTransform().q.c;
+        float sin_theta = robot->GetTransform().q.s;
 
-        for (int i = 0; i < 2; i++) {
-            if (forces[i] > eps) {
-                const b2Vec2 localMotorPos = { motorPositions[i].x, motorPositions[i].y };
-                const b2Vec2 worldMotorPos = robot->GetWorldPoint(localMotorPos);
-                const b2Vec2 worldForce = { dir.x * forces[i], dir.y * forces[i] };
+        float Vl = leftWheelVelocity;
+        float Vr = rightWheelVelocity;
 
-                robot->ApplyForce(worldForce, worldMotorPos, true);            
-            }
+        float l = mProperties.robotWheelXOffset * 2;
+
+        // if R is infinite (so no rotation)
+        // or no distance between wheels
+        if (std::abs(Vl - Vr) < eps || l < eps) {
+            b2Vec2 dir = { cos_theta, sin_theta };
+            float v = (std::abs(Vr) + std::abs(Vl)) / 2.0f;
+
+            robot->SetLinearVelocity(v * dir);
+            robot->SetAngularVelocity(0);
+        } else {
+            float R = l / 2.0f * (Vl + Vr) / (Vr - Vl);
+            float w = (Vr - Vl) / l;
+
+            // Instantaneous Center of Curvature
+            b2Vec2 ICC = { x - R * sin_theta, y + R * cos_theta };
+
+            // move ICC to origin
+            float x_n = x - ICC.x;
+            float y_n = y - ICC.y;
+
+            // rotate by w in ICC space
+            x_n = cosf(w * dt) * x_n - sinf(w * dt) * y_n;
+            y_n = sinf(w * dt) * x_n + cosf(w * dt) * y_n;
+
+            // move from ICC space to world space
+            x_n += ICC.x;
+            y_n += ICC.y;
+            
+            robot->SetLinearVelocity(1.0f / dt * b2Vec2{ x_n - x, y_n - y });
+            robot->SetAngularVelocity(w);
         }
     }
 

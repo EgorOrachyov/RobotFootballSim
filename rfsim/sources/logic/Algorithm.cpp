@@ -36,15 +36,15 @@ namespace rfsim {
 
     struct rfsim_control to_rfsim_control(const glm::vec2& v) {
         rfsim_control r;
-        r.left_motor_force = v.x;
-        r.right_motor_force = v.y;
+        r.left_wheel_velocity = v.x;
+        r.right_wheel_velocity = v.y;
         return r;
     }
 
     static glm::vec2 to_vec2(const rfsim_control& c) {
         glm::vec2 r;
-        r.x = c.left_motor_force;
-        r.y = c.right_motor_force;
+        r.x = c.left_wheel_velocity;
+        r.y = c.right_wheel_velocity;
         return r;
     }
 
@@ -63,7 +63,7 @@ namespace rfsim {
     bool Algorithm::Init(dynalo::library &library) {
         initFunction = library.get_function<rfsim_status(rfsim_algo_state*)>(RFSIM_FUNCTION_INIT_NAME);
         beginGameFunction = library.get_function<rfsim_status(rfsim_algo_state*, const rfsim_game_settings*, const rfsim_game_start_info*)>(RFSIM_FUNCTION_BEGIN_GAME_NAME);
-        tickGameFunction = library.get_function<rfsim_status(rfsim_algo_state*, rfsim_game_state_info*, float)>(RFSIM_FUNCTION_TICK_GAME_NAME);
+        tickGameFunction = library.get_function<rfsim_status(rfsim_algo_state*, rfsim_game_state_info*)>(RFSIM_FUNCTION_TICK_GAME_NAME);
         endGameFunction = library.get_function<rfsim_status(rfsim_algo_state*)>(RFSIM_FUNCTION_END_GAME_NAME);
         finalizeFunction = library.get_function<rfsim_status(rfsim_algo_state*)>(RFSIM_FUNCTION_FINALIZE_NAME);
 
@@ -103,14 +103,17 @@ namespace rfsim {
             startInfo.team_b[i].position = to_rfsim_vec2(r.position);
         }
 
-        assert(beginGameFunction(&algoState, &gameSettings, &startInfo) == rfsim_status_success);
+        rfsim_status r = beginGameFunction(&algoState, &gameSettings, &startInfo);
+        assert(r == rfsim_status_success);
     }
 
-    void Algorithm::TickGame(Game &game, float dt) {
+    void Algorithm::TickGame(float dt, float t, Game &game) {
         auto& pS = game.physicsGameState;
         auto& pII = game.physicsGameInitInfo;
 
         rfsim_game_state_info stateInfo;
+        stateInfo.dt = dt;
+        stateInfo.t = t;
         stateInfo.ball.position = to_rfsim_vec2(pS.ball.position);
         stateInfo.ball.angle = pS.ball.angle;
 
@@ -121,7 +124,7 @@ namespace rfsim {
 
             stateInfo.team_a[i].angle = r.angle;
             stateInfo.team_a[i].position = to_rfsim_vec2(r.position);
-            stateInfo.team_a_control[i] = to_rfsim_control(game.robotMotorPowerA[i]);
+            stateInfo.team_a_control[i] = to_rfsim_control(game.robotWheelVelocitiesA[i]);
         }
 
         // Set robot data and power for team B
@@ -131,20 +134,22 @@ namespace rfsim {
 
             stateInfo.team_b[i].angle = r.angle;
             stateInfo.team_b[i].position = to_rfsim_vec2(r.position);
-            stateInfo.team_b_control[i] = to_rfsim_control(game.robotMotorPowerB[i]);
+            stateInfo.team_b_control[i] = to_rfsim_control(game.robotWheelVelocitiesB[i]);
         }
 
-        assert(tickGameFunction(&algoState, &stateInfo, dt) == rfsim_status_success);
+        rfsim_status r = tickGameFunction(&algoState, &stateInfo);
+        assert(r == rfsim_status_success);
 
         // Copy power info
         for (int i = 0; i < game.teamSize; i++) {
-            game.robotMotorPowerA[i] = to_vec2(stateInfo.team_a_control[i]);
-            game.robotMotorPowerB[i] = to_vec2(stateInfo.team_b_control[i]);
+            game.robotWheelVelocitiesA[i] = to_vec2(stateInfo.team_a_control[i]);
+            game.robotWheelVelocitiesB[i] = to_vec2(stateInfo.team_b_control[i]);
         }
     }
 
     void Algorithm::EndGame(Game& game) {
-        assert(endGameFunction(&algoState) == rfsim_status_success);
+        rfsim_status r = endGameFunction(&algoState);
+        assert(r == rfsim_status_success);
     }
 
 }

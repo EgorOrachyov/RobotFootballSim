@@ -204,9 +204,12 @@ namespace rfsim {
             image = i;
         }
 
-        void PrepareImage(GLDynamicGeometry& geometry, size_t &indicesToDraw) const {
+        void PrepareImage(GLDynamicGeometry& geometry, size_t baseIndex, size_t &indicesToDraw, size_t& verticesToDraw) const {
             const size_t VERTICES_COUNT = 4;
             const size_t INDICES_COUNT = 6;
+
+            indicesToDraw = INDICES_COUNT;
+            verticesToDraw = VERTICES_COUNT;
 
             glm::vec3 positions[VERTICES_COUNT];
             FillAndRotateRect(positions, VERTICES_COUNT);
@@ -218,9 +221,11 @@ namespace rfsim {
                 {1.0f, 1.0f},
             };
 
+            uint32_t bi = baseIndex;
+
             uint32_t indices[INDICES_COUNT] = {
-                0, 1, 2,
-                2, 3, 0
+                bi + 0, bi + 1, bi + 2,
+                bi + 2, bi + 3, bi + 0
             };
 
             auto& vertexData = geometry.GetBuffer(0);
@@ -230,13 +235,18 @@ namespace rfsim {
                 vertexData->Append((const unsigned char*)(&texCoords[i]), sizeof(texCoords[i]));
             }
 
-            auto& colorData = geometry.GetBuffer(1);
-            colorData->Append((const unsigned char*)&brushColor, sizeof(brushColor));
+            float srgb = image->IsSRGB()? 1.0f: 0.0f;
+
+            auto& sharedData = geometry.GetBuffer(1);
+
+            for (size_t i = 0; i < verticesToDraw; i++) {
+                sharedData->Append((const unsigned char*)&brushColor, sizeof(brushColor));
+                sharedData->Append((const unsigned char*)&transparentColor, sizeof(transparentColor));
+                sharedData->Append((const unsigned char*)&srgb, sizeof(srgb));
+            }
 
             auto& indexData = geometry.GetIndexBuffer();
             indexData->Append(indices, INDICES_COUNT);
-
-            indicesToDraw = INDICES_COUNT;
         }
     };
 

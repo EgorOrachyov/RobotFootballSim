@@ -56,8 +56,8 @@ namespace rfsim {
         virtual int Run();
 
     protected:
-        std::string mResourcesPath = "../../resources";
-        std::string mPluginsPath = ".";
+        int mWindowWidth = 1920;
+        int mWindowHeight = 1280;
         std::vector<std::string> mArgs;
 
         std::shared_ptr<class Window> mPrimaryWindow;
@@ -67,6 +67,7 @@ namespace rfsim {
         std::shared_ptr<class PhysicsServer> mPhysicsServer;
         std::shared_ptr<class AlgorithmManager> mAlgorithmManager;
         std::shared_ptr<class GameManager> mGameManager;
+        std::shared_ptr<class ConfigManager> mConfigManager;
     };
 
 }

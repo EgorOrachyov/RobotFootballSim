@@ -42,7 +42,7 @@ namespace rfsim {
         }
 
         static glm::vec2 GetDefaultFieldBorderOffset() {
-            return { 0.5f, 0.5f };
+            return { 0.1f, 0.2f };
         }
 
         static PhysicsGameProperties GetDefaultPhysicsProperties() {
@@ -53,8 +53,8 @@ namespace rfsim {
             pp.robotMass = 1.0f;
             pp.robotFriction = 0.25f;
             pp.robotRestitution = 0.1f;
-            pp.robotLeftMotorOffset = {0, -0.8f };
-            pp.robotRightMotorOffset = {0, 0.8f };
+            pp.robotMaxSpeed = 100.0f;
+            pp.robotWheelXOffset = 0.15f;
             pp.ballRadius = 0.08f;
             pp.ballMass = 0.05f;
             pp.ballFriction = 0.005f;

@@ -70,6 +70,11 @@ set(RFSIM_SCENARIO_SOURCES
         sources/scenario/Duel.hpp
         sources/scenario/RandomScenario.hpp)
 
+set(RSIM_UTILS_SOURCES
+        sources/utils/CircularBuffer.hpp
+        sources/utils/ConfigManager.hpp
+        sources/utils/ConfigManager.cpp)
+
 add_executable(rfsim
         ${RFSIM_C_API}
         ${RFSIM_SOURCES}
@@ -79,7 +84,8 @@ add_executable(rfsim
         ${RFSIM_PHYSICS_SOURCES}
         ${RFSIM_LOGIC_SOURCES}
         ${RFSIM_GUI_SOURCES}
-        ${RFSIM_SCENARIO_SOURCES})
+        ${RFSIM_SCENARIO_SOURCES}
+        ${RSIM_UTILS_SOURCES})
 
 target_include_directories(rfsim PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_include_directories(rfsim PRIVATE ${CMAKE_CURRENT_LIST_DIR}/sources)
@@ -108,6 +114,7 @@ target_link_libraries(rfsim PRIVATE box2d)
 target_link_libraries(rfsim PRIVATE stb_image)
 target_link_libraries(rfsim PRIVATE glm)
 target_link_libraries(rfsim PRIVATE dynalo)
+target_link_libraries(rfsim PRIVATE picojson)
 
 add_library(randommove SHARED plugins/RandomMovement.cpp)
 target_include_directories(randommove PRIVATE include)

@@ -50,6 +50,19 @@ namespace rfsim {
 
         // Popup graphics settings
         if (ImGui::BeginPopup("Settings")) {
+            ImGui::Checkbox("Display Robot Debug Info", &showDebugRobotInfo);
+
+            ImGui::Separator();
+            ImGui::Checkbox("Display Robots Trace", &graphicsSettings.drawRobotTrace);
+
+            if (graphicsSettings.drawRobotTrace) {
+                ImGui::SliderInt("Trace Length", &graphicsSettings.robotTraceLength, 5,  50);
+                ImGui::SliderFloat("Trace Sampling Period", &graphicsSettings.robotTraceSkip, 0.01f, 1.0f);
+                ImGui::SliderFloat("Trace Point Size", &graphicsSettings.robotTracePointRadius, 0.0f, 1.0f);
+                ImGui::ColorEdit3("Trace Point Color", &graphicsSettings.traceColor[0]);
+            }
+
+            ImGui::Separator();
             ImGui::Checkbox("Display Collision Info", &graphicsSettings.drawCollisionInfo);
             ImGui::Checkbox("Display Out Info", &graphicsSettings.drawOutInfo);
 
@@ -58,7 +71,11 @@ namespace rfsim {
 
             if (graphicsSettings.drawShadows) {
                 ImGui::SliderFloat("Shadow Intensity", &graphicsSettings.shadowIntensity, 0.0f, 1.0f);
+                ImGui::SliderFloat("Sun Position", &graphicsSettings.sunPosition, -0.2f, 0.2f);
             }
+
+            ImGui::Separator();
+            ImGui::ColorEdit3("Field Color", &graphicsSettings.fieldCustomColor[0]);
 
             if (ImGui::Button("Close")) {
                 mShowGraphicsSettings = false;

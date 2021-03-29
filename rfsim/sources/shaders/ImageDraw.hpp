@@ -36,16 +36,23 @@ namespace rfsim {
     layout (location = 0) in vec3 position;
     layout (location = 1) in vec2 texCoords;
     layout (location = 2) in vec4 color;
+    layout (location = 3) in vec4 transparentColor;
+    layout (location = 4) in float isSRGB;
+
 
     uniform vec2 areaSize;
     uniform mat4 projView;
 
     out vec2 fsTexCoords;
     out vec4 fsColor;
+    flat out vec4 fsTransparentColor;
+    flat out int fsIsSRGB;
 
     void main() {
         fsTexCoords = vec2(texCoords.x, 1.0 - texCoords.y);
         fsColor = color;
+        fsTransparentColor = transparentColor;
+        fsIsSRGB = isSRGB != 0.0f? 1: 0;
         gl_Position = projView * vec4(position.x, areaSize.y - position.y, position.z, 1.0f);
     }
     )";
@@ -57,11 +64,11 @@ namespace rfsim {
     layout (location = 0) out vec4 outColor;
 
     uniform sampler2D imageTexture;
-    uniform vec4 transparentColor;
-    uniform bool isSRGB;
 
     in vec2 fsTexCoords;
     in vec4 fsColor;
+    flat in vec4 fsTransparentColor;
+    flat in int fsIsSRGB;
 
     #define COLOR_GAMMA 2.2
 
@@ -80,11 +87,11 @@ namespace rfsim {
     void main() {
         vec4 color = texture(imageTexture, fsTexCoords).rgba;
 
-        if (transparentColor.rgb == color.rgb) {
+        if (fsTransparentColor.rgb == color.rgb) {
             discard;
         }
 
-        if (isSRGB) {
+        if (fsIsSRGB == 1) {
             color = convertSRBGtoLinear(color);
         }
 
