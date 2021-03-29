@@ -31,6 +31,7 @@
 #include <physics/PhysicsServer.hpp>
 #include <logic/AlgorithmManager.hpp>
 #include <logic/GameManager.hpp>
+#include <utils/ConfigManager.hpp>
 
 #include <scenario/Scrum.hpp>
 #include <scenario/Duel.hpp>
@@ -43,19 +44,21 @@ namespace rfsim {
             mArgs.emplace_back(argv[i]);
         }
 
+        mConfigManager = std::make_shared<ConfigManager>("config.json");
+
         // Setup main window and window manager
         mWindowManager = std::make_shared<WindowManager>();
         mPrimaryWindow = mWindowManager->CreateNewWindow({mWindowWidth, mWindowHeight}, "Robot Football Sim");
         mPainter = std::make_shared<Painter>(glm::ivec4{0, 0, mWindowWidth, mWindowHeight}, glm::vec4{0, 0, 1.0f, 1.0f}, mPrimaryWindow);
-        mGraphicsServer = std::make_shared<GraphicsServer>(mPrimaryWindow, mPainter, mResourcesPath);
+        mGraphicsServer = std::make_shared<GraphicsServer>(mPrimaryWindow, mPainter, mConfigManager->GetResourcesPath());
         mPhysicsServer = std::make_shared<PhysicsServer>();
-        mAlgorithmManager = std::make_shared<AlgorithmManager>(mPluginsPath);
         mGameManager = std::make_shared<GameManager>();
+        mAlgorithmManager = std::make_shared<AlgorithmManager>(mConfigManager->GetPluginPathPrefix());
 
-        // todo: Load from config
         // This is default algorithm and scenario (does not change order)
-        mAlgorithmManager->Load("randommove");
-        mAlgorithmManager->Load("followmove");
+        for (const auto &a : mConfigManager->GetPluginsPaths()) {
+            mAlgorithmManager->Load(a);
+        }
         mGameManager->AddScenario(std::make_shared<Scrum>());
         mGameManager->AddScenario(std::make_shared<Duel>());
     }

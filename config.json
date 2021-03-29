@@ -1,0 +1,10 @@
+{
+    "fontScale": 2.0,
+    "guiScale": 2.0,
+    "resourcesPath": "../resources",
+    "pluginPathPrefix": ".",
+    "pluginPaths": [
+        "followmove",
+        "randommove"
+    ]
+}

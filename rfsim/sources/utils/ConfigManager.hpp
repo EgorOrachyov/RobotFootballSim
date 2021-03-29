@@ -22,54 +22,52 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_SIMULATOR_HPP
-#define RFSIM_SIMULATOR_HPP
+#ifndef RFSIM_CONFIG_MANAGER_HPP
+#define RFSIM_CONFIG_MANAGER_HPP
 
-#include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
-namespace rfsim {
+namespace picojson {
+    class value;
+}
+
+namespace rfsim
+{
 
     /**
-     * @brief Simulator main class.
+     * @brief Configuration files manager.
      *
-     * Manages sub-systems, update loop, application start-up and configuration parsing.
+     * Manages configuration parsing and getting values.
      */
-    class Simulator {
+    class ConfigManager {
     public:
-        /**
-         * Create the simulator class.
-         *
-         * @param argc Number of the OS native app args
-         * @param argv AActual arguments
-         */
-        Simulator(int argc, const char* const* argv);
-        virtual ~Simulator();
+        ConfigManager(const std::string &configFilePath);
+        ~ConfigManager() = default;
 
-        /**
-         * Run the main simulator update loop.
-         * This function returns control only when user closes the application.
-         *
-         * @return 0 if simulator successfully finished.
-         */
-        virtual int Run();
+        ConfigManager(const ConfigManager &other) = delete;
+        ConfigManager(ConfigManager &&other) noexcept = delete;
+        ConfigManager& operator=(const ConfigManager &other) = delete;
+        ConfigManager& operator=(ConfigManager &&other) noexcept = delete;
 
-    protected:
-        int mWindowWidth = 1920;
-        int mWindowHeight = 1280;
-        std::vector<std::string> mArgs;
+        float GetFontScale() const;
+        float GetGuiScale() const;
+        const std::string& GetResourcesPath() const;
+        const std::string& GetPluginPathPrefix() const;
+        const std::vector<std::string>& GetPluginsPaths() const;
 
-        std::shared_ptr<class Window> mPrimaryWindow;
-        std::shared_ptr<class WindowManager> mWindowManager;
-        std::shared_ptr<class Painter> mPainter;
-        std::shared_ptr<class GraphicsServer> mGraphicsServer;
-        std::shared_ptr<class PhysicsServer> mPhysicsServer;
-        std::shared_ptr<class AlgorithmManager> mAlgorithmManager;
-        std::shared_ptr<class GameManager> mGameManager;
-        std::shared_ptr<class ConfigManager> mConfigManager;
+    private:
+        bool TryToFindConfig(const std::string &configFilePath, std::ifstream &result) const;
+        void Parse(const picojson::value &v);
+
+    private:
+        float mFontScale;
+        float mGuiScale;
+        std::string mResourcesPath;
+        std::string mPluginPathPrefix;
+        std::vector<std::string> mPluginsPaths;
     };
 
 }
 
-#endif //RFSIM_SIMULATOR_HPP
+#endif // RFSIM_CONFIG_MANAGER_HPP

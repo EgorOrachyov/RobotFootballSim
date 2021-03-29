@@ -76,10 +76,6 @@ namespace rfsim {
 
         static const char* GameStateToStr(GameState state);
 
-        // Scale options for hdpi displays
-        float mFontScale = 2.0f;
-        float mGuiScale = 2.0f;
-
         GuiStyle mStyle;
         State mState = State::MainMenu;
 

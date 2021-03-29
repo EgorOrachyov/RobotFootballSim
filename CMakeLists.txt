@@ -49,6 +49,9 @@ set(BUILD_STATIC_LIBS OFF CACHE BOOL "" FORCE)
 add_subdirectory(deps/glm)
 target_include_directories(glm INTERFACE deps/glm)
 
+message(STATUS "Add picojson for parsing config files")
+add_subdirectory(deps/picojson)
+
 
 # Copy resources files into binary dir
 file(COPY resources DESTINATION ${CMAKE_BINARY_DIR})

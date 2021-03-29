@@ -31,6 +31,7 @@
 #include <physics/PhysicsServer.hpp>
 #include <logic/AlgorithmManager.hpp>
 #include <logic/GameManager.hpp>
+#include <utils/ConfigManager.hpp>
 #include <glm/gtc/constants.hpp>
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -41,7 +42,7 @@ namespace rfsim {
 
     GuiSimulator::GuiSimulator(int argc, const char* const* argv) : Simulator(argc, argv) {
         const auto SEP = "/";
-        const auto prefix = mResourcesPath + SEP + "sprites" + SEP;
+        const auto prefix = mConfigManager->GetResourcesPath() + SEP + "sprites" + SEP;
 
         mMainMenuLogo = Image::LoadFromFilePath(prefix + "main-menu-logo.png");
         mMainMenuBall = Image::LoadFromFilePath(prefix + "soccer-ball.png");
@@ -61,10 +62,10 @@ namespace rfsim {
         ImGui::CreateContext();
 
         auto& io = ImGui::GetIO();
-        io.FontGlobalScale *= mFontScale;
+        io.FontGlobalScale *= mConfigManager->GetFontScale();
 
         auto& style = ImGui::GetStyle();
-        style.ScaleAllSizes(mGuiScale);
+        style.ScaleAllSizes(mConfigManager->GetGuiScale());
 
         ImGui::StyleColorsDark();
         ImGui_ImplGlfw_InitForOpenGL(mPrimaryWindow->GetNativeHnd(), true);
@@ -161,13 +162,11 @@ namespace rfsim {
                 // Draw menu widget
                 ImGui::Begin("Main Menu");
 
-                ImGui::Text("How to start a new game:");
                 ImGui::Text(" - 1. Select the game scenario");
-                ImGui::Text(" - 2. Select the algorithm used to control robots");
-                ImGui::Text(" - 3. Press start button");
+                ImGui::ListBox("Game scenario", &selectedScenario, scenariosRaw.data(), scenariosRaw.size());
                 ImGui::NewLine();
 
-                ImGui::ListBox("Game scenario", &selectedScenario, scenariosRaw.data(), scenariosRaw.size());
+                ImGui::Text(" - 2. Select the algorithm used to control robots");
                 ImGui::ListBox("Algorithm", &selectedAlgo, algorithmsRaw.data(), algorithmsRaw.size());
                 ImGui::NewLine();
 
