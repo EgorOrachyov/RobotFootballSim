@@ -42,7 +42,7 @@ namespace rfsim {
         void GetAboutInfo(std::string& info);
 
         void BeginGame(Game& game);
-        void TickGame(Game& game);
+        void TickGame(float dt, float t, Game &game);
         void EndGame(Game& game);
 
     private:

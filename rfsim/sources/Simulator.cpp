@@ -45,8 +45,8 @@ namespace rfsim {
 
         // Setup main window and window manager
         mWindowManager = std::make_shared<WindowManager>();
-        mPrimaryWindow = mWindowManager->CreateNewWindow({1280, 720}, "Robot Football Sim");
-        mPainter = std::make_shared<Painter>(glm::ivec4{0, 0, 1280, 720}, glm::vec4{0, 0, 1280, 720}, mPrimaryWindow);
+        mPrimaryWindow = mWindowManager->CreateNewWindow({mWindowWidth, mWindowHeight}, "Robot Football Sim");
+        mPainter = std::make_shared<Painter>(glm::ivec4{0, 0, mWindowWidth, mWindowHeight}, glm::vec4{0, 0, 1.0f, 1.0f}, mPrimaryWindow);
         mGraphicsServer = std::make_shared<GraphicsServer>(mPrimaryWindow, mPainter, mResourcesPath);
         mPhysicsServer = std::make_shared<PhysicsServer>();
         mAlgorithmManager = std::make_shared<AlgorithmManager>(mPluginsPath);
@@ -82,6 +82,7 @@ namespace rfsim {
         algo->BeginGame(*game);
 
         float dt = 1.0f / 60.0f;
+        float t = 0.0f;
         uint64_t frameCount = 0;
 
         while (!mPrimaryWindow->ShouldClose()) {
@@ -95,7 +96,7 @@ namespace rfsim {
             mPhysicsServer->GameStep(dt);
             mPhysicsServer->GetCurrentGameState(state);
 
-            mGraphicsServer->BeginDraw(state);
+            mGraphicsServer->BeginDraw(dt, state);
             mGraphicsServer->DrawStaticObjects();
             mGraphicsServer->DrawDynamicObjects();
             mGraphicsServer->DrawAuxInfo();
@@ -107,7 +108,7 @@ namespace rfsim {
             mPainter->FitToFramebufferArea();
 
             game->physicsGameState = state;
-            algo->TickGame(*game);
+            algo->TickGame(dt, t, *game);
 
             for (int i = 0; i < game->teamSize; i++) {
                 auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
@@ -122,6 +123,7 @@ namespace rfsim {
             }
 
             frameCount++;
+            t += dt;
         }
 
         algo->EndGame(*game);

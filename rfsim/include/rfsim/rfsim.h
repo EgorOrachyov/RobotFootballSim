@@ -117,6 +117,8 @@ typedef struct rfsim_game_state_info {
     rfsim_control team_a_control[RFSIM_MAX_ROBOTS_PER_TEAM];
     rfsim_control team_b_control[RFSIM_MAX_ROBOTS_PER_TEAM];
     rfsim_body ball;
+    float dt;
+    float t;
 } rfsim_game_state_info;
 
 typedef struct rfsim_algo_state {

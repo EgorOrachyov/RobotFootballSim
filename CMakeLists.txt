@@ -41,7 +41,7 @@ message(STATUS "Add stb image for image data processing")
 add_subdirectory(deps/stb)
 
 message(STATUS "Add dynalo as cross-platform shared lib loader")
-add_subdirectory(deps/dynalo)
+add_subdirectory(deps/dynalo2)
 
 message(STATUS "Add glm for 3d math functions")
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)

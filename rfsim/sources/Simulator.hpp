@@ -56,7 +56,9 @@ namespace rfsim {
         virtual int Run();
 
     protected:
-        std::string mResourcesPath = "../../resources";
+        int mWindowWidth = 1920;
+        int mWindowHeight = 1280;
+        std::string mResourcesPath = "../resources";
         std::string mPluginsPath = ".";
         std::vector<std::string> mArgs;
 

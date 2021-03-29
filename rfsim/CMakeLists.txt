@@ -68,6 +68,9 @@ set(RFSIM_SCENARIO_SOURCES
         sources/scenario/Scrum.hpp
         sources/scenario/ScenarioCommon.hpp sources/scenario/Duel.hpp)
 
+set(RSIM_UTILS_SOURCES
+        sources/utils/CircularBuffer.hpp)
+
 add_executable(rfsim
         ${RFSIM_C_API}
         ${RFSIM_SOURCES}
@@ -77,7 +80,8 @@ add_executable(rfsim
         ${RFSIM_PHYSICS_SOURCES}
         ${RFSIM_LOGIC_SOURCES}
         ${RFSIM_GUI_SOURCES}
-        ${RFSIM_SCENARIO_SOURCES})
+        ${RFSIM_SCENARIO_SOURCES}
+        ${RSIM_UTILS_SOURCES})
 
 target_include_directories(rfsim PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 target_include_directories(rfsim PRIVATE ${CMAKE_CURRENT_LIST_DIR}/sources)

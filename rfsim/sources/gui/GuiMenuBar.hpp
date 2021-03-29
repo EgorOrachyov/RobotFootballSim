@@ -37,6 +37,7 @@ namespace rfsim {
         // In game graphics
         GraphicsSettings graphicsSettings;
         bool quit = false;
+        bool showDebugRobotInfo = false;
 
     private:
         bool mShowAbout = false;

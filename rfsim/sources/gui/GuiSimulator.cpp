@@ -101,6 +101,10 @@ namespace rfsim {
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
+            // Update delta time
+            dt = 1.0f / ImGui::GetIO().Framerate;
+            dt = dt > (1.0f / 30.f)? 1.0f / 30.0f: dt;
+
             // Draw main menu
             menuBar.Update();
             exit |= menuBar.quit;
@@ -136,7 +140,7 @@ namespace rfsim {
                 {
                     static const auto pi = glm::pi<float>();
                     static float angle = 0.0f;
-                    static float step = 0.01f;
+                    static float step = 1.0f;
 
                     auto size = mPrimaryWindow->GetFramebufferSize();
                     auto aspect = (float) size.x / (float) size.y;
@@ -150,7 +154,7 @@ namespace rfsim {
                     mPainter->DrawImage({0.45, 0.4, 0.7, 0.2}, 0.0f, mMainMenuLogo);
                     mPainter->DrawImage({1.17, 0.42, 0.16, 0.16}, angle, mMainMenuBall);
 
-                    angle += step;
+                    angle += step * dt;
                     angle = angle > 2.0f * pi? angle - 2.0f * pi: angle;
                 }
 
@@ -206,19 +210,17 @@ namespace rfsim {
                 // 3) Tick algorithm control (if required)
                 // 4) Update physics settings (motors power) (if required)
 
-                // Update sim delta time
-                dt = 1.0f / ImGui::GetIO().Framerate;
-                dt = dt > (1.0f / 30.f)? 1.0f / 30.0f: dt;
+                auto simDt = gameState == GameState::Running? dt: 0.0f;
 
                 if (gameState == GameState::Running) {
-                    t += dt;
+                    t += simDt;
 
                     PhysicsGameState state;
-                    mPhysicsServer->GameStep(dt);
+                    mPhysicsServer->GameStep(simDt);
                     mPhysicsServer->GetCurrentGameState(state);
 
                     game->physicsGameState = state;
-                    algo->TickGame(*game);
+                    algo->TickGame(simDt, t, *game);
 
                     for (int i = 0; i < game->teamSize; i++) {
                         auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
@@ -235,7 +237,7 @@ namespace rfsim {
 
                 mPainter->FitToFramebufferArea();
 
-                mGraphicsServer->BeginDraw(game->physicsGameState);
+                mGraphicsServer->BeginDraw(simDt, game->physicsGameState);
                 mGraphicsServer->DrawStaticObjects();
                 mGraphicsServer->DrawDynamicObjects();
                 mGraphicsServer->DrawAuxInfo();
@@ -265,7 +267,7 @@ namespace rfsim {
                     ImGui::Separator();
 
                     ImGui::PushStyleColor(ImGuiCol_Button, mStyle.redColor);
-                    if (ImGui::Button("Quit Game", ImVec2(200, 0))) {
+                    if (ImGui::Button("To Menu", ImVec2(130, 0))) {
                         gameState = GameState::Finished;
                         mState = State::EndGame;
                     }
@@ -273,7 +275,7 @@ namespace rfsim {
                     ImGui::SameLine();
 
                     ImGui::PushStyleColor(ImGuiCol_Button, mStyle.violetColor);
-                    if (ImGui::Button("Restart", ImVec2(200, 0))) {
+                    if (ImGui::Button("Restart", ImVec2(130, 0))) {
                         gameState = GameState::Finished;
                         needRestart = true;
                         mState = State::EndGame;
@@ -282,18 +284,52 @@ namespace rfsim {
                     ImGui::SameLine();
 
                     ImGui::PushStyleColor(ImGuiCol_Button, mStyle.greenColor);
-                    if (ImGui::Button("Play", ImVec2(200, 0)) && gameState != GameState::Finished) {
+                    if (ImGui::Button("Play", ImVec2(130, 0)) && gameState != GameState::Finished) {
                         gameState = GameState::Running;
                     }
 
                     ImGui::SameLine();
 
                     ImGui::PushStyleColor(ImGuiCol_Button, mStyle.yellowColor);
-                    if (ImGui::Button("Pause", ImVec2(200, 0)) && gameState == GameState::Running) {
+                    if (ImGui::Button("Pause", ImVec2(130, 0)) && gameState == GameState::Running) {
                         gameState = GameState::Paused;
                     }
 
                     ImGui::PopStyleColor(4);
+                    ImGui::End();
+                }
+
+                // Draw debug info window if required
+                if (menuBar.showDebugRobotInfo) {
+                    ImGui::Begin("Debug Info");
+
+                    auto& ball = game->physicsGameState.ball;
+                    ImGui::Text("Ball: pos=(x=%f m,y=%f m) vel=(x=%f m/s, y=%f m/s)",
+                                ball.position.x, ball.position.y, ball.velocity.x, ball.velocity.y);
+                    ImGui::Separator();
+
+                    ImGui::Text("Team A");
+                    for (int i = 0; i < game->teamSize; i++) {
+                        auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
+                        auto& r = game->physicsGameState.robots[id];
+                        auto& p = game->robotMotorPowerA[i];
+
+                        ImGui::Text(" - Robot [%i]: pos=(x=%f m,y=%f m) vel=(x=%f m/s, y=%f m/s) angle=(%f rad) power=(left %f N, right %f N)",
+                                    id, r.position.x, r.position.y, r.velocity.x, r.velocity.y, r.angle, p.x, p.y);
+                    }
+                    ImGui::Separator();
+
+                    ImGui::Text("Team B");
+                    for (int i = 0; i < game->teamSize; i++) {
+                        auto id = game->physicsGameInitInfo.robotsTeamB[i].id;
+                        auto& r = game->physicsGameState.robots[id];
+                        auto& p = game->robotMotorPowerB[i];
+
+                        ImGui::Text(" - Robot [%i]: pos=(x=%f m,y=%f m) vel=(x=%f m/s, y=%f m/s) angle=(%f rad) power=(left %f N, right %f N)",
+                                    id, r.position.x, r.position.y, r.velocity.x, r.velocity.y, r.angle, p.x, p.y);
+                    }
+                    ImGui::Separator();
+
                     ImGui::End();
                 }
             }
