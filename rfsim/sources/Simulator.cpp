@@ -35,6 +35,7 @@
 
 #include <scenario/Scrum.hpp>
 #include <scenario/Duel.hpp>
+#include <scenario/RandomScenario.hpp>
 
 namespace rfsim {
 
@@ -62,6 +63,7 @@ namespace rfsim {
 
         mGameManager->AddScenario(std::make_shared<Scrum>());
         mGameManager->AddScenario(std::make_shared<Duel>());
+        mGameManager->AddScenario(std::make_shared<RandomScenario>());
     }
 
     Simulator::~Simulator() {

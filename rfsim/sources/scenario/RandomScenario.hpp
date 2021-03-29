@@ -50,20 +50,20 @@ namespace rfsim {
                 if (i == 0) {
                     // Create main robot
                     beginInfo.robotsTeamA.push_back({0, {0.2 * fieldLength, 0.2 * fieldWidth}, 0});
-                    game->robotMotorPowerA.emplace_back(0, 0);
+                    game->robotWheelVelocitiesA.emplace_back(0, 0);
                 } else {
                     beginInfo.robotsTeamA.push_back(
                             {i,
                              {dist(engine) * fieldLength, dist(engine) * fieldWidth},
                              dist(engine) * 2 * pi});
-                    game->robotMotorPowerA.emplace_back(0, 0);
+                    game->robotWheelVelocitiesA.emplace_back(0, 0);
                 }
 
                 beginInfo.robotsTeamB.push_back(
                         {(int) (i + game->teamSize),
                          {dist(engine) * fieldLength, dist(engine) * fieldWidth},
                          dist(engine) * 2 * pi});
-                game->robotMotorPowerB.emplace_back(0, 0);
+                game->robotWheelVelocitiesB.emplace_back(0, 0);
             }
 
             // Graphics is exact copy of ph settings + init info

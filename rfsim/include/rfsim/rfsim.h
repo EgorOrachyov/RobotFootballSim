@@ -149,7 +149,7 @@ typedef enum rfsim_status {
 
 typedef rfsim_status (*rfsim_init_type)(rfsim_algo_state* context);
 typedef rfsim_status (*rfsim_begin_game_type)(rfsim_algo_state* context, const rfsim_game_settings* settings, const rfsim_game_start_info* start);
-typedef rfsim_status (*rfsim_tick_game_type)(rfsim_algo_state* context, rfsim_game_state_info* state, float dt);
+typedef rfsim_status (*rfsim_tick_game_type)(rfsim_algo_state* context, rfsim_game_state_info* state);
 typedef rfsim_status (*rfsim_end_game_type)(rfsim_algo_state* context);
 typedef rfsim_status (*rfsim_finalize_type)(rfsim_algo_state* context);
 
