@@ -94,8 +94,8 @@ typedef struct rfsim_body {
 } rfsim_body;
 
 typedef struct rfsim_control {
-    float left_motor_force;
-    float right_motor_force;
+    float left_wheel_velocity;
+    float right_wheel_velocity;
 } rfsim_control;
 
 typedef struct rfsim_game_settings {

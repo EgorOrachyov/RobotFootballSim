@@ -334,13 +334,13 @@ namespace rfsim {
         mWorld->Step(dt, velocityIterations, positionIterations);
     }
 
-    void PhysicsServer::UpdateMotorsPower(int robotId, float leftMotorForce, float rightMotorForce) {
+    void PhysicsServer::UpdateWheelVelocities(int robotId, float leftWheelVelocity, float rightWheelVelocity) {
         assert(mWorld);
         assert(mRobots.find(robotId) != mRobots.end());
 
         const float eps = 0.001f;
 
-        if (std::abs(leftMotorForce) < eps && std::abs(rightMotorForce) < eps) {
+        if (std::abs(leftWheelVelocity) < eps && std::abs(rightWheelVelocity) < eps) {
             return;
         }
 
@@ -358,8 +358,8 @@ namespace rfsim {
         float cos_theta = robot->GetTransform().q.c;
         float sin_theta = robot->GetTransform().q.s;
 
-        float Vl = leftMotorForce;
-        float Vr = rightMotorForce;
+        float Vl = leftWheelVelocity;
+        float Vr = rightWheelVelocity;
 
         float l = mProperties.robotWheelXOffset * 2;
 

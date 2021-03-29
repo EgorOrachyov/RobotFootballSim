@@ -70,10 +70,10 @@ namespace rfsim {
             // Initial robots placement
             for (int i = 0; i < game->teamSize; i++) {
                 beginInfo.robotsTeamA.push_back({ i,     { fieldLength * 0.25f, fieldWidth * 0.5f + fieldWidth * 0.3f * ((i - 2.5f) / 2.5f) }, 0 });
-                game->robotMotorPowerA.emplace_back(0,0);
+                game->robotWheelVelocitiesA.emplace_back(0,0);
 
                 beginInfo.robotsTeamB.push_back({ (int)(i + game->teamSize), { fieldLength * 0.75f, fieldWidth * 0.5f + fieldWidth * 0.3f * ((i - 2.5f) / 2.5f) }, pi });
-                game->robotMotorPowerB.emplace_back(0,0);
+                game->robotWheelVelocitiesB.emplace_back(0,0);
             }
 
             // Graphics is exact copy of ph settings + init info

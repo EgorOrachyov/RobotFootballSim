@@ -115,14 +115,14 @@ namespace rfsim {
 
             for (int i = 0; i < game->teamSize; i++) {
                 auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
-                auto power = game->robotMotorPowerA[i];
-                mPhysicsServer->UpdateMotorsPower(id, power.x, power.y);
+                const auto &wv = game->robotWheelVelocitiesA[i];
+                mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
             }
 
             for (int i = 0; i < game->teamSize; i++) {
                 auto id = game->physicsGameInitInfo.robotsTeamB[i].id;
-                auto power = game->robotMotorPowerB[i];
-                mPhysicsServer->UpdateMotorsPower(id, power.x, power.y);
+                const auto &wv = game->robotWheelVelocitiesB[i];
+                mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
             }
 
             frameCount++;

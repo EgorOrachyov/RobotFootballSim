@@ -36,15 +36,15 @@ namespace rfsim {
 
     struct rfsim_control to_rfsim_control(const glm::vec2& v) {
         rfsim_control r;
-        r.left_motor_force = v.x;
-        r.right_motor_force = v.y;
+        r.left_wheel_velocity = v.x;
+        r.right_wheel_velocity = v.y;
         return r;
     }
 
     static glm::vec2 to_vec2(const rfsim_control& c) {
         glm::vec2 r;
-        r.x = c.left_motor_force;
-        r.y = c.right_motor_force;
+        r.x = c.left_wheel_velocity;
+        r.y = c.right_wheel_velocity;
         return r;
     }
 
@@ -124,7 +124,7 @@ namespace rfsim {
 
             stateInfo.team_a[i].angle = r.angle;
             stateInfo.team_a[i].position = to_rfsim_vec2(r.position);
-            stateInfo.team_a_control[i] = to_rfsim_control(game.robotMotorPowerA[i]);
+            stateInfo.team_a_control[i] = to_rfsim_control(game.robotWheelVelocitiesA[i]);
         }
 
         // Set robot data and power for team B
@@ -134,7 +134,7 @@ namespace rfsim {
 
             stateInfo.team_b[i].angle = r.angle;
             stateInfo.team_b[i].position = to_rfsim_vec2(r.position);
-            stateInfo.team_b_control[i] = to_rfsim_control(game.robotMotorPowerB[i]);
+            stateInfo.team_b_control[i] = to_rfsim_control(game.robotWheelVelocitiesB[i]);
         }
 
         rfsim_status r = tickGameFunction(&algoState, &stateInfo);
@@ -142,8 +142,8 @@ namespace rfsim {
 
         // Copy power info
         for (int i = 0; i < game.teamSize; i++) {
-            game.robotMotorPowerA[i] = to_vec2(stateInfo.team_a_control[i]);
-            game.robotMotorPowerB[i] = to_vec2(stateInfo.team_b_control[i]);
+            game.robotWheelVelocitiesA[i] = to_vec2(stateInfo.team_a_control[i]);
+            game.robotWheelVelocitiesB[i] = to_vec2(stateInfo.team_b_control[i]);
         }
     }
 

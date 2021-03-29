@@ -47,13 +47,13 @@ RFSIM_DEFINE_FUNCTION_TICK_GAME {
     auto dist = std::uniform_real_distribution<float>(0.0, 1.0);
 
     for (int i = 0; i < teamSize; i++) {
-        state->team_a_control[i].left_motor_force = 70.0f * dist(engine);
-        state->team_a_control[i].right_motor_force = 45.0f * dist(engine);
+        state->team_a_control[i].left_wheel_velocity = 2.0f * dist(engine);
+        state->team_a_control[i].right_wheel_velocity = dist(engine);
     }
 
     for (int i = 0; i < teamSize; i++) {
-        state->team_b_control[i].left_motor_force = 50.0f * dist(engine);
-        state->team_b_control[i].right_motor_force = 65.0f * dist(engine);
+        state->team_b_control[i].left_wheel_velocity = dist(engine);
+        state->team_b_control[i].right_wheel_velocity = 1.5f * dist(engine);
     }
 
     return rfsim_status_success;

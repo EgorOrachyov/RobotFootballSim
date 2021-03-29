@@ -48,8 +48,8 @@ RFSIM_DEFINE_FUNCTION_BEGIN_GAME {
 RFSIM_DEFINE_FUNCTION_TICK_GAME {
     std::default_random_engine engine(std::chrono::system_clock::now().time_since_epoch().count());
     auto dist = std::uniform_real_distribution<float>(0.0, 1.0);
-    auto basePowerA = 30.0f;
-    auto basePowerB = 31.0f;
+    auto basePowerA = 1.0f;
+    auto basePowerB = 1.1f;
 
     auto& b = state->ball;
     auto bp = glm::vec2(b.position.x, b.position.y);
