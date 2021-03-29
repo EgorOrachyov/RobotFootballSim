@@ -17,9 +17,9 @@ static rfsim_body team_b_old[100];
 static double team_a_target_speeds[100];
 static double team_b_target_speeds[100];
 
-const int direction_option_count = 7;
-float l_mult_possible[direction_option_count] = {-5, -3, -1, 0, 1, 3, 5};
-float r_mult_possible[direction_option_count] = {-5, -3, -1, 0, 1, 3, 5};
+const int direction_option_count = 9;
+float l_mult_possible[direction_option_count] = {-10, -5, -3, -1, 0, 1, 3, 5, 10};
+float r_mult_possible[direction_option_count] = {-10, -5, -3, -1, 0, 1, 3, 5, 10};
 
 void save_state(const rfsim_game_state_info *state);
 void calculate_speeds(const rfsim_game_state_info *state, float dt, const rfsim_vec2 *team_a_speeds, const rfsim_vec2 *team_b_speeds, float *team_a_angular_velocities, float *team_b_angular_velocities);
@@ -105,19 +105,18 @@ rfsim_body calculate_new_position(const double vl, const double vr, const double
     }
     // Pure rotation motion
     else {
-        float robot_width = 0.15f;
+        float robot_radius = 0.15f;
+        float robot_width = 0.3f;
+        thetanew = theta + (robot_radius * deltat / (vr - vl));
         if (vl + vr < 0.001) {
             xnew = x;
             ynew = y;
-            thetanew = theta + ((vr - vl) * deltat / robot_width);
         } else {
             // Rotation and arc angle of general circular motion
             // Using equations given in Lecture 2
-            double R = robot_width / 2.0 * (vr + vl) / (vr - vl);
-            double deltatheta = (vr - vl) * deltat / robot_width;
-            xnew = x + R * (sin(deltatheta + theta) - sin(theta));
-            ynew = y - R * (cos(deltatheta + theta) - cos(theta));
-            thetanew = theta + deltatheta;
+            double totalv = vl + vr;
+            xnew = x + totalv * deltat * cos(thetanew);
+            ynew = y - totalv * deltat * cos(thetanew);
         }
     }
     return {{(float) xnew, (float) ynew}, (float) thetanew};
@@ -135,26 +134,31 @@ void move_main_robot(rfsim_game_state_info *state, rfsim_vec2 speed) {
     rfsim_vec2 target = state->ball.position;
     double FORWARDWEIGHT = 200;
     double OBSTACLEWEIGHT = 6666;
-    double TAU = dt * 7;
+    double ANGLEWEIGHT = 400;
     double x = robot_position.x;
     double y = robot_position.y;
     double robotMaxAcceleration = 1;
     double delta = robotMaxAcceleration * dt;
     double curr_distance_to_target = sqrt((x - target.x) * (x - target.x) + (y - target.y) * (y - target.y));
-    for (int i1 = 0; i1 < direction_option_count; i1 += 1) {
-        double l_mult = l_mult_possible[i1];
-        for (int i2 = 0; i2 < direction_option_count; i2 += 1) {
-            double r_mult = l_mult_possible[i2];
+    rfsim_vec2 direction;
+    direction.x = (float) cos(state->team_a->angle);
+    direction.y = (float) sin(state->team_a->angle);
+    double current_angle_to_target = acos(((target.x - x) * direction.x + (target.y - y) * direction.y) / length(target));
 
-            double vl_possible = vl - l_mult * delta;
-            double vr_possible = vr - r_mult * delta;
+    for (int i2 = 0; i2 < direction_option_count; i2 += 1) {
+        double l_mult = l_mult_possible[i2] * 5;
+        for (int i1 = 0; i1 < direction_option_count; i1 += 1) {
+            double r_mult = l_mult_possible[i1] * 5;
 
-            double robotMaxVelocity = 1;
+            double vl_possible = vl + l_mult * delta;
+            double vr_possible = vr + r_mult * delta;
+
+            double robotMaxVelocity = 2;
             if (vl_possible > robotMaxVelocity || vl_possible < -robotMaxVelocity || vr_possible > robotMaxVelocity || vr_possible < -robotMaxVelocity) {
                 continue;
             }
 
-            auto predicted_body = calculate_new_position(vl_possible, vr_possible, x, y, theta, TAU);
+            auto predicted_body = calculate_new_position(vl_possible, vr_possible, x, y, theta, dt);
             double x_predict = predicted_body.position.x;
             double y_predict = predicted_body.position.y;
             double theta_predict = predicted_body.angle;
@@ -169,7 +173,13 @@ void move_main_robot(rfsim_game_state_info *state, rfsim_vec2 speed) {
                 obstacle_benefit = OBSTACLEWEIGHT * (0.15f - distance_to_obstacle);
             }
 
-            double benefit = distance_benefit - obstacle_benefit;
+            rfsim_vec2 new_direction;
+            new_direction.x = (float) cos(theta_predict);
+            new_direction.y = (float) sin(theta_predict);
+            double new_angle_to_target = acos(((target.x - x_predict) * new_direction.x + (target.y - y_predict) * new_direction.y) / length({(float)(target.x - x_predict), (float)(target.y - y_predict)}));
+            double angle_benefit = ANGLEWEIGHT * abs(new_angle_to_target - current_angle_to_target);
+
+            double benefit = distance_benefit - obstacle_benefit - angle_benefit;
             if (benefit >= best_benefit) {
                 best_benefit = benefit;
                 best_vl = vl_possible;
@@ -183,30 +193,6 @@ void move_main_robot(rfsim_game_state_info *state, rfsim_vec2 speed) {
 }
 
 RFSIM_DEFINE_FUNCTION_TICK_GAME {
-    // We want to find the best benefit where we have a positive component for closeness to target,
-    // and a negative component for closeness to obstacles, for each of a choice of possible actions
-    //    auto robot_position = state->team_a[0].position;
-    //    auto theta = state->team_a[0].angle;
-    //    float vl = state->team_a_control[0].left_motor_force;
-    //    float vr = state->team_a_control[0].right_motor_force;
-    //
-    //
-    //    auto TAU = dt * 7;
-
-
-    //    std::default_random_engine engine(std::chrono::system_clock::now().time_since_epoch().count());
-    //    auto dist = std::uniform_real_distribution<float>(0.0, 1.0);
-    //
-    //    for (int i = 0; i < teamSize; i++) {
-    //        state->team_a_control[i].left_motor_force = 70.0f;
-    //        state->team_a_control[i].right_motor_force = 70.0f;
-    //    }
-    //
-    //    for (int i = 0; i < teamSize; i++) {
-    //        state->team_b_control[i].left_motor_force = 70.0f;
-    //        state->team_b_control[i].right_motor_force = 70.0f;
-    //    }
-    //
     rfsim_vec2 team_a_speeds[100];
     rfsim_vec2 team_b_speeds[100];
     float team_a_angular_velocities[100];

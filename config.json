@@ -5,6 +5,7 @@
     "pluginPathPrefix": ".",
     "pluginPaths": [
         "randommove",
-        "followmove"
+        "followmove",
+        "dwamove"
     ]
 }
