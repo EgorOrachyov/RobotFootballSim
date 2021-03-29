@@ -30,6 +30,7 @@
 #include <cstring>
 
 static int teamSize = 0;
+static std::vector<std::pair<float, float>> *vrand;
 
 RFSIM_DEFINE_FUNCTION_INIT {
     std::strcpy(context->name, "Random Movement (testing)");
@@ -39,27 +40,36 @@ RFSIM_DEFINE_FUNCTION_INIT {
 
 RFSIM_DEFINE_FUNCTION_BEGIN_GAME {
     teamSize = start->team_size;
+    vrand = new std::vector<std::pair<float, float>>(teamSize);
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> distr(0.5f, 1.0f);
+    for (int i = 0; i < teamSize; i++) {
+        (*vrand)[i] = { distr(gen), distr(gen) };
+    }
+
     return rfsim_status_success;
 };
 
 RFSIM_DEFINE_FUNCTION_TICK_GAME {
-    std::default_random_engine engine(std::chrono::system_clock::now().time_since_epoch().count());
-    auto dist = std::uniform_real_distribution<float>(0.0, 1.0);
-
     for (int i = 0; i < teamSize; i++) {
-        state->team_a_control[i].left_motor_force = 70.0f * dist(engine);
-        state->team_a_control[i].right_motor_force = 45.0f * dist(engine);
+        state->team_a_control[i].left_wheel_velocity = (*vrand)[i].first * 1.25f;
+        state->team_a_control[i].right_wheel_velocity = (*vrand)[i].second *  1.0f;
     }
 
     for (int i = 0; i < teamSize; i++) {
-        state->team_b_control[i].left_motor_force = 50.0f * dist(engine);
-        state->team_b_control[i].right_motor_force = 65.0f * dist(engine);
+        state->team_b_control[i].left_wheel_velocity = (*vrand)[i].first * 1.0f;
+        state->team_b_control[i].right_wheel_velocity = (*vrand)[i].second * 1.25f;
     }
 
     return rfsim_status_success;
 };
 
 RFSIM_DEFINE_FUNCTION_END_GAME {
+    delete vrand;
+    vrand = nullptr;
+
     return rfsim_status_success;
 };
 

@@ -223,14 +223,14 @@ namespace rfsim {
 
                     for (int i = 0; i < game->teamSize; i++) {
                         auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
-                        auto power = game->robotMotorPowerA[i];
-                        mPhysicsServer->UpdateMotorsPower(id, power.x, power.y);
+                        const auto &wv = game->robotWheelVelocitiesA[i];
+                        mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
                     }
 
                     for (int i = 0; i < game->teamSize; i++) {
                         auto id = game->physicsGameInitInfo.robotsTeamB[i].id;
-                        auto power = game->robotMotorPowerB[i];
-                        mPhysicsServer->UpdateMotorsPower(id, power.x, power.y);
+                        const auto &wv = game->robotWheelVelocitiesB[i];
+                        mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
                     }
                 }
 
@@ -311,9 +311,9 @@ namespace rfsim {
                     for (int i = 0; i < game->teamSize; i++) {
                         auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
                         auto& r = game->physicsGameState.robots[id];
-                        auto& p = game->robotMotorPowerA[i];
+                        auto& p = game->robotWheelVelocitiesA[i];
 
-                        ImGui::Text(" - Robot [%i]: pos=(x=%f m,y=%f m) vel=(x=%f m/s, y=%f m/s) angle=(%f rad) power=(left %f N, right %f N)",
+                        ImGui::Text(" - Robot [%i]: pos=(x=%f m,y=%f m) vel=(x=%f m/s, y=%f m/s) angle=(%f rad) velWheels=(left %f m/s, right %f m/s)",
                                     id, r.position.x, r.position.y, r.velocity.x, r.velocity.y, r.angle, p.x, p.y);
                     }
                     ImGui::Separator();
@@ -322,9 +322,9 @@ namespace rfsim {
                     for (int i = 0; i < game->teamSize; i++) {
                         auto id = game->physicsGameInitInfo.robotsTeamB[i].id;
                         auto& r = game->physicsGameState.robots[id];
-                        auto& p = game->robotMotorPowerB[i];
-
-                        ImGui::Text(" - Robot [%i]: pos=(x=%f m,y=%f m) vel=(x=%f m/s, y=%f m/s) angle=(%f rad) power=(left %f N, right %f N)",
+                        auto& p = game->robotWheelVelocitiesB[i];
+                        
+                        ImGui::Text(" - Robot [%i]: pos=(x=%f m,y=%f m) vel=(x=%f m/s, y=%f m/s) angle=(%f rad) velWheels=(left %f m/s, right %f m/s)",
                                     id, r.position.x, r.position.y, r.velocity.x, r.velocity.y, r.angle, p.x, p.y);
                     }
                     ImGui::Separator();

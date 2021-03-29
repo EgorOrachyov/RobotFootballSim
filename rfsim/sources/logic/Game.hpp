@@ -47,8 +47,8 @@ namespace rfsim {
         PhysicsGameProperties physicsGameProperties;
         GraphicsSceneSettings graphicsSceneSettings;
 
-        std::vector<glm::vec2> robotMotorPowerA;
-        std::vector<glm::vec2> robotMotorPowerB;
+        std::vector<glm::vec2> robotWheelVelocitiesA;
+        std::vector<glm::vec2> robotWheelVelocitiesB;
     };
 
 }

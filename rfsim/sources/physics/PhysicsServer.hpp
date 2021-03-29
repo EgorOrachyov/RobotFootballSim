@@ -52,7 +52,7 @@ namespace rfsim {
         void SetGameProperties(const PhysicsGameProperties& properties);
         void BeginGame(const PhysicsGameInitInfo& info);
         void GameStep(float dt);
-        void UpdateMotorsPower(int robotId, float leftMotorForce, float rightMotorForce);
+        void UpdateWheelVelocities(int robotId, float leftWheelVelocity, float rightWheelVelocity);
         void GetCurrentGameState(PhysicsGameState& state) const;
         void EndGame();
 
@@ -73,6 +73,8 @@ namespace rfsim {
         static float AngleToGameCoords(float angle);
 
     private:
+        float dtAccumulated;
+
         std::shared_ptr<b2World> mWorld;
         std::shared_ptr<PhysicsContactListener> mContactListener;
 
