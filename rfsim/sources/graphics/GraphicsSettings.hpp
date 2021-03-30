@@ -34,10 +34,10 @@ namespace rfsim {
      * Configures effects and level of drawing game details.
      */
     struct GraphicsSettings {
-        bool drawRobotTrace = false;
-        int robotTraceLength = 20;
-        float robotTraceSkip = 0.1;
-        float robotTracePointRadius = 0.04;
+        bool drawTrace = false;
+        int traceLength = 20;
+        float traceSkip = 0.1;
+        float tracePointRadius = 0.5;
 
         bool drawOutInfo = true;
         bool drawCollisionInfo = true;

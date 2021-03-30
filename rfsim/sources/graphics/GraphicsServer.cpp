@@ -50,7 +50,7 @@ namespace rfsim {
 
         auto prefix = mResPath + SEP;
 
-        mRobotTraceImage = Image::LoadFromFilePath(prefix + TRACE_POINT_IMAGE_PATH);
+        mTraceImage = Image::LoadFromFilePath(prefix + TRACE_POINT_IMAGE_PATH);
         mBallImage = Image::LoadFromFilePath(prefix + BALL_IMAGE_TRSP_PATH);
         mFieldImage = Image::LoadFromFilePath(prefix + FIELD_IMAGE_PATH);
         mOnCollisionImage = Image::LoadFromFilePath(prefix + ON_COLLISION_IMAGE_PATH);
@@ -76,7 +76,7 @@ namespace rfsim {
         mSceneSettings = sceneSettings;
 
         auto totalRobots = mSceneSettings.robotsTeamA.size() + mSceneSettings.robotsTeamB.size();
-        mRobotsTrace.resize(totalRobots, circular_buffer<glm::vec2>(mSettings.robotTraceLength));
+        mRobotsTrace.resize(totalRobots, circular_buffer<glm::vec2>(mSettings.traceLength));
 
         for (auto& r: mSceneSettings.robotsTeamA) {
             mRobotsTrace[r.id].push_back(r.position);
@@ -85,6 +85,9 @@ namespace rfsim {
         for (auto& r: mSceneSettings.robotsTeamB) {
             mRobotsTrace[r.id].push_back(r.position);
         }
+
+        mBallTrace.resize(mSettings.traceLength);
+        mBallTrace.push_back(mSceneSettings.ballPosition);
 
         mTime = 0;
         mTimeLastTraceCapture = 0;
@@ -104,12 +107,12 @@ namespace rfsim {
         mPainter->Clear();
         mPainter->SetDrawSpace({ room00.x, room00.y, roomWH.x, roomWH.y });
 
-        // Update robots trace
-        if (mTime >= mTimeLastTraceCapture + mSettings.robotTraceSkip) {
+        // Update trace
+        if (mTime >= mTimeLastTraceCapture + mSettings.traceSkip) {
             for (size_t i = 0; i < gameState.robots.size(); i++) {
                 mRobotsTrace[i].push_back(gameState.robots[i].position);
             }
-
+            mBallTrace.push_back(gameState.ball.position);
             mTimeLastTraceCapture = mTime;
         }
     }
@@ -130,23 +133,38 @@ namespace rfsim {
         assert(mState == InternalState::InGameBeginDraw);
 
         // Draw robots trace
-        if (mSettings.drawRobotTrace) {
+        if (mSettings.drawTrace) {
             mPainter->SetBrushColor({mSettings.traceColor, 0.8f});
             mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
 
-            auto r = mSettings.robotTracePointRadius;
+            auto r = mSettings.tracePointRadius * mSceneSettings.robotRadius;
 
             for (const auto& tr: mRobotsTrace) {
                 float factor = 0.1f;
-                float step = 0.9f / (float) mSettings.robotTraceLength;
+                float step = 0.9f / (float) mSettings.traceLength;
 
                 tr.for_each([&](const glm::vec2& pos) {
                     mPainter->SetBrushColor({mSettings.traceColor, factor});
-                    mPainter->DrawImage({pos.x - r, pos.y - r, 2.0f * r, 2.0f * r}, 0.0f, mRobotTraceImage);
+                    mPainter->DrawImage({pos.x - r, pos.y - r, 2.0f * r, 2.0f * r}, 0.0f, mTraceImage);
 
                     factor += step;
                 });
             }
+        }
+
+        // Draw ball trace
+        {
+            auto r = mSettings.tracePointRadius * mSceneSettings.ballRadius;
+
+            float factor = 0.1f;
+            float step = 0.9f / (float) mSettings.traceLength;
+
+            mBallTrace.for_each([&](const glm::vec2& pos) {
+                mPainter->SetBrushColor({mSettings.traceColor, factor});
+                mPainter->DrawImage({pos.x - r, pos.y - r, 2.0f * r, 2.0f * r}, 0.0f, mTraceImage);
+
+                factor += step;
+            });
         }
 
         // Draw robots

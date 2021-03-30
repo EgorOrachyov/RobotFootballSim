@@ -53,12 +53,12 @@ namespace rfsim {
             ImGui::Checkbox("Display Debug Info", &showDebugRobotInfo);
 
             ImGui::Separator();
-            ImGui::Checkbox("Display Trace", &graphicsSettings.drawRobotTrace);
+            ImGui::Checkbox("Display Trace", &graphicsSettings.drawTrace);
 
-            if (graphicsSettings.drawRobotTrace) {
-                ImGui::SliderInt("Trace Length", &graphicsSettings.robotTraceLength, 5,  50);
-                ImGui::SliderFloat("Trace Sampling Period", &graphicsSettings.robotTraceSkip, 0.01f, 1.0f);
-                ImGui::SliderFloat("Trace Point Size", &graphicsSettings.robotTracePointRadius, 0.0f, 1.0f);
+            if (graphicsSettings.drawTrace) {
+                ImGui::SliderInt("Trace Length", &graphicsSettings.traceLength, 5, 50);
+                ImGui::SliderFloat("Trace Sampling Period", &graphicsSettings.traceSkip, 0.01f, 1.0f);
+                ImGui::SliderFloat("Trace Point Size", &graphicsSettings.tracePointRadius, 0.0f, 1.0f);
                 ImGui::ColorEdit3("Trace Point Color", &graphicsSettings.traceColor[0]);
             }
 
