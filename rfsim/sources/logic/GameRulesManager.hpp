@@ -22,55 +22,30 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_SIMULATOR_HPP
-#define RFSIM_SIMULATOR_HPP
+#ifndef RFSIM_GAMERULESMANAGER_HPP
+#define RFSIM_GAMERULESMANAGER_HPP
 
-#include <memory>
+#include <logic/GameRule.hpp>
 #include <vector>
-#include <string>
+#include <memory>
 
 namespace rfsim {
 
-    /**
-     * @brief Simulator main class.
-     *
-     * Manages sub-systems, update loop, application start-up and configuration parsing.
-     */
-    class Simulator {
+    class GameRulesManager {
     public:
-        /**
-         * Create the simulator class.
-         *
-         * @param argc Number of the OS native app args
-         * @param argv AActual arguments
-         */
-        Simulator(int argc, const char* const* argv);
-        virtual ~Simulator();
+        GameRulesManager() = default;
+        GameRulesManager(const GameRulesManager& other) = delete;
+        GameRulesManager(GameRulesManager&& other) noexcept = delete;
+        ~GameRulesManager() = default;
 
-        /**
-         * Run the main simulator update loop.
-         * This function returns control only when user closes the application.
-         *
-         * @return 0 if simulator successfully finished.
-         */
-        virtual int Run();
+        void GetRulesInfo(std::vector<std::string> &info);
+        void AddRule(const std::shared_ptr<GameRule> &rule);
+        std::shared_ptr<GameRule> GetRule(unsigned int idx);
 
-    protected:
-        int mWindowWidth = 1920;
-        int mWindowHeight = 1280;
-        std::vector<std::string> mArgs;
-
-        std::shared_ptr<class Window> mPrimaryWindow;
-        std::shared_ptr<class WindowManager> mWindowManager;
-        std::shared_ptr<class Painter> mPainter;
-        std::shared_ptr<class GraphicsServer> mGraphicsServer;
-        std::shared_ptr<class PhysicsServer> mPhysicsServer;
-        std::shared_ptr<class AlgorithmManager> mAlgorithmManager;
-        std::shared_ptr<class GameManager> mGameManager;
-        std::shared_ptr<class GameRulesManager> mGameRulesManager;
-        std::shared_ptr<class ConfigManager> mConfigManager;
+    private:
+        std::vector<std::shared_ptr<GameRule>> mRules;
     };
 
 }
 
-#endif //RFSIM_SIMULATOR_HPP
+#endif //RFSIM_GAMERULESMANAGER_HPP

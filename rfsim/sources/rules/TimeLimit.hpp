@@ -22,55 +22,36 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_SIMULATOR_HPP
-#define RFSIM_SIMULATOR_HPP
+#ifndef RFSIM_TIMELIMIT_HPP
+#define RFSIM_TIMELIMIT_HPP
 
-#include <memory>
-#include <vector>
-#include <string>
+#include <logic/Game.hpp>
+#include <logic/GameRule.hpp>
+#include <sstream>
 
 namespace rfsim {
 
-    /**
-     * @brief Simulator main class.
-     *
-     * Manages sub-systems, update loop, application start-up and configuration parsing.
-     */
-    class Simulator {
+    class TimeLimit: public GameRule {
     public:
-        /**
-         * Create the simulator class.
-         *
-         * @param argc Number of the OS native app args
-         * @param argv AActual arguments
-         */
-        Simulator(int argc, const char* const* argv);
-        virtual ~Simulator();
+        explicit TimeLimit(float limit) : mLimit(limit) { }
+        ~TimeLimit() override = default;
 
-        /**
-         * Run the main simulator update loop.
-         * This function returns control only when user closes the application.
-         *
-         * @return 0 if simulator successfully finished.
-         */
-        virtual int Run();
+        std::string GetName() override {
+            std::stringstream ss;
 
-    protected:
-        int mWindowWidth = 1920;
-        int mWindowHeight = 1280;
-        std::vector<std::string> mArgs;
+            ss << "Time Limit (t=" << mLimit << " sec)";
 
-        std::shared_ptr<class Window> mPrimaryWindow;
-        std::shared_ptr<class WindowManager> mWindowManager;
-        std::shared_ptr<class Painter> mPainter;
-        std::shared_ptr<class GraphicsServer> mGraphicsServer;
-        std::shared_ptr<class PhysicsServer> mPhysicsServer;
-        std::shared_ptr<class AlgorithmManager> mAlgorithmManager;
-        std::shared_ptr<class GameManager> mGameManager;
-        std::shared_ptr<class GameRulesManager> mGameRulesManager;
-        std::shared_ptr<class ConfigManager> mConfigManager;
+            return ss.str();
+        }
+
+        GameMessage Process(float t, float dt, const struct Game &game) override {
+            return t > mLimit? GameMessage::Finish: GameMessage::Continue;
+        }
+
+    private:
+        float mLimit;
     };
 
 }
 
-#endif //RFSIM_SIMULATOR_HPP
+#endif //RFSIM_TIMELIMIT_HPP

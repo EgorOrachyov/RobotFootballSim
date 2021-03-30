@@ -22,55 +22,70 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_SIMULATOR_HPP
-#define RFSIM_SIMULATOR_HPP
+#ifndef RFSIM_COMBINEAND_HPP
+#define RFSIM_COMBINEAND_HPP
 
-#include <memory>
+#include <logic/Game.hpp>
+#include <logic/GameRule.hpp>
 #include <vector>
-#include <string>
+#include <memory>
+#include <sstream>
 
 namespace rfsim {
 
-    /**
-     * @brief Simulator main class.
-     *
-     * Manages sub-systems, update loop, application start-up and configuration parsing.
-     */
-    class Simulator {
+    class CombineAnd: public GameRule {
     public:
-        /**
-         * Create the simulator class.
-         *
-         * @param argc Number of the OS native app args
-         * @param argv AActual arguments
-         */
-        Simulator(int argc, const char* const* argv);
-        virtual ~Simulator();
+        ~CombineAnd() override = default;
 
-        /**
-         * Run the main simulator update loop.
-         * This function returns control only when user closes the application.
-         *
-         * @return 0 if simulator successfully finished.
-         */
-        virtual int Run();
+        std::string GetName() override {
+            if (mRules.empty()) {
+                return "No rules";
+            }
 
-    protected:
-        int mWindowWidth = 1920;
-        int mWindowHeight = 1280;
-        std::vector<std::string> mArgs;
+            if (mRules.size() == 1) {
+                return mRules[0]->GetName();
+            }
 
-        std::shared_ptr<class Window> mPrimaryWindow;
-        std::shared_ptr<class WindowManager> mWindowManager;
-        std::shared_ptr<class Painter> mPainter;
-        std::shared_ptr<class GraphicsServer> mGraphicsServer;
-        std::shared_ptr<class PhysicsServer> mPhysicsServer;
-        std::shared_ptr<class AlgorithmManager> mAlgorithmManager;
-        std::shared_ptr<class GameManager> mGameManager;
-        std::shared_ptr<class GameRulesManager> mGameRulesManager;
-        std::shared_ptr<class ConfigManager> mConfigManager;
+            std::stringstream ss;
+
+            ss << "Combine (and) [ ";
+            ss << mRules[0]->GetName();
+
+            for (int i = 1; i < mRules.size(); i++) {
+                ss << ", ";
+                ss << mRules[i]->GetName();
+            }
+
+            ss << " ]";
+
+            return ss.str();
+        }
+
+        GameMessage Process(float t, float dt, const Game &game) override {
+            GameMessage message = GameMessage::Continue;
+
+            for (auto& r: mRules) {
+                message = r->Process(t, dt, game);
+
+                if (message != GameMessage::Continue)
+                    return message;
+            }
+
+            return message;
+        }
+
+        void AddRule(const std::shared_ptr<GameRule>& rule) {
+            mRules.push_back(rule);
+        }
+
+        void Clear() {
+            mRules.clear();
+        }
+
+    private:
+        std::vector<std::shared_ptr<GameRule>> mRules;
     };
 
 }
 
-#endif //RFSIM_SIMULATOR_HPP
+#endif //RFSIM_COMBINEAND_HPP

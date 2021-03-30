@@ -22,55 +22,27 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_SIMULATOR_HPP
-#define RFSIM_SIMULATOR_HPP
+#ifndef RFSIM_BALLHIT_HPP
+#define RFSIM_BALLHIT_HPP
 
-#include <memory>
-#include <vector>
-#include <string>
+#include <logic/Game.hpp>
+#include <logic/GameRule.hpp>
 
 namespace rfsim {
 
-    /**
-     * @brief Simulator main class.
-     *
-     * Manages sub-systems, update loop, application start-up and configuration parsing.
-     */
-    class Simulator {
+    class BallHit: public GameRule {
     public:
-        /**
-         * Create the simulator class.
-         *
-         * @param argc Number of the OS native app args
-         * @param argv AActual arguments
-         */
-        Simulator(int argc, const char* const* argv);
-        virtual ~Simulator();
+        ~BallHit() override = default;
 
-        /**
-         * Run the main simulator update loop.
-         * This function returns control only when user closes the application.
-         *
-         * @return 0 if simulator successfully finished.
-         */
-        virtual int Run();
+        std::string GetName() override {
+            return "Ball Hit";
+        }
 
-    protected:
-        int mWindowWidth = 1920;
-        int mWindowHeight = 1280;
-        std::vector<std::string> mArgs;
-
-        std::shared_ptr<class Window> mPrimaryWindow;
-        std::shared_ptr<class WindowManager> mWindowManager;
-        std::shared_ptr<class Painter> mPainter;
-        std::shared_ptr<class GraphicsServer> mGraphicsServer;
-        std::shared_ptr<class PhysicsServer> mPhysicsServer;
-        std::shared_ptr<class AlgorithmManager> mAlgorithmManager;
-        std::shared_ptr<class GameManager> mGameManager;
-        std::shared_ptr<class GameRulesManager> mGameRulesManager;
-        std::shared_ptr<class ConfigManager> mConfigManager;
+        GameMessage Process(float t, float dt, const Game &game) override {
+            return game.physicsGameState.robotBallCollisions.empty()? GameMessage::Continue: GameMessage::Finish;
+        }
     };
 
 }
 
-#endif //RFSIM_SIMULATOR_HPP
+#endif //RFSIM_BALLHIT_HPP

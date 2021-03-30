@@ -31,10 +31,15 @@
 #include <physics/PhysicsServer.hpp>
 #include <logic/AlgorithmManager.hpp>
 #include <logic/GameManager.hpp>
+#include <logic/GameRulesManager.hpp>
 #include <utils/ConfigManager.hpp>
 
 #include <scenario/Scrum.hpp>
 #include <scenario/Duel.hpp>
+
+#include <rules/BallHit.hpp>
+#include <rules/NoCollisions.hpp>
+#include <rules/TimeLimit.hpp>
 
 namespace rfsim {
 
@@ -55,6 +60,7 @@ namespace rfsim {
         mGraphicsServer = std::make_shared<GraphicsServer>(mPrimaryWindow, mPainter, mConfigManager->GetResourcesPath());
         mPhysicsServer = std::make_shared<PhysicsServer>();
         mGameManager = std::make_shared<GameManager>();
+        mGameRulesManager = std::make_shared<GameRulesManager>();
         mAlgorithmManager = std::make_shared<AlgorithmManager>(mConfigManager->GetPluginPathPrefix());
 
         // This is default algorithm and scenario (does not change order)
@@ -64,10 +70,17 @@ namespace rfsim {
 
         mGameManager->AddScenario(std::make_shared<Scrum>());
         mGameManager->AddScenario(std::make_shared<Duel>());
+
+        mGameRulesManager->AddRule(std::make_shared<TimeLimit>(20.0f));
+        mGameRulesManager->AddRule(std::make_shared<TimeLimit>(40.0f));
+        mGameRulesManager->AddRule(std::make_shared<TimeLimit>(60.0f));
+        mGameRulesManager->AddRule(std::make_shared<BallHit>());
+        mGameRulesManager->AddRule(std::make_shared<NoCollisions>());
     }
 
     Simulator::~Simulator() {
         // Release in reverse order
+        mGameRulesManager = nullptr;
         mGameManager = nullptr;
         mAlgorithmManager = nullptr;
         mPhysicsServer = nullptr;

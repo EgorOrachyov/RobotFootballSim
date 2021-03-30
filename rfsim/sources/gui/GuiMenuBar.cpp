@@ -50,10 +50,10 @@ namespace rfsim {
 
         // Popup graphics settings
         if (ImGui::BeginPopup("Settings")) {
-            ImGui::Checkbox("Display Robot Debug Info", &showDebugRobotInfo);
+            ImGui::Checkbox("Display Debug Info", &showDebugRobotInfo);
 
             ImGui::Separator();
-            ImGui::Checkbox("Display Robots Trace", &graphicsSettings.drawRobotTrace);
+            ImGui::Checkbox("Display Trace", &graphicsSettings.drawRobotTrace);
 
             if (graphicsSettings.drawRobotTrace) {
                 ImGui::SliderInt("Trace Length", &graphicsSettings.robotTraceLength, 5,  50);
