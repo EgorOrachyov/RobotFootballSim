@@ -52,9 +52,9 @@ target_include_directories(glm INTERFACE deps/glm)
 message(STATUS "Add picojson for parsing config files")
 add_subdirectory(deps/picojson)
 
-
-# Copy resources files into binary dir
-file(COPY resources DESTINATION ${CMAKE_BINARY_DIR})
+# Set source path to copy artifacts into exe file directory
+set(RESOURCES_PATH ${CMAKE_CURRENT_LIST_DIR}/resources)
+set(CONFIG_PATH ${CMAKE_CURRENT_LIST_DIR}/config.json)
 
 # Actual rfsim application
 add_subdirectory(rfsim)

@@ -27,6 +27,7 @@
 
 #include <string>
 #include <vector>
+#include <glm/vec2.hpp>
 
 namespace picojson {
     class value;
@@ -50,6 +51,7 @@ namespace rfsim
         ConfigManager& operator=(const ConfigManager &other) = delete;
         ConfigManager& operator=(ConfigManager &&other) noexcept = delete;
 
+        glm::vec2 GetWindowSize() const;
         float GetFontScale() const;
         float GetGuiScale() const;
         const std::string& GetResourcesPath() const;
@@ -63,6 +65,8 @@ namespace rfsim
     private:
         float mFontScale;
         float mGuiScale;
+        float mWindowWidth;
+        float mWindowHeight;
         std::string mResourcesPath;
         std::string mPluginPathPrefix;
         std::vector<std::string> mPluginsPaths;

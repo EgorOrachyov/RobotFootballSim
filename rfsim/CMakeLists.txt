@@ -121,3 +121,7 @@ target_link_libraries(randommove glm)
 add_library(followmove SHARED plugins/BallFollowMovement.cpp)
 target_include_directories(followmove PRIVATE include)
 target_link_libraries(followmove glm)
+
+message(STATUS "${RESOURCES_PATH}")
+file(COPY ${RESOURCES_PATH} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${CONFIG_PATH} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

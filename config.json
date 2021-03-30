@@ -1,7 +1,9 @@
 {
+    "windowWidth": 1920.0,
+    "windowHeight": 1280.0,
     "fontScale": 2.0,
     "guiScale": 2.0,
-    "resourcesPath": "../resources",
+    "resourcesPath": "./resources",
     "pluginPathPrefix": ".",
     "pluginPaths": [
         "randommove",

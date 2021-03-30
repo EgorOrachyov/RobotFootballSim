@@ -45,6 +45,8 @@ namespace rfsim {
         }
 
         mConfigManager = std::make_shared<ConfigManager>("config.json");
+        mWindowWidth = mConfigManager->GetWindowSize().x;
+        mWindowHeight = mConfigManager->GetWindowSize().y;
 
         // Setup main window and window manager
         mWindowManager = std::make_shared<WindowManager>();
