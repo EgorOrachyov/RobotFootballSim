@@ -375,7 +375,7 @@ namespace rfsim {
         // or no distance between wheels
         if (std::abs(Vl - Vr) < eps || l < eps) {
             b2Vec2 dir = { cos_theta, sin_theta };
-            float v = (std::abs(Vr) + std::abs(Vl)) / 2.0f;
+            float v = (Vr + Vl) / 2.0f;
 
             robot->SetLinearVelocity(v * dir);
             robot->SetAngularVelocity(0);
@@ -387,12 +387,12 @@ namespace rfsim {
             b2Vec2 ICC = { x - R * sin_theta, y + R * cos_theta };
 
             // move ICC to origin
-            float x_n = x - ICC.x;
-            float y_n = y - ICC.y;
+            const float x_i = x - ICC.x;
+            const float y_i = y - ICC.y;
 
             // rotate by w in ICC space
-            x_n = cosf(w * dt) * x_n - sinf(w * dt) * y_n;
-            y_n = sinf(w * dt) * x_n + cosf(w * dt) * y_n;
+            float x_n = cosf(w * dt) * x_i - sinf(w * dt) * y_i;
+            float y_n = sinf(w * dt) * x_i + cosf(w * dt) * y_i;
 
             // move from ICC space to world space
             x_n += ICC.x;
