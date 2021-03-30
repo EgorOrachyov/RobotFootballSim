@@ -42,21 +42,14 @@ namespace rfsim {
                 return "No rules";
             }
 
-            if (mRules.size() == 1) {
-                return mRules[0]->GetName();
-            }
-
             std::stringstream ss;
 
-            ss << "Combine (and) [ ";
             ss << mRules[0]->GetName();
 
             for (int i = 1; i < mRules.size(); i++) {
-                ss << ", ";
+                ss << " & ";
                 ss << mRules[i]->GetName();
             }
-
-            ss << " ]";
 
             return ss.str();
         }
