@@ -289,6 +289,46 @@ namespace rfsim {
         }
     }
 
+    void PhysicsServer::FrameStep(const std::shared_ptr<const Game> &game, 
+                                  std::function<void(float fixedDt)> onFixedStep,
+                                  float dt, float t) { 
+        assert(game->physicsGameInitInfo.robotsTeamA.size() >= game->teamSize);
+        assert(game->physicsGameInitInfo.robotsTeamB.size() >= game->teamSize);
+        assert(game->robotWheelVelocitiesA.size() >= game->teamSize);
+        assert(game->robotWheelVelocitiesB.size() >= game->teamSize);
+
+        constexpr int teamCount = 2;
+
+        const std::vector<rfsim::RobotInitInfo> *pRs[teamCount] = {
+            &game->physicsGameInitInfo.robotsTeamA,
+            &game->physicsGameInitInfo.robotsTeamB
+        };
+
+        const std::vector<glm::vec2>* pVs[teamCount] = {
+            &game->robotWheelVelocitiesA,
+            &game->robotWheelVelocitiesB
+        };
+
+        AccumulateDeltaTime(dt);
+
+        while (TryFixedStep())
+        {
+            onFixedStep(GetFixedDt());
+
+            for (int t = 0; t < teamCount; t++) {
+                const auto &rs = *(pRs[t]);
+                const auto &vs = *(pVs[t]);
+
+                for (int i = 0; i < game->teamSize; i++) {
+                    auto id = rs[i].id;
+                    const auto &wv = vs[i];
+
+                    UpdateWheelVelocities(id, wv.x, wv.y);
+                }
+            }
+        }
+    }
+
     void PhysicsServer::SetFieldFriction(b2Body *target, float maxForceMult, float maxTorqueMult) {
         assert(mWorld);
         assert(mRoomBounds);
@@ -325,7 +365,7 @@ namespace rfsim {
         return mFixedDt;
     }
 
-    bool PhysicsServer::TryGameStep() {
+    bool PhysicsServer::TryFixedStep() {
         assert(mWorld);
         assert(mContactListener);
 

@@ -25,12 +25,14 @@
 #ifndef RFSIM_PHYSICSSERVER_HPP
 #define RFSIM_PHYSICSSERVER_HPP
 
+#include <functional>
 #include <map>
 #include <memory>
 
 #include <physics/PhysicsGameProperties.hpp>
 #include <physics/PhysicsGameInitInfo.hpp>
 #include <physics/PhysicsGameState.hpp>
+#include <logic/Game.hpp>
 
 class b2World;
 class b2Body;
@@ -51,16 +53,18 @@ namespace rfsim {
 
         void SetGameProperties(const PhysicsGameProperties& properties);
         void BeginGame(const PhysicsGameInitInfo& info);
-       
-        void AccumulateDeltaTime(float dt);
-        float GetFixedDt() const;
-        bool TryGameStep();
-
+        void FrameStep(const std::shared_ptr<const Game> &game, 
+                       std::function<void(float fixedDt)> onFixedStep,
+                       float dt, float t);
         void UpdateWheelVelocities(int robotId, float leftWheelVelocity, float rightWheelVelocity);
         void GetCurrentGameState(PhysicsGameState& state) const;
         void EndGame();
 
     private:
+        void AccumulateDeltaTime(float dt);
+        float GetFixedDt() const;
+        bool TryFixedStep();
+
         void SetFieldFriction(b2Body *target, float maxForceMult = 1.0f, float maxTorqueMult = 1.0f);
 
         bool IsRoomBounds(b2Body *body) const;
