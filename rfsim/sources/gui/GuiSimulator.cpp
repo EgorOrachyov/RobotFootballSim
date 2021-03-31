@@ -187,13 +187,13 @@ namespace rfsim {
                     ImGui::NewLine();
 
                     ImGui::Text(" - 3. Select game rules (leave empty for no rules)");
-                    ImGui::BeginListBox("Rules");
+                    if (ImGui::BeginListBox("Rules")) {
+                        for (int i = 0; i < rules.size(); i++) {
+                             ImGui::Selectable(rules[i].data(), &selectedRules[i].v);
+                        }
 
-                    for (int i = 0; i < rules.size(); i++) {
-                        ImGui::Selectable(rules[i].data(), &selectedRules[i].v);
+                        ImGui::EndListBox();
                     }
-
-                    ImGui::EndListBox();
                     ImGui::NewLine();
 
                     ImGui::PushStyleColor(ImGuiCol_Button, mStyle.greenColor);
