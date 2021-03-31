@@ -25,12 +25,14 @@
 #ifndef RFSIM_PHYSICSSERVER_HPP
 #define RFSIM_PHYSICSSERVER_HPP
 
+#include <functional>
 #include <map>
 #include <memory>
 
 #include <physics/PhysicsGameProperties.hpp>
 #include <physics/PhysicsGameInitInfo.hpp>
 #include <physics/PhysicsGameState.hpp>
+#include <logic/Game.hpp>
 
 class b2World;
 class b2Body;
@@ -41,7 +43,7 @@ namespace rfsim {
 
     class PhysicsServer {
     public:
-        PhysicsServer();
+        explicit PhysicsServer(float fixedDt = 1.0f / 60.0f);
         ~PhysicsServer();
 
         PhysicsServer(const PhysicsServer &other) = delete;
@@ -51,12 +53,17 @@ namespace rfsim {
 
         void SetGameProperties(const PhysicsGameProperties& properties);
         void BeginGame(const PhysicsGameInitInfo& info);
-        void GameStep(float dt);
+        void FrameStep(const std::shared_ptr<Game> &game, const std::function<bool(float)> &onFixedStep, float dt);
         void UpdateWheelVelocities(int robotId, float leftWheelVelocity, float rightWheelVelocity);
         void GetCurrentGameState(PhysicsGameState& state) const;
         void EndGame();
 
     private:
+        void AccumulateDeltaTime(float dt);
+        float GetFixedDt() const;
+        bool TryFixedStep();
+        bool UpdateState(const std::shared_ptr<Game> &game);
+
         void SetFieldFriction(b2Body *target, float maxForceMult = 1.0f, float maxTorqueMult = 1.0f);
 
         bool IsRoomBounds(b2Body *body) const;
@@ -73,7 +80,8 @@ namespace rfsim {
         static float AngleToGameCoords(float angle);
 
     private:
-        float dtAccumulated;
+        float mFixedDt;
+        float mDtAccumulated;
 
         std::shared_ptr<b2World> mWorld;
         std::shared_ptr<PhysicsContactListener> mContactListener;

@@ -187,13 +187,13 @@ namespace rfsim {
                     ImGui::NewLine();
 
                     ImGui::Text(" - 3. Select game rules (leave empty for no rules)");
-                    ImGui::BeginListBox("Rules");
+                    if (ImGui::BeginListBox("Rules")) {
+                        for (int i = 0; i < rules.size(); i++) {
+                             ImGui::Selectable(rules[i].data(), &selectedRules[i].v);
+                        }
 
-                    for (int i = 0; i < rules.size(); i++) {
-                        ImGui::Selectable(rules[i].data(), &selectedRules[i].v);
+                        ImGui::EndListBox();
                     }
-
-                    ImGui::EndListBox();
                     ImGui::NewLine();
 
                     ImGui::PushStyleColor(ImGuiCol_Button, mStyle.greenColor);
@@ -226,9 +226,7 @@ namespace rfsim {
 
                 t = 0.0f;
 
-                PhysicsGameState state;
-                mPhysicsServer->GetCurrentGameState(state);
-                game->physicsGameState = state;
+                mPhysicsServer->GetCurrentGameState(game->physicsGameState);
 
                 mState = State::InGame;
                 gameState = GameState::Paused;
@@ -243,31 +241,23 @@ namespace rfsim {
                 auto simDt = gameState == GameState::Running? dt: 0.0f;
 
                 if (gameState == GameState::Running) {
-                    t += simDt;
 
-                    PhysicsGameState state;
-                    mPhysicsServer->GameStep(simDt);
-                    mPhysicsServer->GetCurrentGameState(state);
+                    // Return true if must continue physics sim step
+                    auto onFixedStep = [&] (float fixedDt) {
+                        auto res = rule->Process(t, fixedDt, *game);
 
-                    game->physicsGameState = state;
-                    algo->TickGame(simDt, t, *game);
+                        if (res == GameMessage::Finish) {
+                            gameState = GameState::Finished;
+                            return false;
+                        }
 
-                    for (int i = 0; i < game->teamSize; i++) {
-                        auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
-                        const auto &wv = game->robotWheelVelocitiesA[i];
-                        mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
-                    }
+                        algo->TickGame(fixedDt, t, *game);
+                        t += fixedDt;
 
-                    for (int i = 0; i < game->teamSize; i++) {
-                        auto id = game->physicsGameInitInfo.robotsTeamB[i].id;
-                        const auto &wv = game->robotWheelVelocitiesB[i];
-                        mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
-                    }
+                        return true;
+                    };
 
-                    auto message = rule->Process(t, simDt, *game);
-
-                    if (message == GameMessage::Finish)
-                        gameState = GameState::Finished;
+                    mPhysicsServer->FrameStep(game, onFixedStep, simDt);
                 }
 
                 mPainter->FitToFramebufferArea();

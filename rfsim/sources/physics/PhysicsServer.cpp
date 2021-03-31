@@ -30,11 +30,9 @@
 
 namespace rfsim {
 
-    constexpr float PHYSICS_FIXED_DT = 1.0f / 60.0f;
-
     class PhysicsContactListener : public b2ContactListener {
     public:
-        PhysicsContactListener(const b2Body *fieldBoundSensors) : mFieldBoundSensors(fieldBoundSensors) {}
+        explicit PhysicsContactListener(const b2Body *fieldBoundSensors) : mFieldBoundSensors(fieldBoundSensors) {}
         ~PhysicsContactListener() override = default;
 
         PhysicsContactListener(const PhysicsContactListener &other) = delete;
@@ -66,7 +64,7 @@ namespace rfsim {
 		        return;
 	        }
 
-            mContacts.push_back({ contact->GetFixtureA(), contact->GetFixtureB() });
+            mContacts.emplace_back( contact->GetFixtureA(), contact->GetFixtureB() );
 	    }
 
         void GetContacts(std::vector<std::pair<b2Fixture*, b2Fixture*>> &contacts) {
@@ -90,7 +88,11 @@ namespace rfsim {
         std::list<std::pair<b2Fixture*, b2Fixture*>> mSensorContacts;
     };
 
-    PhysicsServer::PhysicsServer() : dtAccumulated(0), mRoomBounds(nullptr), mFieldBoundSensors(nullptr), mBall(nullptr) {}
+    PhysicsServer::PhysicsServer(float fixedDt) : 
+        mFixedDt(fixedDt), mDtAccumulated(0), 
+        mRoomBounds(nullptr), mFieldBoundSensors(nullptr), mBall(nullptr) {
+        assert(mFixedDt > 0);
+    }
 
     PhysicsServer::~PhysicsServer() {
         EndGame();
@@ -243,7 +245,7 @@ namespace rfsim {
             &info.robotsTeamB
         };
 
-        const float robotAngularDamping = 100;
+//        const float robotAngularDamping = 100;
 
         for (const auto *lst : allRobots) {
             for (const auto &i : *lst) {
@@ -287,6 +289,42 @@ namespace rfsim {
         }
     }
 
+    void PhysicsServer::FrameStep(const std::shared_ptr<Game> &game, const std::function<bool(float)> &onFixedStep, float dt) {
+        assert(game->physicsGameInitInfo.robotsTeamA.size() >= game->teamSize);
+        assert(game->physicsGameInitInfo.robotsTeamB.size() >= game->teamSize);
+        assert(game->robotWheelVelocitiesA.size() >= game->teamSize);
+        assert(game->robotWheelVelocitiesB.size() >= game->teamSize);
+
+        constexpr int teamCount = 2;
+
+        const std::vector<rfsim::RobotInitInfo> *pRs[teamCount] = {
+            &game->physicsGameInitInfo.robotsTeamA,
+            &game->physicsGameInitInfo.robotsTeamB
+        };
+
+        const std::vector<glm::vec2>* pVs[teamCount] = {
+            &game->robotWheelVelocitiesA,
+            &game->robotWheelVelocitiesB
+        };
+
+        AccumulateDeltaTime(dt);
+
+        while (TryFixedStep() && UpdateState(game) && onFixedStep(GetFixedDt()))
+        {
+            for (int t = 0; t < teamCount; t++) {
+                const auto &rs = *(pRs[t]);
+                const auto &vs = *(pVs[t]);
+
+                for (int i = 0; i < game->teamSize; i++) {
+                    auto id = rs[i].id;
+                    const auto &wv = vs[i];
+
+                    UpdateWheelVelocities(id, wv.x, wv.y);
+                }
+            }
+        }
+    }
+
     void PhysicsServer::SetFieldFriction(b2Body *target, float maxForceMult, float maxTorqueMult) {
         assert(mWorld);
         assert(mRoomBounds);
@@ -314,32 +352,48 @@ namespace rfsim {
         mWorld->CreateJoint(&jd);
     }
 
-    void PhysicsServer::GameStep(float dt) {
+    void PhysicsServer::AccumulateDeltaTime(float dt) {
+        mDtAccumulated += dt;
+    }
+
+    float PhysicsServer::GetFixedDt() const
+    {
+        return mFixedDt;
+    }
+
+    bool PhysicsServer::TryFixedStep() {
         assert(mWorld);
         assert(mContactListener);
 
-        dtAccumulated += dt;
-
-        while (dtAccumulated >= PHYSICS_FIXED_DT) {
-            mContactListener->Clear();
-
-            int32 velocityIterations = 8;
-            int32 positionIterations = 3;
-
-            float maxSpeed = mProperties.robotMaxSpeed;
-
-            for (const auto &r : mRobots) {
-                if (r.second->GetLinearVelocity().LengthSquared() > maxSpeed * maxSpeed) {
-                    b2Vec2 v = r.second->GetLinearVelocity();
-                    v.Normalize();
-                    r.second->SetLinearVelocity(maxSpeed * v);
-                }
-            }
-
-            mWorld->Step(PHYSICS_FIXED_DT, velocityIterations, positionIterations);
-
-            dtAccumulated -= PHYSICS_FIXED_DT;
+        if (mDtAccumulated < mFixedDt) {
+            return false;
         }
+
+        mContactListener->Clear();
+
+        int32 velocityIterations = 8;
+        int32 positionIterations = 3;
+
+        float maxSpeed = mProperties.robotMaxSpeed;
+
+        for (const auto &r : mRobots) {
+            if (r.second->GetLinearVelocity().LengthSquared() > maxSpeed * maxSpeed) {
+                b2Vec2 v = r.second->GetLinearVelocity();
+                v.Normalize();
+                r.second->SetLinearVelocity(maxSpeed * v);
+            }
+        }
+
+        mWorld->Step(mFixedDt, velocityIterations, positionIterations);
+
+        mDtAccumulated -= mFixedDt;
+
+        return true;
+    }
+
+    bool PhysicsServer::UpdateState(const std::shared_ptr<Game> &game) {
+        GetCurrentGameState(game->physicsGameState);
+        return true;
     }
 
     void PhysicsServer::UpdateWheelVelocities(int robotId, float leftWheelVelocity, float rightWheelVelocity) {
@@ -354,7 +408,7 @@ namespace rfsim {
 
         b2Body *robot = mRobots[robotId];
         
-        const float dt = PHYSICS_FIXED_DT;
+        const float dt = mFixedDt;
 
         // Differential Drive Robots
         // http://www.cs.columbia.edu/~allen/F17/NOTES/icckinematics.pdf
@@ -375,7 +429,7 @@ namespace rfsim {
         // or no distance between wheels
         if (std::abs(Vl - Vr) < eps || l < eps) {
             b2Vec2 dir = { cos_theta, sin_theta };
-            float v = (std::abs(Vr) + std::abs(Vl)) / 2.0f;
+            float v = (Vr + Vl) / 2.0f;
 
             robot->SetLinearVelocity(v * dir);
             robot->SetAngularVelocity(0);
@@ -387,12 +441,12 @@ namespace rfsim {
             b2Vec2 ICC = { x - R * sin_theta, y + R * cos_theta };
 
             // move ICC to origin
-            float x_n = x - ICC.x;
-            float y_n = y - ICC.y;
+            const float x_i = x - ICC.x;
+            const float y_i = y - ICC.y;
 
             // rotate by w in ICC space
-            x_n = cosf(w * dt) * x_n - sinf(w * dt) * y_n;
-            y_n = sinf(w * dt) * x_n + cosf(w * dt) * y_n;
+            float x_n = cosf(w * dt) * x_i - sinf(w * dt) * y_i;
+            float y_n = sinf(w * dt) * x_i + cosf(w * dt) * y_i;
 
             // move from ICC space to world space
             x_n += ICC.x;
@@ -406,8 +460,13 @@ namespace rfsim {
     void PhysicsServer::GetCurrentGameState(PhysicsGameState &state) const {
         assert(mWorld);
         assert(mContactListener);
-        
+
         state.robots.resize(mRobots.size());
+
+        state.robotRobotCollisions.clear();
+        state.robotFieldBoundsCollisions.clear();
+        state.robotRoomBoundsCollisions.clear();
+        state.robotBallCollisions.clear();
 
         {
             BodyState s = {};

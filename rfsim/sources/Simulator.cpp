@@ -97,6 +97,8 @@ namespace rfsim {
 
         mPhysicsServer->SetGameProperties(game->physicsGameProperties);
         mPhysicsServer->BeginGame(game->physicsGameInitInfo);
+        mPhysicsServer->GetCurrentGameState(game->physicsGameState);
+
         mGraphicsServer->BeginGame(game->graphicsSceneSettings);
 
         algo->BeginGame(*game);
@@ -112,11 +114,17 @@ namespace rfsim {
             // 3) Tick algorithm control (if required)
             // 4) Update physics settings (motors power) (if required)
 
-            PhysicsGameState state;
-            mPhysicsServer->GameStep(dt);
-            mPhysicsServer->GetCurrentGameState(state);
+            // Return true if must continue physics sim step
+            auto onFixedStep = [&] (float fixedDt) {
+                algo->TickGame(fixedDt, t, *game);
+                t += fixedDt;
 
-            mGraphicsServer->BeginDraw(dt, state);
+                return true;
+            };
+
+            mPhysicsServer->FrameStep(game, onFixedStep, dt);
+
+            mGraphicsServer->BeginDraw(dt, game->physicsGameState);
             mGraphicsServer->DrawStaticObjects();
             mGraphicsServer->DrawDynamicObjects();
             mGraphicsServer->DrawAuxInfo();
@@ -126,21 +134,6 @@ namespace rfsim {
             mWindowManager->UpdateEvents();
             mWindowManager->SwapBuffers();
             mPainter->FitToFramebufferArea();
-
-            game->physicsGameState = state;
-            algo->TickGame(dt, t, *game);
-
-            for (int i = 0; i < game->teamSize; i++) {
-                auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
-                const auto &wv = game->robotWheelVelocitiesA[i];
-                mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
-            }
-
-            for (int i = 0; i < game->teamSize; i++) {
-                auto id = game->physicsGameInitInfo.robotsTeamB[i].id;
-                const auto &wv = game->robotWheelVelocitiesB[i];
-                mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
-            }
 
             frameCount++;
             t += dt;
