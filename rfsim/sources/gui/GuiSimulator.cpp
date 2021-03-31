@@ -245,23 +245,22 @@ namespace rfsim {
                 if (gameState == GameState::Running) {
                     t += simDt;
 
-                    PhysicsGameState state;
-                    mPhysicsServer->GameStep(simDt);
-                    mPhysicsServer->GetCurrentGameState(state);
+                    mPhysicsServer->AccumulateDeltaTime(simDt);
 
-                    game->physicsGameState = state;
-                    algo->TickGame(simDt, t, *game);
+                    while (mPhysicsServer->TryGameStep()) {
+                        algo->TickGame(mPhysicsServer->GetFixedDt(), t, *game);
 
-                    for (int i = 0; i < game->teamSize; i++) {
-                        auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
-                        const auto &wv = game->robotWheelVelocitiesA[i];
-                        mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
-                    }
+                        for (int i = 0; i < game->teamSize; i++) {
+                            auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
+                            const auto &wv = game->robotWheelVelocitiesA[i];
+                            mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
+                        }
 
-                    for (int i = 0; i < game->teamSize; i++) {
-                        auto id = game->physicsGameInitInfo.robotsTeamB[i].id;
-                        const auto &wv = game->robotWheelVelocitiesB[i];
-                        mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
+                        for (int i = 0; i < game->teamSize; i++) {
+                            auto id = game->physicsGameInitInfo.robotsTeamB[i].id;
+                            const auto &wv = game->robotWheelVelocitiesB[i];
+                            mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
+                        }
                     }
 
                     auto message = rule->Process(t, simDt, *game);
@@ -269,6 +268,8 @@ namespace rfsim {
                     if (message == GameMessage::Finish)
                         gameState = GameState::Finished;
                 }
+
+                mPhysicsServer->GetCurrentGameState(game->physicsGameState);
 
                 mPainter->FitToFramebufferArea();
 

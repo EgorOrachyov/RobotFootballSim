@@ -41,7 +41,7 @@ namespace rfsim {
 
     class PhysicsServer {
     public:
-        PhysicsServer();
+        PhysicsServer(float fixedDt = 1.0f / 60.0f);
         ~PhysicsServer();
 
         PhysicsServer(const PhysicsServer &other) = delete;
@@ -51,7 +51,11 @@ namespace rfsim {
 
         void SetGameProperties(const PhysicsGameProperties& properties);
         void BeginGame(const PhysicsGameInitInfo& info);
-        void GameStep(float dt);
+       
+        void AccumulateDeltaTime(float dt);
+        float GetFixedDt() const;
+        bool TryGameStep();
+
         void UpdateWheelVelocities(int robotId, float leftWheelVelocity, float rightWheelVelocity);
         void GetCurrentGameState(PhysicsGameState& state) const;
         void EndGame();
@@ -73,7 +77,8 @@ namespace rfsim {
         static float AngleToGameCoords(float angle);
 
     private:
-        float dtAccumulated;
+        float mFixedDt;
+        float mDtAccumulated;
 
         std::shared_ptr<b2World> mWorld;
         std::shared_ptr<PhysicsContactListener> mContactListener;
