@@ -53,7 +53,7 @@ namespace rfsim {
 
         void SetGameProperties(const PhysicsGameProperties& properties);
         void BeginGame(const PhysicsGameInitInfo& info);
-        void FrameStep(const std::shared_ptr<const Game> &game, const std::function<bool(float)> &onFixedStep, float dt);
+        void FrameStep(const std::shared_ptr<Game> &game, const std::function<bool(float)> &onFixedStep, float dt);
         void UpdateWheelVelocities(int robotId, float leftWheelVelocity, float rightWheelVelocity);
         void GetCurrentGameState(PhysicsGameState& state) const;
         void EndGame();
@@ -62,6 +62,7 @@ namespace rfsim {
         void AccumulateDeltaTime(float dt);
         float GetFixedDt() const;
         bool TryFixedStep();
+        bool UpdateState(const std::shared_ptr<Game> &game);
 
         void SetFieldFriction(b2Body *target, float maxForceMult = 1.0f, float maxTorqueMult = 1.0f);
 

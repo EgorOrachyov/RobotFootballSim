@@ -244,23 +244,21 @@ namespace rfsim {
 
                     // Return true if must continue physics sim step
                     auto onFixedStep = [&] (float fixedDt) {
-                        algo->TickGame(fixedDt, t, *game);
                         auto res = rule->Process(t, fixedDt, *game);
-
-                        t += fixedDt;
 
                         if (res == GameMessage::Finish) {
                             gameState = GameState::Finished;
                             return false;
                         }
 
+                        algo->TickGame(fixedDt, t, *game);
+                        t += fixedDt;
+
                         return true;
                     };
 
                     mPhysicsServer->FrameStep(game, onFixedStep, simDt);
                 }
-
-                mPhysicsServer->GetCurrentGameState(game->physicsGameState);
 
                 mPainter->FitToFramebufferArea();
 

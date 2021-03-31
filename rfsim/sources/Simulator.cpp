@@ -97,6 +97,8 @@ namespace rfsim {
 
         mPhysicsServer->SetGameProperties(game->physicsGameProperties);
         mPhysicsServer->BeginGame(game->physicsGameInitInfo);
+        mPhysicsServer->GetCurrentGameState(game->physicsGameState);
+
         mGraphicsServer->BeginGame(game->graphicsSceneSettings);
 
         algo->BeginGame(*game);
@@ -121,7 +123,6 @@ namespace rfsim {
             };
 
             mPhysicsServer->FrameStep(game, onFixedStep, dt);
-            mPhysicsServer->GetCurrentGameState(game->physicsGameState);
 
             mGraphicsServer->BeginDraw(dt, game->physicsGameState);
             mGraphicsServer->DrawStaticObjects();

@@ -289,7 +289,7 @@ namespace rfsim {
         }
     }
 
-    void PhysicsServer::FrameStep(const std::shared_ptr<const Game> &game, const std::function<bool(float)> &onFixedStep, float dt) {
+    void PhysicsServer::FrameStep(const std::shared_ptr<Game> &game, const std::function<bool(float)> &onFixedStep, float dt) {
         assert(game->physicsGameInitInfo.robotsTeamA.size() >= game->teamSize);
         assert(game->physicsGameInitInfo.robotsTeamB.size() >= game->teamSize);
         assert(game->robotWheelVelocitiesA.size() >= game->teamSize);
@@ -309,7 +309,7 @@ namespace rfsim {
 
         AccumulateDeltaTime(dt);
 
-        while (TryFixedStep() && onFixedStep(GetFixedDt()))
+        while (TryFixedStep() && UpdateState(game) && onFixedStep(GetFixedDt()))
         {
             for (int t = 0; t < teamCount; t++) {
                 const auto &rs = *(pRs[t]);
@@ -388,6 +388,11 @@ namespace rfsim {
 
         mDtAccumulated -= mFixedDt;
 
+        return true;
+    }
+
+    bool PhysicsServer::UpdateState(const std::shared_ptr<Game> &game) {
+        GetCurrentGameState(game->physicsGameState);
         return true;
     }
 
