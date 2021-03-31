@@ -32,7 +32,7 @@ namespace rfsim {
 
     class PhysicsContactListener : public b2ContactListener {
     public:
-        PhysicsContactListener(const b2Body *fieldBoundSensors) : mFieldBoundSensors(fieldBoundSensors) {}
+        explicit PhysicsContactListener(const b2Body *fieldBoundSensors) : mFieldBoundSensors(fieldBoundSensors) {}
         ~PhysicsContactListener() override = default;
 
         PhysicsContactListener(const PhysicsContactListener &other) = delete;
@@ -64,7 +64,7 @@ namespace rfsim {
 		        return;
 	        }
 
-            mContacts.push_back({ contact->GetFixtureA(), contact->GetFixtureB() });
+            mContacts.emplace_back( contact->GetFixtureA(), contact->GetFixtureB() );
 	    }
 
         void GetContacts(std::vector<std::pair<b2Fixture*, b2Fixture*>> &contacts) {
@@ -245,7 +245,7 @@ namespace rfsim {
             &info.robotsTeamB
         };
 
-        const float robotAngularDamping = 100;
+//        const float robotAngularDamping = 100;
 
         for (const auto *lst : allRobots) {
             for (const auto &i : *lst) {
@@ -289,9 +289,7 @@ namespace rfsim {
         }
     }
 
-    void PhysicsServer::FrameStep(const std::shared_ptr<const Game> &game, 
-                                  std::function<void(float fixedDt)> onFixedStep,
-                                  float dt, float t) { 
+    void PhysicsServer::FrameStep(const std::shared_ptr<const Game> &game, const std::function<bool(float)> &onFixedStep, float dt) {
         assert(game->physicsGameInitInfo.robotsTeamA.size() >= game->teamSize);
         assert(game->physicsGameInitInfo.robotsTeamB.size() >= game->teamSize);
         assert(game->robotWheelVelocitiesA.size() >= game->teamSize);
@@ -311,10 +309,8 @@ namespace rfsim {
 
         AccumulateDeltaTime(dt);
 
-        while (TryFixedStep())
+        while (TryFixedStep() && onFixedStep(GetFixedDt()))
         {
-            onFixedStep(GetFixedDt());
-
             for (int t = 0; t < teamCount; t++) {
                 const auto &rs = *(pRs[t]);
                 const auto &vs = *(pVs[t]);
@@ -357,7 +353,7 @@ namespace rfsim {
     }
 
     void PhysicsServer::AccumulateDeltaTime(float dt) {
-        mDtAccumulated += dt;
+        return mDtAccumulated += dt;
     }
 
     float PhysicsServer::GetFixedDt() const
@@ -391,6 +387,7 @@ namespace rfsim {
         mWorld->Step(mFixedDt, velocityIterations, positionIterations);
 
         mDtAccumulated -= mFixedDt;
+
         return true;
     }
 

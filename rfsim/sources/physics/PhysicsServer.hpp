@@ -43,7 +43,7 @@ namespace rfsim {
 
     class PhysicsServer {
     public:
-        PhysicsServer(float fixedDt = 1.0f / 60.0f);
+        explicit PhysicsServer(float fixedDt = 1.0f / 60.0f);
         ~PhysicsServer();
 
         PhysicsServer(const PhysicsServer &other) = delete;
@@ -53,9 +53,7 @@ namespace rfsim {
 
         void SetGameProperties(const PhysicsGameProperties& properties);
         void BeginGame(const PhysicsGameInitInfo& info);
-        void FrameStep(const std::shared_ptr<const Game> &game, 
-                       std::function<void(float fixedDt)> onFixedStep,
-                       float dt, float t);
+        void FrameStep(const std::shared_ptr<const Game> &game, const std::function<bool(float)> &onFixedStep, float dt);
         void UpdateWheelVelocities(int robotId, float leftWheelVelocity, float rightWheelVelocity);
         void GetCurrentGameState(PhysicsGameState& state) const;
         void EndGame();

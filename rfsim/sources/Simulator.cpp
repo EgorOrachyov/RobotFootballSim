@@ -112,12 +112,15 @@ namespace rfsim {
             // 3) Tick algorithm control (if required)
             // 4) Update physics settings (motors power) (if required)
 
-
-            auto onFixedStep = [&algo, t, &game] (float fixedDt) {
+            // Return true if must continue physics sim step
+            auto onFixedStep = [&] (float fixedDt) {
                 algo->TickGame(fixedDt, t, *game);
+                t += fixedDt;
+
+                return true;
             };
 
-            mPhysicsServer->FrameStep(game, onFixedStep, dt, t);
+            mPhysicsServer->FrameStep(game, onFixedStep, dt);
             mPhysicsServer->GetCurrentGameState(game->physicsGameState);
 
             mGraphicsServer->BeginDraw(dt, game->physicsGameState);

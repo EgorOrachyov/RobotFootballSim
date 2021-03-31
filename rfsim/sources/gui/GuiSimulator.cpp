@@ -241,18 +241,23 @@ namespace rfsim {
                 auto simDt = gameState == GameState::Running? dt: 0.0f;
 
                 if (gameState == GameState::Running) {
-                    t += simDt;
 
-                    auto onFixedStep = [&algo, t, &game] (float fixedDt) {
+                    // Return true if must continue physics sim step
+                    auto onFixedStep = [&] (float fixedDt) {
                         algo->TickGame(fixedDt, t, *game);
+                        auto res = rule->Process(t, fixedDt, *game);
+
+                        t += fixedDt;
+
+                        if (res == GameMessage::Finish) {
+                            gameState = GameState::Finished;
+                            return false;
+                        }
+
+                        return true;
                     };
 
-                    mPhysicsServer->FrameStep(game, onFixedStep, simDt, t);
-
-                    auto message = rule->Process(t, simDt, *game);
-
-                    if (message == GameMessage::Finish)
-                        gameState = GameState::Finished;
+                    mPhysicsServer->FrameStep(game, onFixedStep, simDt);
                 }
 
                 mPhysicsServer->GetCurrentGameState(game->physicsGameState);
