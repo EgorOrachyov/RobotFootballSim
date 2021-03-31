@@ -112,25 +112,12 @@ namespace rfsim {
             // 3) Tick algorithm control (if required)
             // 4) Update physics settings (motors power) (if required)
 
-            mPhysicsServer->AccumulateDeltaTime(dt);
 
-            while (mPhysicsServer->TryGameStep())
-            {
-                algo->TickGame(mPhysicsServer->GetFixedDt(), t, *game);
+            auto onFixedStep = [&algo, t, &game] (float fixedDt) {
+                algo->TickGame(fixedDt, t, *game);
+            };
 
-                for (int i = 0; i < game->teamSize; i++) {
-                    auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
-                    const auto &wv = game->robotWheelVelocitiesA[i];
-                    mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
-                }
-
-                for (int i = 0; i < game->teamSize; i++) {
-                    auto id = game->physicsGameInitInfo.robotsTeamB[i].id;
-                    const auto &wv = game->robotWheelVelocitiesB[i];
-                    mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
-                }
-            }
-
+            mPhysicsServer->FrameStep(game, onFixedStep, dt, t);
             mPhysicsServer->GetCurrentGameState(game->physicsGameState);
 
             mGraphicsServer->BeginDraw(dt, game->physicsGameState);

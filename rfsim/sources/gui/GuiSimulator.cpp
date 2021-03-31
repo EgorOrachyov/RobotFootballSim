@@ -226,9 +226,7 @@ namespace rfsim {
 
                 t = 0.0f;
 
-                PhysicsGameState state;
-                mPhysicsServer->GetCurrentGameState(state);
-                game->physicsGameState = state;
+                mPhysicsServer->GetCurrentGameState(game->physicsGameState);
 
                 mState = State::InGame;
                 gameState = GameState::Paused;
@@ -245,23 +243,11 @@ namespace rfsim {
                 if (gameState == GameState::Running) {
                     t += simDt;
 
-                    mPhysicsServer->AccumulateDeltaTime(simDt);
+                    auto onFixedStep = [&algo, t, &game] (float fixedDt) {
+                        algo->TickGame(fixedDt, t, *game);
+                    };
 
-                    while (mPhysicsServer->TryGameStep()) {
-                        algo->TickGame(mPhysicsServer->GetFixedDt(), t, *game);
-
-                        for (int i = 0; i < game->teamSize; i++) {
-                            auto id = game->physicsGameInitInfo.robotsTeamA[i].id;
-                            const auto &wv = game->robotWheelVelocitiesA[i];
-                            mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
-                        }
-
-                        for (int i = 0; i < game->teamSize; i++) {
-                            auto id = game->physicsGameInitInfo.robotsTeamB[i].id;
-                            const auto &wv = game->robotWheelVelocitiesB[i];
-                            mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
-                        }
-                    }
+                    mPhysicsServer->FrameStep(game, onFixedStep, simDt, t);
 
                     auto message = rule->Process(t, simDt, *game);
 
