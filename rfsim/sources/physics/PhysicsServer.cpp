@@ -353,7 +353,7 @@ namespace rfsim {
     }
 
     void PhysicsServer::AccumulateDeltaTime(float dt) {
-        return mDtAccumulated += dt;
+        mDtAccumulated += dt;
     }
 
     float PhysicsServer::GetFixedDt() const
