@@ -75,7 +75,7 @@ namespace rfsim {
         std::shared_ptr<Window> mWindow;
         std::shared_ptr<Painter> mPainter;
 
-        std::shared_ptr<Image> mRobotTraceImage;
+        std::shared_ptr<Image> mTraceImage;
         std::shared_ptr<Image> mBallImage;
         std::shared_ptr<Image> mFieldImage;
         std::shared_ptr<Image> mOnCollisionImage;
@@ -83,6 +83,7 @@ namespace rfsim {
         std::shared_ptr<Image> mShadowImage;
         std::vector<std::shared_ptr<Image>> mRobotImages;
 
+        circular_buffer<glm::vec2> mBallTrace;
         std::vector<circular_buffer<glm::vec2>> mRobotsTrace;
 
         float mTime = 0;

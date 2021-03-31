@@ -22,35 +22,36 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GRAPHICSSETTINGS_HPP
-#define RFSIM_GRAPHICSSETTINGS_HPP
+#ifndef RFSIM_TIMELIMIT_HPP
+#define RFSIM_TIMELIMIT_HPP
 
-#include <glm/vec3.hpp>
+#include <logic/Game.hpp>
+#include <logic/GameRule.hpp>
+#include <sstream>
 
 namespace rfsim {
 
-    /**
-     * @brief Game draw settings.
-     * Configures effects and level of drawing game details.
-     */
-    struct GraphicsSettings {
-        bool drawTrace = false;
-        int traceLength = 20;
-        float traceSkip = 0.1;
-        float tracePointRadius = 0.5;
+    class TimeLimit: public GameRule {
+    public:
+        explicit TimeLimit(float limit) : mLimit(limit) { }
+        ~TimeLimit() override = default;
 
-        bool drawOutInfo = true;
-        bool drawCollisionInfo = true;
+        std::string GetName() override {
+            std::stringstream ss;
 
-        bool drawShadows = true;
-        float shadowIntensity = 1.0f;
-        float sunPosition = 0.0f;
+            ss << "Time Limit (t=" << mLimit << " sec)";
 
-        glm::vec3 traceColor = {1.0f, 1.0f, 1.0f };
-        glm::vec3 backgroundColor = {0, 0, 0};
-        glm::vec3 fieldCustomColor = { 1.0f, 1.0f, 1.0f };
+            return ss.str();
+        }
+
+        GameMessage Process(float t, float dt, const struct Game &game) override {
+            return t > mLimit? GameMessage::Finish: GameMessage::Continue;
+        }
+
+    private:
+        float mLimit;
     };
 
 }
 
-#endif //RFSIM_GRAPHICSSETTINGS_HPP
+#endif //RFSIM_TIMELIMIT_HPP

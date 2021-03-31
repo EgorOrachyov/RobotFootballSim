@@ -22,35 +22,27 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GRAPHICSSETTINGS_HPP
-#define RFSIM_GRAPHICSSETTINGS_HPP
+#ifndef RFSIM_NOCOLLISIONS_HPP
+#define RFSIM_NOCOLLISIONS_HPP
 
-#include <glm/vec3.hpp>
+#include <logic/Game.hpp>
+#include <logic/GameRule.hpp>
 
 namespace rfsim {
 
-    /**
-     * @brief Game draw settings.
-     * Configures effects and level of drawing game details.
-     */
-    struct GraphicsSettings {
-        bool drawTrace = false;
-        int traceLength = 20;
-        float traceSkip = 0.1;
-        float tracePointRadius = 0.5;
+    class NoCollisions: public GameRule {
+    public:
+        ~NoCollisions() override = default;
 
-        bool drawOutInfo = true;
-        bool drawCollisionInfo = true;
+        std::string GetName() override {
+            return "No Collisions";
+        }
 
-        bool drawShadows = true;
-        float shadowIntensity = 1.0f;
-        float sunPosition = 0.0f;
-
-        glm::vec3 traceColor = {1.0f, 1.0f, 1.0f };
-        glm::vec3 backgroundColor = {0, 0, 0};
-        glm::vec3 fieldCustomColor = { 1.0f, 1.0f, 1.0f };
+        GameMessage Process(float t, float dt, const Game &game) override {
+            return game.physicsGameState.robotRobotCollisions.empty()? GameMessage::Continue: GameMessage::Finish;
+        }
     };
 
 }
 
-#endif //RFSIM_GRAPHICSSETTINGS_HPP
+#endif //RFSIM_NOCOLLISIONS_HPP

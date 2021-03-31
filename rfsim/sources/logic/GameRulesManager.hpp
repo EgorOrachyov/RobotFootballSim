@@ -22,35 +22,30 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GRAPHICSSETTINGS_HPP
-#define RFSIM_GRAPHICSSETTINGS_HPP
+#ifndef RFSIM_GAMERULESMANAGER_HPP
+#define RFSIM_GAMERULESMANAGER_HPP
 
-#include <glm/vec3.hpp>
+#include <logic/GameRule.hpp>
+#include <vector>
+#include <memory>
 
 namespace rfsim {
 
-    /**
-     * @brief Game draw settings.
-     * Configures effects and level of drawing game details.
-     */
-    struct GraphicsSettings {
-        bool drawTrace = false;
-        int traceLength = 20;
-        float traceSkip = 0.1;
-        float tracePointRadius = 0.5;
+    class GameRulesManager {
+    public:
+        GameRulesManager() = default;
+        GameRulesManager(const GameRulesManager& other) = delete;
+        GameRulesManager(GameRulesManager&& other) noexcept = delete;
+        ~GameRulesManager() = default;
 
-        bool drawOutInfo = true;
-        bool drawCollisionInfo = true;
+        void GetRulesInfo(std::vector<std::string> &info);
+        void AddRule(const std::shared_ptr<GameRule> &rule);
+        std::shared_ptr<GameRule> GetRule(unsigned int idx);
 
-        bool drawShadows = true;
-        float shadowIntensity = 1.0f;
-        float sunPosition = 0.0f;
-
-        glm::vec3 traceColor = {1.0f, 1.0f, 1.0f };
-        glm::vec3 backgroundColor = {0, 0, 0};
-        glm::vec3 fieldCustomColor = { 1.0f, 1.0f, 1.0f };
+    private:
+        std::vector<std::shared_ptr<GameRule>> mRules;
     };
 
 }
 
-#endif //RFSIM_GRAPHICSSETTINGS_HPP
+#endif //RFSIM_GAMERULESMANAGER_HPP

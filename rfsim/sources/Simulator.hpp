@@ -67,6 +67,7 @@ namespace rfsim {
         std::shared_ptr<class PhysicsServer> mPhysicsServer;
         std::shared_ptr<class AlgorithmManager> mAlgorithmManager;
         std::shared_ptr<class GameManager> mGameManager;
+        std::shared_ptr<class GameRulesManager> mGameRulesManager;
         std::shared_ptr<class ConfigManager> mConfigManager;
     };
 

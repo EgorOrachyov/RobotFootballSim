@@ -31,6 +31,8 @@
 #include <physics/PhysicsServer.hpp>
 #include <logic/AlgorithmManager.hpp>
 #include <logic/GameManager.hpp>
+#include <logic/GameRulesManager.hpp>
+#include <rules/CombineAnd.hpp>
 #include <utils/ConfigManager.hpp>
 #include <glm/gtc/constants.hpp>
 #include <imgui.h>
@@ -39,6 +41,10 @@
 #include <memory>
 
 namespace rfsim {
+
+    struct Flag {
+        bool v = false;
+    };
 
     GuiSimulator::GuiSimulator(int argc, const char* const* argv) : Simulator(argc, argv) {
         const auto SEP = "/";
@@ -76,6 +82,8 @@ namespace rfsim {
         GameState gameState;
         std::shared_ptr<Game> game;
         std::shared_ptr<Algorithm> algo;
+        std::shared_ptr<CombineAnd> rule = std::make_shared<CombineAnd>();
+        std::string ruleTextInfo;
 
         // This is main menu related data
         bool needRefresh = true;
@@ -83,10 +91,12 @@ namespace rfsim {
         bool exit = false;
         int selectedScenario = -1;
         int selectedAlgo = -1;
+        std::vector<Flag> selectedRules;
         std::vector<std::string> scenarios;
         std::vector<const char*> scenariosRaw;
         std::vector<std::string> algorithms;
         std::vector<const char*> algorithmsRaw;
+        std::vector<std::string> rules;
 
         // In-game
         float dt;
@@ -118,9 +128,11 @@ namespace rfsim {
 
                     algorithms.clear();
                     scenarios.clear();
+                    rules.clear();
 
                     mAlgorithmManager->GetAlgorithmsInfo(algorithms);
                     mGameManager->GetScenarioInfo(scenarios);
+                    mGameRulesManager->GetRulesInfo(rules);
 
                     scenariosRaw.clear();
                     scenariosRaw.reserve(scenarios.size());
@@ -133,6 +145,9 @@ namespace rfsim {
 
                     for (auto& a: algorithms)
                         algorithmsRaw.push_back(a.data());
+
+                    selectedRules.clear();
+                    selectedRules.resize(rules.size(), {});
 
                     needRefresh = false;
                 }
@@ -160,21 +175,33 @@ namespace rfsim {
                 }
 
                 // Draw menu widget
-                ImGui::Begin("Main Menu");
+                {
+                    ImGui::Begin("Main Menu");
 
-                ImGui::Text(" - 1. Select the game scenario");
-                ImGui::ListBox("Game scenario", &selectedScenario, scenariosRaw.data(), scenariosRaw.size());
-                ImGui::NewLine();
+                    ImGui::Text(" - 1. Select the game scenario");
+                    ImGui::ListBox("Game scenario", &selectedScenario, scenariosRaw.data(), scenariosRaw.size());
+                    ImGui::NewLine();
 
-                ImGui::Text(" - 2. Select the algorithm used to control robots");
-                ImGui::ListBox("Algorithm", &selectedAlgo, algorithmsRaw.data(), algorithmsRaw.size());
-                ImGui::NewLine();
+                    ImGui::Text(" - 2. Select the algorithm used to control robots");
+                    ImGui::ListBox("Algorithm", &selectedAlgo, algorithmsRaw.data(), algorithmsRaw.size());
+                    ImGui::NewLine();
 
-                ImGui::PushStyleColor(ImGuiCol_Button, mStyle.greenColor);
-                beginGame = ImGui::Button("Start", ImVec2(300, 0));
+                    ImGui::Text(" - 3. Select game rules (leave empty for no rules)");
+                    ImGui::BeginListBox("Rules");
 
-                ImGui::PopStyleColor(1);
-                ImGui::End();
+                    for (int i = 0; i < rules.size(); i++) {
+                        ImGui::Selectable(rules[i].data(), &selectedRules[i].v);
+                    }
+
+                    ImGui::EndListBox();
+                    ImGui::NewLine();
+
+                    ImGui::PushStyleColor(ImGuiCol_Button, mStyle.greenColor);
+                    beginGame = ImGui::Button("Start", ImVec2(300, 0));
+
+                    ImGui::PopStyleColor(1);
+                    ImGui::End();
+                }
 
                 if (beginGame && selectedScenario >= 0 && selectedAlgo >= 0) {
                     mState = State::BeginGame;
@@ -184,6 +211,13 @@ namespace rfsim {
             else if (mState == State::BeginGame) {
                 game = mGameManager->CreateGame(selectedScenario);
                 algo = mAlgorithmManager->GetAlgorithmAt(selectedAlgo);
+
+                rule->Clear();
+                for (int i = 0; i < rules.size(); i++) {
+                    if (selectedRules[i].v)
+                        rule->AddRule(mGameRulesManager->GetRule(i));
+                }
+                ruleTextInfo = std::move(rule->GetName());
 
                 mPhysicsServer->SetGameProperties(game->physicsGameProperties);
                 mPhysicsServer->BeginGame(game->physicsGameInitInfo);
@@ -229,6 +263,11 @@ namespace rfsim {
                         const auto &wv = game->robotWheelVelocitiesB[i];
                         mPhysicsServer->UpdateWheelVelocities(id, wv.x, wv.y);
                     }
+
+                    auto message = rule->Process(t, simDt, *game);
+
+                    if (message == GameMessage::Finish)
+                        gameState = GameState::Finished;
                 }
 
                 mPainter->FitToFramebufferArea();
@@ -258,6 +297,7 @@ namespace rfsim {
                     ImGui::Text("Targets:");
                     ImGui::Text(" - Scenario: %s", scenariosRaw[selectedScenario]);
                     ImGui::Text(" - Algorithm: %s", algorithmsRaw[selectedAlgo]);
+                    ImGui::Text(" - Rules: %s", ruleTextInfo.c_str());
                     ImGui::EndGroup();
 
                     ImGui::Separator();

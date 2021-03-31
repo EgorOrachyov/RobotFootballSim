@@ -55,7 +55,10 @@ set(RFSIM_LOGIC_SOURCES
         sources/logic/AlgorithmManager.hpp
         sources/logic/GameManager.cpp
         sources/logic/GameManager.hpp
-        sources/logic/GameScenario.hpp)
+        sources/logic/GameScenario.hpp
+        sources/logic/GameRulesManager.cpp
+        sources/logic/GameRulesManager.hpp
+        sources/logic/GameRule.hpp)
 
 set(RFSIM_GUI_SOURCES
         sources/gui/GuiSimulator.cpp
@@ -66,7 +69,14 @@ set(RFSIM_GUI_SOURCES
 
 set(RFSIM_SCENARIO_SOURCES
         sources/scenario/Scrum.hpp
-        sources/scenario/ScenarioCommon.hpp sources/scenario/Duel.hpp)
+        sources/scenario/ScenarioCommon.hpp
+        sources/scenario/Duel.hpp)
+
+set(RFSIM_RULES_SOURCES
+        sources/rules/BallHit.hpp
+        sources/rules/NoCollisions.hpp
+        sources/rules/TimeLimit.hpp
+        sources/rules/CombineAnd.hpp)
 
 set(RSIM_UTILS_SOURCES
         sources/utils/CircularBuffer.hpp
@@ -82,6 +92,7 @@ add_executable(rfsim
         ${RFSIM_PHYSICS_SOURCES}
         ${RFSIM_LOGIC_SOURCES}
         ${RFSIM_GUI_SOURCES}
+        ${RFSIM_RULES_SOURCES}
         ${RFSIM_SCENARIO_SOURCES}
         ${RSIM_UTILS_SOURCES})
 
@@ -121,3 +132,7 @@ target_link_libraries(randommove glm)
 add_library(followmove SHARED plugins/BallFollowMovement.cpp)
 target_include_directories(followmove PRIVATE include)
 target_link_libraries(followmove glm)
+
+message(STATUS "${RESOURCES_PATH}")
+file(COPY ${RESOURCES_PATH} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${CONFIG_PATH} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

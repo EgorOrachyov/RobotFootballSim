@@ -34,7 +34,7 @@ namespace rfsim {
     class circular_buffer {
     public:
 
-        explicit circular_buffer(size_t capacity, const T& initial = T()) {
+        explicit circular_buffer(size_t capacity = 0, const T& initial = T()) {
             mData.resize(capacity, initial);
         }
 
@@ -122,6 +122,11 @@ namespace rfsim {
                     }
                 }
             }
+        }
+
+        void resize(size_t new_size, const T& t = T()) {
+            mData.resize(new_size, t);
+            mHead = mTail = mSize = 0;
         }
 
         void clear() {

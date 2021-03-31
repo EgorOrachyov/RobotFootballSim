@@ -22,35 +22,63 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GRAPHICSSETTINGS_HPP
-#define RFSIM_GRAPHICSSETTINGS_HPP
+#ifndef RFSIM_COMBINEAND_HPP
+#define RFSIM_COMBINEAND_HPP
 
-#include <glm/vec3.hpp>
+#include <logic/Game.hpp>
+#include <logic/GameRule.hpp>
+#include <vector>
+#include <memory>
+#include <sstream>
 
 namespace rfsim {
 
-    /**
-     * @brief Game draw settings.
-     * Configures effects and level of drawing game details.
-     */
-    struct GraphicsSettings {
-        bool drawTrace = false;
-        int traceLength = 20;
-        float traceSkip = 0.1;
-        float tracePointRadius = 0.5;
+    class CombineAnd: public GameRule {
+    public:
+        ~CombineAnd() override = default;
 
-        bool drawOutInfo = true;
-        bool drawCollisionInfo = true;
+        std::string GetName() override {
+            if (mRules.empty()) {
+                return "No rules";
+            }
 
-        bool drawShadows = true;
-        float shadowIntensity = 1.0f;
-        float sunPosition = 0.0f;
+            std::stringstream ss;
 
-        glm::vec3 traceColor = {1.0f, 1.0f, 1.0f };
-        glm::vec3 backgroundColor = {0, 0, 0};
-        glm::vec3 fieldCustomColor = { 1.0f, 1.0f, 1.0f };
+            ss << mRules[0]->GetName();
+
+            for (int i = 1; i < mRules.size(); i++) {
+                ss << " & ";
+                ss << mRules[i]->GetName();
+            }
+
+            return ss.str();
+        }
+
+        GameMessage Process(float t, float dt, const Game &game) override {
+            GameMessage message = GameMessage::Continue;
+
+            for (auto& r: mRules) {
+                message = r->Process(t, dt, game);
+
+                if (message != GameMessage::Continue)
+                    return message;
+            }
+
+            return message;
+        }
+
+        void AddRule(const std::shared_ptr<GameRule>& rule) {
+            mRules.push_back(rule);
+        }
+
+        void Clear() {
+            mRules.clear();
+        }
+
+    private:
+        std::vector<std::shared_ptr<GameRule>> mRules;
     };
 
 }
 
-#endif //RFSIM_GRAPHICSSETTINGS_HPP
+#endif //RFSIM_COMBINEAND_HPP

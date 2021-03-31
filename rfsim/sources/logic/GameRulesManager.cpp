@@ -22,35 +22,27 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef RFSIM_GRAPHICSSETTINGS_HPP
-#define RFSIM_GRAPHICSSETTINGS_HPP
-
-#include <glm/vec3.hpp>
+#include <logic/GameRulesManager.hpp>
+#include <cassert>
 
 namespace rfsim {
 
-    /**
-     * @brief Game draw settings.
-     * Configures effects and level of drawing game details.
-     */
-    struct GraphicsSettings {
-        bool drawTrace = false;
-        int traceLength = 20;
-        float traceSkip = 0.1;
-        float tracePointRadius = 0.5;
+    void GameRulesManager::GetRulesInfo(std::vector<std::string> &info) {
+        info.clear();
+        info.reserve(mRules.size());
 
-        bool drawOutInfo = true;
-        bool drawCollisionInfo = true;
+        for (auto& r: mRules) {
+            info.push_back(std::move(r->GetName()));
+        }
+    }
 
-        bool drawShadows = true;
-        float shadowIntensity = 1.0f;
-        float sunPosition = 0.0f;
+    void GameRulesManager::AddRule(const std::shared_ptr<GameRule> &rule) {
+        mRules.push_back(rule);
+    }
 
-        glm::vec3 traceColor = {1.0f, 1.0f, 1.0f };
-        glm::vec3 backgroundColor = {0, 0, 0};
-        glm::vec3 fieldCustomColor = { 1.0f, 1.0f, 1.0f };
-    };
+    std::shared_ptr<GameRule> GameRulesManager::GetRule(unsigned int idx) {
+        assert(idx < mRules.size());
+        return mRules[idx];
+    }
 
 }
-
-#endif //RFSIM_GRAPHICSSETTINGS_HPP

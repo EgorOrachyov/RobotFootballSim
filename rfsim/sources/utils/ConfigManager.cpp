@@ -30,7 +30,7 @@
 namespace rfsim {
 
     ConfigManager::ConfigManager(const std::string &configFilePath) :
-        mFontScale(1.0f), mGuiScale(1.0f), mResourcesPath("../resources") {
+        mWindowWidth(1920), mWindowHeight(1280), mFontScale(1.0f), mGuiScale(1.0f), mResourcesPath("./resources"), mPluginPathPrefix(".") {
 
         std::ifstream configFile;
         if (!TryToFindConfig(configFilePath, configFile)) {
@@ -75,6 +75,8 @@ namespace rfsim {
         if (v.is<picojson::object>()) {
             try {
                 auto obj = v.get<picojson::object>();
+                mWindowWidth = (int) obj["windowWidth"].get<double>();
+                mWindowHeight = (int) obj["windowHeight"].get<double>();
                 mFontScale = (float)obj["fontScale"].get<double>();
                 mGuiScale = (float)obj["guiScale"].get<double>();
                 mResourcesPath = obj["resourcesPath"].get<std::string>();
@@ -92,6 +94,10 @@ namespace rfsim {
                 return;
             }
         }
+    }
+
+    glm::vec2 ConfigManager::GetWindowSize() const {
+        return {mWindowWidth, mWindowHeight};
     }
 
     float ConfigManager::GetFontScale() const {
