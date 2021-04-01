@@ -27,6 +27,7 @@
 #include <box2d/box2d.h>
 #include <algorithm>
 #include <list>
+#include <cmath>
 
 namespace rfsim {
 

@@ -26,6 +26,7 @@
 #include <stb/stb_image.hpp>
 #include <utility>
 #include <cstring>
+#include <iostream>
 
 namespace rfsim {
 
@@ -82,6 +83,10 @@ namespace rfsim {
         int desiredChannelsCount = 4;
 
         const unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &channels, desiredChannelsCount);
+
+        if (data == nullptr) {
+            std::cerr << "Failed to load image: " << filePath << std::endl;
+        }
 
         if (data != nullptr) {
             assert(width > 0);

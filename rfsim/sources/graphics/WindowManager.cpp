@@ -26,15 +26,34 @@
 #include <graphics/WindowManager.hpp>
 #include <iostream>
 
+#ifdef RFSIM_PLATFORM_MACOS
+    #include <unistd.h>
+#endif
+
 namespace rfsim {
 
     WindowManager::WindowManager() {
         glfwSetErrorCallback(ErrorCallback);
 
+#ifdef RFSIM_PLATFORM_MACOS
+        // GLFW sets cwd to the resources folder of the bundle.
+        // So, we will have to save our path and the restore it
+        // Get the current working directory of the application
+        char buffer[PATH_MAX];
+        auto result = getcwd(buffer, PATH_MAX);
+        assert(result);
+#endif
+
         if (glfwInit() != GLFW_TRUE) {
             std::cerr << "Failed to initialize GLFW" << std::endl;
             return;
         }
+
+#ifdef RFSIM_PLATFORM_MACOS
+        // Restore previous path
+        auto error = chdir(result);
+        assert(!error);
+#endif
 
 #ifdef RFSIM_PLATFORM_MACOS
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
