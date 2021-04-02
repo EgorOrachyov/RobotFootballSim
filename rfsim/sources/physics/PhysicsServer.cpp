@@ -246,8 +246,6 @@ namespace rfsim {
             &info.robotsTeamB
         };
 
-//        const float robotAngularDamping = 100;
-
         for (const auto *lst : allRobots) {
             for (const auto &i : *lst) {
                 // robot IDs must be less than robot count
@@ -283,7 +281,7 @@ namespace rfsim {
 
                 body->CreateFixture(&fixture);
 
-                //SetFieldFriction(body);
+                SetFieldFriction(body);
 
                 mRobots[i.id] = body;
             }
