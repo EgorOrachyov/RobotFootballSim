@@ -239,6 +239,10 @@ namespace rfsim {
                 // 4) Update physics settings (motors power) (if required)
 
                 auto simDt = gameState == GameState::Running? dt: 0.0f;
+                auto timeScale = menuBar.timeScale;
+
+                // Scale sim time
+                simDt *= timeScale;
 
                 if (gameState == GameState::Running) {
 

@@ -36,6 +36,7 @@ namespace rfsim {
     public:
         // In game graphics
         GraphicsSettings graphicsSettings;
+        float timeScale = 1.0f;
         bool quit = false;
         bool showDebugRobotInfo = false;
 
