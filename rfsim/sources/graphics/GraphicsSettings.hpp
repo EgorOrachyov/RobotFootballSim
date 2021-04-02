@@ -39,6 +39,7 @@ namespace rfsim {
         float traceSkip = 0.1;
         float tracePointRadius = 0.5;
 
+        bool drawRobotIDs = true;
         bool drawOutInfo = true;
         bool drawCollisionInfo = true;
 

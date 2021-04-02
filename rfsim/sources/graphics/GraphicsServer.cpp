@@ -24,6 +24,8 @@
 
 #include <graphics/GraphicsServer.hpp>
 #include <glm/gtx/norm.hpp>
+#include <sstream>
+#include <iostream>
 
 namespace rfsim {
 
@@ -38,17 +40,16 @@ namespace rfsim {
         mPainter = painter;
         mResPath = resPath;
 
-        static const auto SEP = "/";
-        static const auto ROBOT_IMAGE_PATH = "sprites/robot.png";
-        static const auto FIELD_IMAGE_PATH = "sprites/play-field-div-b.png";
-        static const auto BALL_IMAGE_PATH = "sprites/ball.png";
-        static const auto BALL_IMAGE_TRSP_PATH = "sprites/soccer-ball.png";
-        static const auto SHADOW_IMAGE_PATH = "sprites/shadow.png";
-        static const auto ON_COLLISION_IMAGE_PATH = "sprites/hit.png";
-        static const auto ON_OUT_IMAGE_PATH = "sprites/out-of-bounds.png";
-        static const auto TRACE_POINT_IMAGE_PATH = "sprites/trace-point.png";
+        static const auto ROBOT_IMAGE_PATH = "robot.png";
+        static const auto FIELD_IMAGE_PATH = "play-field-div-b.png";
+        static const auto BALL_IMAGE_PATH = "ball.png";
+        static const auto BALL_IMAGE_TRSP_PATH = "soccer-ball.png";
+        static const auto SHADOW_IMAGE_PATH = "shadow.png";
+        static const auto ON_COLLISION_IMAGE_PATH = "hit.png";
+        static const auto ON_OUT_IMAGE_PATH = "out-of-bounds.png";
+        static const auto TRACE_POINT_IMAGE_PATH = "trace-point.png";
 
-        auto prefix = mResPath + SEP;
+        auto prefix = mResPath + "/sprites/";
 
         mTraceImage = Image::LoadFromFilePath(prefix + TRACE_POINT_IMAGE_PATH);
         mBallImage = Image::LoadFromFilePath(prefix + BALL_IMAGE_TRSP_PATH);
@@ -57,8 +58,22 @@ namespace rfsim {
         mOnOutImage = Image::LoadFromFilePath(prefix + ON_OUT_IMAGE_PATH);
         mShadowImage = Image::LoadFromFilePath(prefix + SHADOW_IMAGE_PATH);
 
-        // todo: each robot will have unique image (realism)
-        mRobotImages.push_back(Image::LoadFromFilePath(prefix + ROBOT_IMAGE_PATH));
+        static const  size_t TOTAL_ROBOTS = 16;
+        static const  size_t TOTAL_NUMBERS= 16;
+
+        for (size_t i = 0; i < TOTAL_ROBOTS; i++) {
+            std::stringstream path;
+
+            path << prefix << "robot_" << i << ".png";
+            mRobotImages.push_back(Image::LoadFromFilePath(path.str()));
+        }
+
+        for (size_t i = 0; i < TOTAL_NUMBERS; i++) {
+            std::stringstream path;
+
+            path << prefix << "number_" << i << ".png";
+            mRobotNumbers.push_back(Image::LoadFromFilePath(path.str()));
+        }
     }
 
     void GraphicsServer::SetSettings(const GraphicsSettings &settings) {
@@ -91,6 +106,14 @@ namespace rfsim {
 
         mTime = 0;
         mTimeLastTraceCapture = 0;
+
+        if (totalRobots > mRobotImages.size()) {
+            std::cerr << "Too much robots on the scene (not enough sprites to display all robots with unique look)" << std::endl;
+        }
+
+        if (totalRobots > mRobotNumbers.size()) {
+            std::cerr << "Too much robots on the scene (not enough sprites to display all robots with unique ids)" << std::endl;
+        }
     }
 
     void GraphicsServer::BeginDraw(float dt, const GraphicsGameState& gameState) {
@@ -168,9 +191,28 @@ namespace rfsim {
             }
         }
 
-        // Draw robots
-        for (const auto &r: mCurrentState.robots) {
+        // Draw shadow function
+        auto drawRobotShadow = [&](const BodyState& r) {
             const auto radius = mSceneSettings.robotRadius;
+
+            auto shadowRadius = radius * 1.1;
+            const Painter::Rect shadowRect = {
+                    r.position.x - shadowRadius,
+                    r.position.y - shadowRadius,
+                    shadowRadius * 2.0f,
+                    shadowRadius * 2.0f
+            };
+
+            mPainter->SetBrushColor(mSettings.shadowIntensity * SHADOW_COLOR);
+            mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
+            mPainter->DrawImage(shadowRect + glm::vec4{mSettings.sunPosition * shadowRadius,shadowRadius * 0.3,0,0}, 0, mShadowImage);
+        };
+
+        // Draw robot function
+        auto drawRobot = [&](const BodyState& r, size_t id) {
+            const auto radius = mSceneSettings.robotRadius;
+            auto usedId = std::min(id, mRobotImages.size() - 1);
+            auto texture = mRobotImages[usedId];
 
             const Painter::Rect rect = {
                 r.position.x - radius,
@@ -179,15 +221,28 @@ namespace rfsim {
                 radius * 2.0f
             };
 
-            if (mSettings.drawShadows) {
-                mPainter->SetBrushColor(mSettings.shadowIntensity * SHADOW_COLOR);
-                mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
-                mPainter->DrawImage(rect + glm::vec4{mSettings.sunPosition * radius,radius * 0.7,0,0}, 0, mShadowImage);
-            }
-
             mPainter->SetBrushColor(WHITE_COLOR);
             mPainter->SetTransparentColor(WHITE_COLOR);
-            mPainter->DrawImage(rect, r.angle, mRobotImages.back());
+            mPainter->DrawImage(rect, r.angle, texture);
+        };
+
+        // Draw robots shadows
+        if (mSettings.drawShadows) {
+            for (const auto& r: mCurrentState.robots) {
+                drawRobotShadow(r);
+            }
+        }
+
+        // Draw team A robots
+        for (const auto& r: mSceneSettings.robotsTeamA) {
+            auto id = r.id;
+            drawRobot(mCurrentState.robots[id], id);
+        }
+
+        // Draw team B robots
+        for (const auto& r: mSceneSettings.robotsTeamB) {
+            auto id = r.id;
+            drawRobot(mCurrentState.robots[id], id);
         }
 
         // Draw ball
@@ -263,6 +318,27 @@ namespace rfsim {
                 };
 
                 mPainter->DrawImage(rect, 0, mOnOutImage);
+            }
+        }
+
+        // Draw Robots Ids
+        if (mSettings.drawRobotIDs) {
+            for (size_t i = 0; i < mCurrentState.robots.size(); i++) {
+                auto actualId = std::min(i, mRobotNumbers.size() - 1);
+                auto number = mRobotNumbers[actualId];
+                auto& r = mCurrentState.robots[i];
+                const auto radius = mSceneSettings.robotRadius;
+
+                const Painter::Rect rect = {
+                        r.position.x - radius * 2.0,
+                        r.position.y - radius * 1.5,
+                        radius * 1.5,
+                        radius * 1.5
+                };
+
+                mPainter->SetBrushColor(WHITE_COLOR);
+                mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
+                mPainter->DrawImage(rect, 0.0f, number);
             }
         }
     }

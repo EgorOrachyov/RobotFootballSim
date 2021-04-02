@@ -65,6 +65,7 @@ namespace rfsim {
             }
             ImGui::Separator();
 
+            ImGui::Checkbox("Display Robots Ids", &graphicsSettings.drawRobotIDs);
             ImGui::Checkbox("Display Collision Info", &graphicsSettings.drawCollisionInfo);
             ImGui::Checkbox("Display Out Info", &graphicsSettings.drawOutInfo);
             ImGui::Separator();
