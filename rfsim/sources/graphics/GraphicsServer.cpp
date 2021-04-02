@@ -132,39 +132,39 @@ namespace rfsim {
     void GraphicsServer::DrawDynamicObjects() {
         assert(mState == InternalState::InGameBeginDraw);
 
-        // Draw robots trace
+        // Draw trace
         if (mSettings.drawTrace) {
-            mPainter->SetBrushColor({mSettings.traceColor, 0.8f});
-            mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
+            // Robots trace
+            {
+                auto r = mSettings.tracePointRadius * mSceneSettings.robotRadius;
 
-            auto r = mSettings.tracePointRadius * mSceneSettings.robotRadius;
+                for (const auto& tr: mRobotsTrace) {
+                    float factor = 0.1f;
+                    float step = 0.9f / (float) mSettings.traceLength;
 
-            for (const auto& tr: mRobotsTrace) {
+                    tr.for_each([&](const glm::vec2& pos) {
+                        mPainter->SetBrushColor({mSettings.traceColor, factor});
+                        mPainter->DrawImage({pos.x - r, pos.y - r, 2.0f * r, 2.0f * r}, 0.0f, mTraceImage);
+
+                        factor += step;
+                    });
+                }
+            }
+
+            // Draw ball trace
+            {
+                auto r = mSettings.tracePointRadius * mSceneSettings.ballRadius;
+
                 float factor = 0.1f;
                 float step = 0.9f / (float) mSettings.traceLength;
 
-                tr.for_each([&](const glm::vec2& pos) {
+                mBallTrace.for_each([&](const glm::vec2& pos) {
                     mPainter->SetBrushColor({mSettings.traceColor, factor});
                     mPainter->DrawImage({pos.x - r, pos.y - r, 2.0f * r, 2.0f * r}, 0.0f, mTraceImage);
 
                     factor += step;
                 });
             }
-        }
-
-        // Draw ball trace
-        {
-            auto r = mSettings.tracePointRadius * mSceneSettings.ballRadius;
-
-            float factor = 0.1f;
-            float step = 0.9f / (float) mSettings.traceLength;
-
-            mBallTrace.for_each([&](const glm::vec2& pos) {
-                mPainter->SetBrushColor({mSettings.traceColor, factor});
-                mPainter->DrawImage({pos.x - r, pos.y - r, 2.0f * r, 2.0f * r}, 0.0f, mTraceImage);
-
-                factor += step;
-            });
         }
 
         // Draw robots

@@ -153,7 +153,7 @@ Follow `rfsim.h` and some example algorithms implementations to create your cust
 1. Simulator uses 2d coordinates space with horizontal from left to right X-axis,
 and vertical from top to bottom Y-axis. Rotations are encoded in radians, full rotation is 2 * PI respectively.
 By default the body (robot) direction vector is `(1, 0)` and its angle is `0.0f`. 
-The rotation is in clockwise order, so the body with angle `PI / 4` has direction vector (0.707, 0.707).
+The rotation has clockwise order, so the body with angle `PI / 4` has direction vector (0.707, 0.707).
 More info is shown on the image: 
 ![rfsim](https://raw.githubusercontent.com/EgorOrachyov/RobotFootballSim/main/docs/pictures/coords-space.png)
 
@@ -189,7 +189,7 @@ frame rate, score and status. Selected scenario, rules and algorithm also displa
 3. Simulator allows you to pause and play game, tweak settings, dive into game process, display out and collision info.
 ![rfsim](https://raw.githubusercontent.com/EgorOrachyov/RobotFootballSim/main/docs/pictures/rfsim_ingame.png)
 
-4. Simulator provides some basic settings tool, which allows to tweak drawing settings such as 
+4. Simulator provides some basic settings tool, which allows to tweak simulation time scale, drawing settings, such as 
 trace information, debug info window, collisions/out info display, shadows settings (including the Sun position),
 field customization color.
 ![rfsim](https://raw.githubusercontent.com/EgorOrachyov/RobotFootballSim/main/docs/pictures/rfsim_settings.png)
