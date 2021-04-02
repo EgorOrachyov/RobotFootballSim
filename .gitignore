@@ -1,3 +1,6 @@
+# MacOS filesystem meta
+/**/.DS_Store
+
 # Build directories (default for clion)
 /**/*build*
 

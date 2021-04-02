@@ -20,6 +20,12 @@ various game strategies and game mechanics.
 - [X] Example Algorithms
 - [X] Config file support
 
+### Platforms
+
+* macOS (tested on Mojave)
+* Linux based OS (tested on Ubuntu 20.04)
+* Windows (tested on 10)
+
 ## Third-party dependencies
 
 * [glfw](https://www.glfw.org) for cross-platform window and input management
@@ -32,6 +38,13 @@ various game strategies and game mechanics.
 * [glm](https://github.com/g-truc/glm) for 3d math functions
 
 ## Getting started
+
+### Dependencies
+
+The project uses cross-platform windowing and input management library **glfw**.
+This library uses native windowing APIs and built-in OS window frameworks,
+however it may require additional setup step for linux users. Follow the official
+**glfw** guide to setup this dependencies by `apt-get` tool.s
 
 ### Source code
 
@@ -85,6 +98,10 @@ Use this config file to customize the following params:
 * **resourcesPath** Prefix path to simulator resources **ADVANCED**
 * **pluginPathPrefix** Prefix path to algorithms plugins **ADVANCED**
 * **pluginPaths** Actual plugins names to load on start-up (use name without `lib` and `ext` specifiers)
+
+> macOS: Tweak fontScale and set it to 1.0 or less on high-resolution Retina displays.
+> Windowing library glfw and imgui automatically scales font and window size on this
+> platform, so explicit scaling is not required.
 
 ### Algorithm
 

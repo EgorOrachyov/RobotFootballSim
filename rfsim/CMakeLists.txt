@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.11)
 project(rfsim-app LANGUAGES CXX)
 
+
 set(RFSIM_C_API
         include/rfsim/rfsim.h)
 
@@ -125,13 +126,19 @@ target_link_libraries(rfsim PRIVATE glm)
 target_link_libraries(rfsim PRIVATE dynalo)
 target_link_libraries(rfsim PRIVATE picojson)
 
+add_library(plugin INTERFACE)
+target_include_directories(plugin INTERFACE include)
+target_link_libraries(plugin INTERFACE glm)
+
 add_library(randommove SHARED plugins/RandomMovement.cpp)
-target_include_directories(randommove PRIVATE include)
-target_link_libraries(randommove glm)
+target_link_libraries(randommove PRIVATE plugin)
+set_target_properties(randommove PROPERTIES CXX_STANDARD 14)
+set_target_properties(randommove PROPERTIES CXX_STANDARD_REQUIRED ON)
 
 add_library(followmove SHARED plugins/BallFollowMovement.cpp)
-target_include_directories(followmove PRIVATE include)
-target_link_libraries(followmove glm)
+target_link_libraries(followmove PRIVATE plugin)
+set_target_properties(followmove PROPERTIES CXX_STANDARD 14)
+set_target_properties(followmove PROPERTIES CXX_STANDARD_REQUIRED ON)
 
 message(STATUS "${RESOURCES_PATH}")
 file(COPY ${RESOURCES_PATH} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
