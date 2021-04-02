@@ -50,8 +50,8 @@ namespace rfsim {
             const auto pi = glm::pi<float>();
             const auto fieldSize = ScenarioCommon::GetDefaultFieldSize();
             const auto fieldBorder = ScenarioCommon::GetDefaultFieldBorderOffset();
-            const float fieldLength = fieldSize.x;
-            const float fieldWidth = fieldSize.y;
+            const float fieldWidth = fieldSize.x;
+            const float fieldHeight = fieldSize.y;
 
             // Team size (total x2 robots)
             game->teamSize = ScenarioCommon::DEFAULT_TEAM_SIZE;
@@ -61,18 +61,18 @@ namespace rfsim {
 
             // Field settings will be fixed (but ball placement can differ)
             auto& beginInfo = game->physicsGameInitInfo;
-            beginInfo.fieldTopLeftBounds     = { fieldBorder.x, fieldBorder.y };
-            beginInfo.fieldBottomRightBounds = { fieldLength - fieldBorder.x,  fieldWidth - fieldBorder.y };
-            beginInfo.roomTopLeftBounds      = { 0, 0 };
-            beginInfo.roomBottomRightBounds  = { fieldLength, fieldWidth };
-            beginInfo.ballPosition = { fieldLength * 0.5f, fieldWidth * 0.5f };
+            beginInfo.fieldTopLeftBounds     = { 0.0f, 0.0f };
+            beginInfo.fieldBottomRightBounds = {fieldWidth, fieldHeight };
+            beginInfo.roomTopLeftBounds      = { 0.0f - fieldBorder.x, 0.0f - fieldBorder.y };
+            beginInfo.roomBottomRightBounds  = {fieldWidth + fieldBorder.x, fieldHeight + fieldBorder.y};
+            beginInfo.ballPosition = {fieldWidth * 0.5f, fieldHeight * 0.5f };
 
             // Initial robots placement
             for (int i = 0; i < game->teamSize; i++) {
-                beginInfo.robotsTeamA.push_back({ i,     { fieldLength * 0.25f, fieldWidth * 0.5f + fieldWidth * 0.3f * ((i - 2.5f) / 2.5f) }, 0 });
+                beginInfo.robotsTeamA.push_back({i, {fieldWidth * 0.25f, fieldHeight * 0.5f + fieldHeight * 0.3f * ((i - 2.5f) / 2.5f) }, 0 });
                 game->robotWheelVelocitiesA.emplace_back(0,0);
 
-                beginInfo.robotsTeamB.push_back({ (int)(i + game->teamSize), { fieldLength * 0.75f, fieldWidth * 0.5f + fieldWidth * 0.3f * ((i - 2.5f) / 2.5f) }, pi });
+                beginInfo.robotsTeamB.push_back({(int)(i + game->teamSize), {fieldWidth * 0.75f, fieldHeight * 0.5f + fieldHeight * 0.3f * ((i - 2.5f) / 2.5f) }, pi });
                 game->robotWheelVelocitiesB.emplace_back(0,0);
             }
 

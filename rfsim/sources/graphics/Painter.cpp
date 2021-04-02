@@ -194,10 +194,8 @@ namespace rfsim {
 
             glViewport(area.x, area.y, area.z, area.w);
 
-            static const std::string AREA_SIZE = "areaSize";
             static const std::string PROJ_VIEW = "projView";
-            glm::vec2 areaSize = glm::vec2(space.z, space.w);
-            glm::mat4 proj = glm::ortho(space.x, space.x + space.z, space.y, space.y + space.w, 0.0f, (float) -mFarZ);
+            glm::mat4 proj = glm::ortho(space.x, space.x + space.z, space.y + space.w, space.y, 0.0f, (float) -mFarZ);
 
             // Draw images separately
             // Batch images with the same texture
@@ -242,7 +240,6 @@ namespace rfsim {
                     auto& image = mImages[currentImage];
 
                     mImageDrawShader->SetMatrix4(PROJ_VIEW, proj);
-                    mImageDrawShader->SetVec2(AREA_SIZE, areaSize);
                     mImageDrawShader->SetTexture(IMAGE_TEXTURE, image.image, 0);
 
                     mImageDrawGeometry->UpdateResource();
@@ -279,7 +276,6 @@ namespace rfsim {
 
                 mRectDrawGeometry->UpdateResource();
                 mRectDrawShader->SetMatrix4(PROJ_VIEW, proj);
-                mRectDrawShader->SetVec2(AREA_SIZE, areaSize);
                 mRectDrawGeometry->Bind();
                 mRectDrawGeometry->Draw(totalIndicesToDraw, 1);
                 mRectDrawGeometry->Unbind();

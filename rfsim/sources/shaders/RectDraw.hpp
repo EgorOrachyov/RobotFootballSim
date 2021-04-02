@@ -38,7 +38,6 @@ namespace rfsim {
     layout (location = 2) in vec4 brushColor;
     layout (location = 3) in float isFilled;
 
-    uniform vec2 areaSize;
     uniform mat4 projView;
 
     flat out vec4 fsPenColor;
@@ -49,7 +48,7 @@ namespace rfsim {
         fsPenColor = penColor;
         fsBrushColor = brushColor;
         fsIsFilled = isFilled != 0.0f ? 1: 0;
-        gl_Position = projView * vec4(position.x, areaSize.y - position.y, position.z, 1.0f);
+        gl_Position = projView * vec4(position, 1.0f);
     }
     )";
 

@@ -167,8 +167,8 @@ namespace rfsim {
                     mPainter->SetClearColor({mStyle.clearColor.x, mStyle.clearColor.y, mStyle.clearColor.z, mStyle.clearColor.w});
                     mPainter->SetBrushColor(glm::vec4 {1.0f});
                     mPainter->SetTransparentColor(glm::vec4{2.0f});
-                    mPainter->DrawImage({0.45, 0.4, 0.7, 0.2}, 0.0f, mMainMenuLogo);
-                    mPainter->DrawImage({1.17, 0.42, 0.16, 0.16}, angle, mMainMenuBall);
+                    mPainter->DrawImage({0.25, 0.4, 0.7, 0.2}, 0.0f, mMainMenuLogo);
+                    mPainter->DrawImage({0.97, 0.42, 0.16, 0.16}, angle, mMainMenuBall);
 
                     angle += step * dt;
                     angle = angle > 2.0f * pi? angle - 2.0f * pi: angle;

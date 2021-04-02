@@ -40,7 +40,7 @@ namespace rfsim {
 
         static const auto SEP = "/";
         static const auto ROBOT_IMAGE_PATH = "sprites/robot.png";
-        static const auto FIELD_IMAGE_PATH = "sprites/play-field.png";
+        static const auto FIELD_IMAGE_PATH = "sprites/play-field-div-b.png";
         static const auto BALL_IMAGE_PATH = "sprites/ball.png";
         static const auto BALL_IMAGE_TRSP_PATH = "sprites/soccer-ball.png";
         static const auto SHADOW_IMAGE_PATH = "sprites/shadow.png";
@@ -101,11 +101,12 @@ namespace rfsim {
 
         auto room00 = mSceneSettings.roomTopLeftBounds;
         auto roomWH = mSceneSettings.roomBottomRightBounds;
+        auto size = roomWH - room00;
 
         // Prepare area
         mPainter->SetClearColor({ mSettings.backgroundColor, 1.0f });
         mPainter->Clear();
-        mPainter->SetDrawSpace({ room00.x, room00.y, roomWH.x, roomWH.y });
+        mPainter->SetDrawSpace({ room00, size });
 
         // Update trace
         if (mTime >= mTimeLastTraceCapture + mSettings.traceSkip) {
