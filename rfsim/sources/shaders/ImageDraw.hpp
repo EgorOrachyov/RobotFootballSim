@@ -39,8 +39,6 @@ namespace rfsim {
     layout (location = 3) in vec4 transparentColor;
     layout (location = 4) in float isSRGB;
 
-
-    uniform vec2 areaSize;
     uniform mat4 projView;
 
     out vec2 fsTexCoords;
@@ -53,7 +51,7 @@ namespace rfsim {
         fsColor = color;
         fsTransparentColor = transparentColor;
         fsIsSRGB = isSRGB != 0.0f? 1: 0;
-        gl_Position = projView * vec4(position.x, areaSize.y - position.y, position.z, 1.0f);
+        gl_Position = projView * vec4(position, 1.0f);
     }
     )";
 

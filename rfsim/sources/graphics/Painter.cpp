@@ -156,10 +156,11 @@ namespace rfsim {
 
             if (found == mImageTexCache.end()) {
                 texture = std::make_shared<GLTexture>(i);
-                mImageTexCache.insert({i.get(), texture});
+                mImageTexCache.insert({i.get(), {texture, mCurrentCacheIteration}});
             }
             else {
-                texture = found->second;
+                texture = found->second.texture;
+                found->second.lastUsed = mCurrentCacheIteration;
             }
 
             PainterImage image(texture, target, angle, palette, GetNextZ());
@@ -194,10 +195,8 @@ namespace rfsim {
 
             glViewport(area.x, area.y, area.z, area.w);
 
-            static const std::string AREA_SIZE = "areaSize";
             static const std::string PROJ_VIEW = "projView";
-            glm::vec2 areaSize = glm::vec2(space.z, space.w);
-            glm::mat4 proj = glm::ortho(space.x, space.x + space.z, space.y, space.y + space.w, 0.0f, (float) -mFarZ);
+            glm::mat4 proj = glm::ortho(space.x, space.x + space.z, space.y + space.w, space.y, 0.0f, (float) -mFarZ);
 
             // Draw images separately
             // Batch images with the same texture
@@ -242,7 +241,6 @@ namespace rfsim {
                     auto& image = mImages[currentImage];
 
                     mImageDrawShader->SetMatrix4(PROJ_VIEW, proj);
-                    mImageDrawShader->SetVec2(AREA_SIZE, areaSize);
                     mImageDrawShader->SetTexture(IMAGE_TEXTURE, image.image, 0);
 
                     mImageDrawGeometry->UpdateResource();
@@ -279,7 +277,6 @@ namespace rfsim {
 
                 mRectDrawGeometry->UpdateResource();
                 mRectDrawShader->SetMatrix4(PROJ_VIEW, proj);
-                mRectDrawShader->SetVec2(AREA_SIZE, areaSize);
                 mRectDrawGeometry->Bind();
                 mRectDrawGeometry->Draw(totalIndicesToDraw, 1);
                 mRectDrawGeometry->Unbind();
@@ -289,14 +286,40 @@ namespace rfsim {
 
         void Clear() {
             mCurrentZ = mFarZ;
+            mCurrentCacheIteration += 1;
             mRects.clear();
             mImages.clear();
+
+            ClearCache();
+        }
+
+        void ClearCache() {
+            auto iter = mImageTexCache.begin();
+
+            while (iter != mImageTexCache.end()) {
+                if ((iter->second.lastUsed + mCacheEraseFactor) <= mCurrentCacheIteration) {
+                    iter = mImageTexCache.erase(iter);
+                }
+                else {
+                    ++iter;
+                }
+            }
         }
 
     private:
         int mFarZ = -10000;
         int mStepZ = 2;
         int mCurrentZ = mFarZ;
+
+        // We use a form of a cache with not-used for SOME time
+        uint64_t mCurrentCacheIteration = 0;
+        // This factor controls, how long we keep entry in cache without use
+        uint64_t mCacheEraseFactor = 5;
+
+        struct CacheEntry {
+            std::shared_ptr<GLTexture> texture;
+            uint64_t lastUsed = 0;
+        };
 
         std::vector<PainterRect> mRects;
         std::shared_ptr<GLDynamicGeometry> mRectDrawGeometry;
@@ -305,7 +328,7 @@ namespace rfsim {
         std::vector<PainterImage> mImages;
         std::shared_ptr<GLDynamicGeometry> mImageDrawGeometry;
         std::shared_ptr<GLShader> mImageDrawShader;
-        std::unordered_map<Image*, std::shared_ptr<GLTexture>> mImageTexCache;
+        std::unordered_map<Image*, CacheEntry> mImageTexCache;
     };
 
     Painter::Painter(const Recti &area, const Rect& space, std::shared_ptr<Window> target)

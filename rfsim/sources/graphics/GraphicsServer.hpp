@@ -82,6 +82,7 @@ namespace rfsim {
         std::shared_ptr<Image> mOnOutImage;
         std::shared_ptr<Image> mShadowImage;
         std::vector<std::shared_ptr<Image>> mRobotImages;
+        std::vector<std::shared_ptr<Image>> mRobotNumbers;
 
         circular_buffer<glm::vec2> mBallTrace;
         std::vector<circular_buffer<glm::vec2>> mRobotsTrace;

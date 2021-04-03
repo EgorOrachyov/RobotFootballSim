@@ -26,7 +26,7 @@ various game strategies and game mechanics.
 * Linux based OS (tested on Ubuntu 20.04)
 * Windows (tested on 10)
 
-## Third-party dependencies
+### Third-party dependencies
 
 * [glfw](https://www.glfw.org) for cross-platform window and input management
 * [glew](https://github.com/Perlmint/glew-cmake) for OpenGL functions and extensions loading
@@ -44,7 +44,7 @@ various game strategies and game mechanics.
 The project uses cross-platform windowing and input management library **glfw**.
 This library uses native windowing APIs and built-in OS window frameworks,
 however it may require additional setup step for linux users. Follow the official
-**glfw** guide to setup this dependencies by `apt-get` tool.s
+**glfw** guide to setup this dependencies by `apt-get` tool.
 
 ### Source code
 
@@ -61,17 +61,19 @@ $ git submodule update --init --recursive
 Configure build directory and run the build process.
 
 ```shell script
-mkdir build
-cd build
-cmake ..
-cmake --build .
+$ mkdir build
+$ cd build
+$ cmake ..
+$ cmake --build .
 ```
+
+> Pass `-j N` option in the last cmake command to issue build on N threads.
 
 Alternatively import project into desired IDE (import as cmake project).
 
-In order to start the simulator `rfsim` target, you will have to build all default
-algorithm plugins targets `randommove` and `followmove`. As soon as its done,
-you will be able to correctly start the simulator application.
+> In order to start the simulator `rfsim` target, you will have to build all default
+> algorithm plugins targets `randommove` and `followmove`. As soon as its done,
+> you will be able to correctly start the simulator application.
 
 ### Run
 
@@ -80,7 +82,7 @@ Inside the build directory go into directory with actual `rfsim` executable
 can output the actual executable into `build/Debug/rfsim` and something similar):
 
 ```shell script
-./rfsim
+$ ./rfsim
 ```
 
 This command starts simulator application, so the app primary window must appear on the screen.
@@ -186,15 +188,12 @@ Also control window displays some statistic info current simulation: total time 
 frame rate, score and status. Selected scenario, rules and algorithm also displayed.
 ![rfsim](https://raw.githubusercontent.com/EgorOrachyov/RobotFootballSim/main/docs/pictures/rfsim_before_game.png)
 
-3. Simulator allows you to pause and play game, tweak settings, dive into game process, display out and collision info.
-![rfsim](https://raw.githubusercontent.com/EgorOrachyov/RobotFootballSim/main/docs/pictures/rfsim_ingame.png)
-
-4. Simulator provides some basic settings tool, which allows to tweak simulation time scale, drawing settings, such as 
+3. Simulator provides some basic settings tool, which allows to tweak simulation time scale, drawing settings, such as 
 trace information, debug info window, collisions/out info display, shadows settings (including the Sun position),
 field customization color.
 ![rfsim](https://raw.githubusercontent.com/EgorOrachyov/RobotFootballSim/main/docs/pictures/rfsim_settings.png)
 
-5. Debug info provides current actual information about game state. In includes all dynamic objects
+4. Debug info provides current actual information about game state. In includes all dynamic objects
 properties: position, velocity, rotation (angle, the same as direction), and motors forces.
 ![rfsim](https://raw.githubusercontent.com/EgorOrachyov/RobotFootballSim/main/docs/pictures/rfsim_debug_info.png)
 
@@ -231,11 +230,6 @@ RobotFootballSim
 └── config.json - application config file, copyied into build dir at cmake build step
 ```
 
-## License
-
-This project is licensed under MIT license. License text can be found in the 
-[license file](https://github.com/EgorOrachyov/RobotFootballSim/blob/main/LICENSE.md).
-
 ## Contributors
 
 - Unknown Contributor 1
@@ -243,6 +237,11 @@ This project is licensed under MIT license. License text can be found in the
 - Unknown Contributor 3
 - Unknown Contributor 4
 - Unknown Contributor 5
+
+## License
+
+This project is licensed under MIT license. License text can be found in the 
+[license file](https://github.com/EgorOrachyov/RobotFootballSim/blob/main/LICENSE.md).
 
 ## Also
 

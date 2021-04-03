@@ -54,17 +54,17 @@ namespace rfsim {
             const float fieldHeight = fieldSize.y;
 
             // Team size (total x2 robots)
-            game->teamSize = 1;
+            game->teamSize = ScenarioCommon::DEFAULT_TEAM_SIZE;
 
             auto& physicsProperties = game->physicsGameProperties;
             physicsProperties = ScenarioCommon::GetDefaultPhysicsProperties();
 
             // Field settings will be fixed (but ball placement can differ)
             auto& beginInfo = game->physicsGameInitInfo;
-            beginInfo.fieldTopLeftBounds     = { fieldBorder.x, fieldBorder.y };
-            beginInfo.fieldBottomRightBounds = {fieldWidth - fieldBorder.x, fieldHeight - fieldBorder.y };
-            beginInfo.roomTopLeftBounds      = { 0, 0 };
-            beginInfo.roomBottomRightBounds  = {fieldWidth, fieldHeight };
+            beginInfo.fieldTopLeftBounds     = { 0.0f, 0.0f };
+            beginInfo.fieldBottomRightBounds = {fieldWidth, fieldHeight };
+            beginInfo.roomTopLeftBounds      = { 0.0f - fieldBorder.x, 0.0f - fieldBorder.y };
+            beginInfo.roomBottomRightBounds  = {fieldWidth + fieldBorder.x, fieldHeight + fieldBorder.y};
             beginInfo.ballPosition = {fieldWidth * 0.5f, fieldHeight * 0.5f };
 
             // Initial robots placement
