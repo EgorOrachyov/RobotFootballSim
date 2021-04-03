@@ -36,8 +36,8 @@ namespace rfsim {
     struct GraphicsSettings {
         bool drawTrace = false;
         int traceLength = 20;
-        float traceSkip = 0.1;
-        float tracePointRadius = 0.5;
+        float traceSkip = 0.2;
+        float tracePointRadius = 0.3;
 
         bool drawRobotIDs = true;
         bool drawOutInfo = true;
