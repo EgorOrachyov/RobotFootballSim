@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.11)
-project(rfsim-app LANGUAGES CXX)
+project(rfsim-app LANGUAGES CXX C)
 
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 
 set(RFSIM_C_API
         include/rfsim/rfsim.h)
@@ -71,7 +73,8 @@ set(RFSIM_GUI_SOURCES
 set(RFSIM_SCENARIO_SOURCES
         sources/scenario/Scrum.hpp
         sources/scenario/ScenarioCommon.hpp
-        sources/scenario/Duel.hpp)
+        sources/scenario/Duel.hpp
+        sources/scenario/RandomScenario.hpp)
 
 set(RFSIM_RULES_SOURCES
         sources/rules/BallHit.hpp
@@ -139,6 +142,11 @@ add_library(followmove SHARED plugins/BallFollowMovement.cpp)
 target_link_libraries(followmove PRIVATE plugin)
 set_target_properties(followmove PROPERTIES CXX_STANDARD 14)
 set_target_properties(followmove PROPERTIES CXX_STANDARD_REQUIRED ON)
+
+add_library(dwamove SHARED plugins/DwaMovement.c)
+target_link_libraries(dwamove PRIVATE plugin)
+set_target_properties(dwamove PROPERTIES C_STANDARD 11)
+set_target_properties(dwamove PROPERTIES C_STANDARD_REQUIRED ON)
 
 message(STATUS "${RESOURCES_PATH}")
 file(COPY ${RESOURCES_PATH} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
