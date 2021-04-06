@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 project(rfsim-app LANGUAGES CXX C)
 
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 
 set(RFSIM_C_API
         include/rfsim/rfsim.h)
