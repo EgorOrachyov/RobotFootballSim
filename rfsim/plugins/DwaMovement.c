@@ -60,6 +60,10 @@ static float DT           = 0;
 
 #define EPS 1e-4f
 
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
+
 // ---------------------------------------------------------------------------------
 //region Data structures
 

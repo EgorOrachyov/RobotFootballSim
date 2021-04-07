@@ -104,8 +104,9 @@ namespace rfsim {
         mBallTrace.resize(mSettings.traceLength);
         mBallTrace.push_back(mSceneSettings.ballPosition);
 
-        mTime = 0;
-        mTimeLastTraceCapture = 0;
+        mTime = 0.0f;
+        mBallAngleAccum = 0.0f;
+        mTimeLastTraceCapture = 0.0f;
 
         if (totalRobots > mRobotImages.size()) {
             std::cerr << "Too much robots on the scene (not enough sprites to display all robots with unique look)" << std::endl;
@@ -264,13 +265,17 @@ namespace rfsim {
             }
 
             // Cool hack to make ball rotate
-            float direction = b.velocity.x >= 0.0f? -1.0f: 1.0f;
-            float magnitude = glm::length(b.velocity);
-            float angle = direction * magnitude;
+            float direction = b.velocity.x >= 0.0f? 1.0f: -1.0f;
+            float magnitude = std::min(glm::length(b.velocity), 6.0f);
+            float angle = direction * magnitude * 0.25f;
+
+            mBallAngleAccum += angle;
+
+            std::cout << b.velocity.x << " " << b.velocity.y << " " << angle << std::endl;
 
             mPainter->SetBrushColor(WHITE_COLOR);
             mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
-            mPainter->DrawImage(rect, angle, mBallImage);
+            mPainter->DrawImage(rect, mBallAngleAccum, mBallImage);
         }
     }
 

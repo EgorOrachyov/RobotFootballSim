@@ -22,7 +22,6 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#include <corecrt_math_defines.h>
 #include <physics/PhysicsServer.hpp>
 #include <glm/ext/scalar_constants.hpp>
 #include <box2d/box2d.h>
@@ -287,20 +286,29 @@ namespace rfsim {
     }
 
     b2PolygonShape PhysicsServer::createRobotShape(const double r) {
+        const auto pi = glm::pi<double>();
+
+        // Accordingly to the spec:
+        // Default robot size is 0.085m
+        // Default front offset is 0.050m, so some % here
+        const double frontOffsetProportion = 0.050 / 0.085;
+
+        const double radius = r;
+        const double frontOffset = r * frontOffsetProportion;
+
         b2PolygonShape shape = {};
         const int frontPointCount = 2;
         const int circlePointCount = 6;
         const int pointCount = frontPointCount + circlePointCount;
         b2Vec2 points[pointCount];
         // constants are for r = 0.085. Scale them for other robot sizes:
-        const double radiusInSpecs = 0.085;
-        const double frontOffset = 0.050f;
-        double cornerY = std::sqrt(radiusInSpecs * radiusInSpecs - frontOffset * frontOffset);
-        double scale = r / radiusInSpecs;
+
+        double cornerY = std::sqrt(radius * radius - frontOffset * frontOffset);
+        double scale = r / radius;
         points[0] = {(float) (frontOffset * scale), (float) (-cornerY * scale)};
         points[1] = {(float)(frontOffset * scale), (float) (cornerY * scale)};
-        double initialPointAngle = std::acos(frontOffset / radiusInSpecs);
-        double backArc = 2 * M_PI - initialPointAngle * 2;
+        double initialPointAngle = std::acos(frontOffset / radius);
+        double backArc = 2 * pi - initialPointAngle * 2;
         double stepAngle = backArc / circlePointCount; // What are you doing, step-angle?
         for (int i = 0; i < circlePointCount; i += 1) {
             double currentAngle = initialPointAngle + stepAngle * (i + 1);

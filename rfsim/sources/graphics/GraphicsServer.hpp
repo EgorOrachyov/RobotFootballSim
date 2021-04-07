@@ -87,8 +87,9 @@ namespace rfsim {
         circular_buffer<glm::vec2> mBallTrace;
         std::vector<circular_buffer<glm::vec2>> mRobotsTrace;
 
-        float mTime = 0;
-        float mTimeLastTraceCapture = 0;
+        float mTime = 0.0f;
+        float mBallAngleAccum = 0.0f;
+        float mTimeLastTraceCapture = 0.0f;
     };
 
 }
