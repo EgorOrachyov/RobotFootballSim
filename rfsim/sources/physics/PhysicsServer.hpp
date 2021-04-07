@@ -29,10 +29,11 @@
 #include <map>
 #include <memory>
 
-#include <physics/PhysicsGameProperties.hpp>
-#include <physics/PhysicsGameInitInfo.hpp>
-#include <physics/PhysicsGameState.hpp>
+#include <box2d/b2_circle_shape.h>
 #include <logic/Game.hpp>
+#include <physics/PhysicsGameInitInfo.hpp>
+#include <physics/PhysicsGameProperties.hpp>
+#include <physics/PhysicsGameState.hpp>
 
 class b2World;
 class b2Body;
@@ -94,6 +95,7 @@ namespace rfsim {
         b2Body* mBall;
 
         PhysicsGameProperties mProperties;
+        static b2PolygonShape createRobotShape(const double r) ;
     };
 
 }

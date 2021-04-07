@@ -22,6 +22,7 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
+#include <corecrt_math_defines.h>
 #include <physics/PhysicsServer.hpp>
 #include <glm/ext/scalar_constants.hpp>
 #include <box2d/box2d.h>
@@ -270,8 +271,7 @@ namespace rfsim {
                 const double robotVolume = glm::pi<double>() * r * r * h;
                 assert(robotVolume > 0.0);
           
-                b2CircleShape shape = {};
-                shape.m_radius = (float) r;
+                b2PolygonShape shape = createRobotShape(r);
 
                 b2FixtureDef fixture = {};
                 fixture.density = (float)((double)mProperties.robotMass / robotVolume);
@@ -284,6 +284,32 @@ namespace rfsim {
                 mRobots[i.id] = body;
             }
         }
+    }
+
+    b2PolygonShape PhysicsServer::createRobotShape(const double r) {
+        b2PolygonShape shape = {};
+        const int frontPointCount = 2;
+        const int circlePointCount = 6;
+        const int pointCount = frontPointCount + circlePointCount;
+        b2Vec2 points[pointCount];
+        // constants are for r = 0.085. Scale them for other robot sizes:
+        const double radiusInSpecs = 0.085;
+        const double frontOffset = 0.050f;
+        double cornerY = sqrt(radiusInSpecs * radiusInSpecs - frontOffset * frontOffset);
+        double scale = r / radiusInSpecs;
+        points[0] = {(float) (frontOffset * scale), (float) (-cornerY * scale)};
+        points[1] = {(float)(frontOffset * scale), (float) (cornerY * scale)};
+        double initialPointAngle = acos(frontOffset / radiusInSpecs);
+        double backArc = 2 * M_PI - initialPointAngle * 2;
+        double stepAngle = backArc / circlePointCount; // What are you doing, step-angle?
+        for (int i = 0; i < circlePointCount; i += 1) {
+            double currentAngle = initialPointAngle + stepAngle * (i + 1);
+            double x = r * cos(currentAngle);
+            double y = r * sin(currentAngle);
+            points[frontPointCount + i] = { (float) x, (float) y};
+        }
+        shape.Set(points, pointCount);
+        return shape;
     }
 
     void PhysicsServer::FrameStep(const std::shared_ptr<Game> &game, const std::function<bool(float)> &onFixedStep, float dt) {
