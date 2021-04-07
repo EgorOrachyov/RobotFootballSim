@@ -26,6 +26,7 @@
 #include <glm/gtx/norm.hpp>
 #include <sstream>
 #include <iostream>
+#include <algorithm>
 
 namespace rfsim {
 
