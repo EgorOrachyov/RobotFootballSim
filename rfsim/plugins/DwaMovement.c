@@ -23,10 +23,10 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 #define RFSIM_EXPORTS
-#define _USE_MATH_DEFINES
 #include <rfsim/rfsim.h>
 
 #include <assert.h>
+#include <corecrt_math_defines.h>
 #include <float.h>
 #include <math.h>
 #include <stdbool.h>
