@@ -281,8 +281,6 @@ namespace rfsim {
 
                 body->CreateFixture(&fixture);
 
-                SetFieldFriction(body);
-
                 mRobots[i.id] = body;
             }
         }
