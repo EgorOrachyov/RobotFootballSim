@@ -22,7 +22,7 @@
 // SOFTWARE.                                                                      //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#include <corecrt_math_defines.h>
+#define _USE_MATH_DEFINES
 #include <physics/PhysicsServer.hpp>
 #include <glm/ext/scalar_constants.hpp>
 #include <box2d/box2d.h>
