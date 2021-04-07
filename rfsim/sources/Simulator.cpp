@@ -40,6 +40,7 @@
 #include <rules/BallHit.hpp>
 #include <rules/NoCollisions.hpp>
 #include <rules/TimeLimit.hpp>
+#include <scenario/RandomScenario.hpp>
 
 namespace rfsim {
 
@@ -70,6 +71,7 @@ namespace rfsim {
 
         mGameManager->AddScenario(std::make_shared<Scrum>());
         mGameManager->AddScenario(std::make_shared<Duel>());
+        mGameManager->AddScenario(std::make_shared<RandomScenario>());
 
         mGameRulesManager->AddRule(std::make_shared<TimeLimit>(20.0f));
         mGameRulesManager->AddRule(std::make_shared<TimeLimit>(40.0f));
