@@ -47,15 +47,15 @@ namespace rfsim {
 
         static PhysicsGameProperties GetDefaultPhysicsProperties() {
             PhysicsGameProperties pp;
-            pp.fieldFriction = 0.0f;
-            pp.robotRadius = 0.15f;
+            pp.fieldFriction = 0.05f;
+            pp.robotRadius = 0.085f;
             pp.robotHeight = 0.1f;
             pp.robotMass = 1.0f;
             pp.robotFriction = 0.25f;
             pp.robotRestitution = 0.1f;
             pp.robotMaxSpeed = 100.0f;
             pp.robotWheelXOffset = 0.15f;
-            pp.ballRadius = 0.08f;
+            pp.ballRadius = 0.043;
             pp.ballMass = 0.05f;
             pp.ballFriction = 0.005f;
             pp.ballRestitution = 0.05f;

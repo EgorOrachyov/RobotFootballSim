@@ -29,10 +29,11 @@
 #include <map>
 #include <memory>
 
-#include <physics/PhysicsGameProperties.hpp>
-#include <physics/PhysicsGameInitInfo.hpp>
-#include <physics/PhysicsGameState.hpp>
+#include <box2d/b2_circle_shape.h>
 #include <logic/Game.hpp>
+#include <physics/PhysicsGameInitInfo.hpp>
+#include <physics/PhysicsGameProperties.hpp>
+#include <physics/PhysicsGameState.hpp>
 
 class b2World;
 class b2Body;
@@ -72,14 +73,15 @@ namespace rfsim {
         bool IsBall(b2Body *body) const;
         bool TryGetRobotByBody(b2Body *body, int &outId) const;
 
+    private:
         // Convert position from game coordinates (y axis points down) to physics ones (y axis points up)
         static glm::vec2 ToPhysicsCoords(const glm::vec2& p);
         static float AngleToPhysicsCoords(float angle);
         // Convert position from physics coordinates (y axis points up) to game ones (y axis points down)
         static glm::vec2 ToGameCoords(const glm::vec2& p);
         static float AngleToGameCoords(float angle);
+        static b2PolygonShape createRobotShape(const double r) ;
 
-    private:
         float mFixedDt;
         float mDtAccumulated;
 
