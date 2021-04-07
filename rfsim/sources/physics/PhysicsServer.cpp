@@ -295,17 +295,17 @@ namespace rfsim {
         // constants are for r = 0.085. Scale them for other robot sizes:
         const double radiusInSpecs = 0.085;
         const double frontOffset = 0.050f;
-        double cornerY = sqrt(radiusInSpecs * radiusInSpecs - frontOffset * frontOffset);
+        double cornerY = std::sqrt(radiusInSpecs * radiusInSpecs - frontOffset * frontOffset);
         double scale = r / radiusInSpecs;
         points[0] = {(float) (frontOffset * scale), (float) (-cornerY * scale)};
         points[1] = {(float)(frontOffset * scale), (float) (cornerY * scale)};
-        double initialPointAngle = acos(frontOffset / radiusInSpecs);
+        double initialPointAngle = std::acos(frontOffset / radiusInSpecs);
         double backArc = 2 * M_PI - initialPointAngle * 2;
         double stepAngle = backArc / circlePointCount; // What are you doing, step-angle?
         for (int i = 0; i < circlePointCount; i += 1) {
             double currentAngle = initialPointAngle + stepAngle * (i + 1);
-            double x = r * cos(currentAngle);
-            double y = r * sin(currentAngle);
+            double x = r * std::cos(currentAngle);
+            double y = r * std::sin(currentAngle);
             points[frontPointCount + i] = { (float) x, (float) y};
         }
         shape.Set(points, pointCount);
