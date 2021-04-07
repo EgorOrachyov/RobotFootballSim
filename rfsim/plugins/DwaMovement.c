@@ -26,7 +26,6 @@
 #include <rfsim/rfsim.h>
 
 #include <assert.h>
-#include <corecrt_math_defines.h>
 #include <float.h>
 #include <math.h>
 #include <stdbool.h>
@@ -310,8 +309,7 @@ dwa_velocity plan(
     float        best_velocity_cost  = FLT_MAX;
     float        best_heading_cost   = FLT_MAX;
     float        best_clearance_cost = FLT_MAX;
-    dwa_velocity best_velocity;
-    memset(&best_velocity, 0, sizeof(dwa_velocity));
+    dwa_velocity best_velocity       = {};
 
     for (int i = 0; i < window->possible_v_size; ++i) {
         for (int j = 0; j < window->possible_w_size; ++j) {
