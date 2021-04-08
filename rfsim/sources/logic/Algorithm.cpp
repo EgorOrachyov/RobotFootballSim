@@ -82,9 +82,19 @@ namespace rfsim {
         auto& pP = game.physicsGameProperties;
 
         rfsim_game_settings gameSettings{};
-        gameSettings.ball_radius = pP.ballRadius;
-        gameSettings.robot_radius = pP.robotRadius;
         gameSettings.field_Size = to_rfsim_vec2(pII.roomBottomRightBounds - pII.roomTopLeftBounds);
+        gameSettings.field_friction = pP.fieldFriction;
+        gameSettings.robot_radius = pP.robotRadius;
+        gameSettings.robot_height = pP.robotHeight;
+        gameSettings.robot_mass = pP.robotMass;
+        gameSettings.robot_friction = pP.robotFriction;
+        gameSettings.robot_restitution = pP.robotRestitution;
+        gameSettings.robot_max_speed = pP.robotMaxSpeed;
+        gameSettings.robot_wheel_x_offset = pP.robotWheelXOffset;
+        gameSettings.ball_radius = pP.ballRadius;
+        gameSettings.ball_mass = pP.ballMass;
+        gameSettings.ball_friction = pP.ballFriction;
+        gameSettings.ball_restitution = pP.ballRestitution;
 
         rfsim_game_start_info startInfo{};
         startInfo.ball.position = to_rfsim_vec2(pII.ballPosition);

@@ -100,8 +100,18 @@ typedef struct rfsim_control {
 
 typedef struct rfsim_game_settings {
     rfsim_vec2 field_Size;
+    float field_friction;
     float robot_radius;
+    float robot_height;
+    float robot_mass;
+    float robot_friction;
+    float robot_restitution;
+    float robot_max_speed;
+    float robot_wheel_x_offset;
     float ball_radius;
+    float ball_mass;
+    float ball_friction;
+    float ball_restitution;
 } rfsim_game_settings;
 
 typedef struct rfsim_game_start_info {
