@@ -47,6 +47,12 @@ namespace rfsim {
         float shadowIntensity = 1.0f;
         float sunPosition = 0.0f;
 
+        bool drawMarkers = true;
+        float markerProp = 1.0f;
+        float markerOpacity = 0.8f;
+        glm::vec3 team1Color = {0.9f, 0.1f, 0.1f };
+        glm::vec3 team2Color = {0.1f, 0.1f, 0.9f };
+
         glm::vec3 traceColor = {1.0f, 1.0f, 1.0f };
         glm::vec3 backgroundColor = {0, 0, 0};
         glm::vec3 fieldCustomColor = { 1.0f, 1.0f, 1.0f };

@@ -80,7 +80,7 @@ namespace rfsim {
         // Convert position from physics coordinates (y axis points up) to game ones (y axis points down)
         static glm::vec2 ToGameCoords(const glm::vec2& p);
         static float AngleToGameCoords(float angle);
-        static b2PolygonShape createRobotShape(const double r) ;
+        static b2PolygonShape createRobotShape(double r) ;
 
         float mFixedDt;
         float mDtAccumulated;

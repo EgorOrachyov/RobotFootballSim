@@ -300,22 +300,27 @@ namespace rfsim {
         const int frontPointCount = 2;
         const int circlePointCount = 6;
         const int pointCount = frontPointCount + circlePointCount;
+
+        assert(b2_maxPolygonVertices >= pointCount);
         b2Vec2 points[pointCount];
-        // constants are for r = 0.085. Scale them for other robot sizes:
 
         double cornerY = std::sqrt(radius * radius - frontOffset * frontOffset);
         double scale = r / radius;
+
         points[0] = {(float) (frontOffset * scale), (float) (-cornerY * scale)};
         points[1] = {(float)(frontOffset * scale), (float) (cornerY * scale)};
+
         double initialPointAngle = std::acos(frontOffset / radius);
         double backArc = 2 * pi - initialPointAngle * 2;
         double stepAngle = backArc / circlePointCount; // What are you doing, step-angle?
+
         for (int i = 0; i < circlePointCount; i += 1) {
             double currentAngle = initialPointAngle + stepAngle * (i + 1);
             double x = r * std::cos(currentAngle);
             double y = r * std::sin(currentAngle);
             points[frontPointCount + i] = { (float) x, (float) y};
         }
+
         shape.Set(points, pointCount);
         return shape;
     }

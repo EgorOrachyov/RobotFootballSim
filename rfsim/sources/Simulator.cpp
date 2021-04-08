@@ -126,7 +126,7 @@ namespace rfsim {
 
             mPhysicsServer->FrameStep(game, onFixedStep, dt);
 
-            mGraphicsServer->BeginDraw(dt, game->physicsGameState);
+            mGraphicsServer->BeginDraw(dt, 0, game->physicsGameState);
             mGraphicsServer->DrawStaticObjects();
             mGraphicsServer->DrawDynamicObjects();
             mGraphicsServer->DrawAuxInfo();
