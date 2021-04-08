@@ -87,10 +87,10 @@ namespace rfsim {
 
         circular_buffer<glm::vec2> mBallTrace;
         std::vector<circular_buffer<glm::vec2>> mRobotsTrace;
-        std::vector<float> mRobotsMarkers;
 
         float mTime = 0.0f;
         float mMarkerOffset = 0.0f;
+        float mMarkerDeformationScale = 0.2f;
         float mMarkerOffsetScale = 0.8f;
         float mMarkerOffsetSpeed = 3.0f;
         float mBallAngleAccum = 0.0f;

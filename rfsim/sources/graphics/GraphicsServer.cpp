@@ -95,12 +95,6 @@ namespace rfsim {
         mSceneSettings = sceneSettings;
 
         auto totalRobots = mSceneSettings.robotsTeamA.size() + mSceneSettings.robotsTeamB.size();
-
-        mRobotsMarkers.resize(totalRobots);
-        for (auto& marker: mRobotsMarkers) {
-            marker = 0;
-        }
-
         mRobotsTrace.resize(totalRobots, circular_buffer<glm::vec2>(mSettings.traceLength));
 
         for (auto& r: mSceneSettings.robotsTeamA) {
@@ -362,19 +356,21 @@ namespace rfsim {
         // Draw Robots Markers
         if (mSettings.drawMarkers) {
             const float radius = mSceneSettings.robotRadius;
-            const float markerSize = mSettings.markerProp * radius;
-            const float offset = 1.0f + std::sin(mMarkerOffset);
-            const float displacement = offset * markerSize * mMarkerOffsetScale + markerSize;
+            const float markerBaseSize = mSettings.markerProp * radius;
+            const float smoothStep = std::sin(mMarkerOffset);
+            const float offsetY = 1.0f + smoothStep;
+            const float displacementY = offsetY * markerBaseSize * mMarkerOffsetScale + markerBaseSize;
+            const float markerHeight = markerBaseSize * (1.0f + smoothStep * mMarkerDeformationScale);
+            const float markerWidth = markerBaseSize * (1.0f - smoothStep * mMarkerDeformationScale);
 
             auto drawMarker = [&](size_t id, const glm::vec3& color) {
                 const auto& r = mCurrentState.robots[id];
 
-
                 const Painter::Rect rect = {
-                    r.position.x - markerSize * 0.5f,
-                    r.position.y - radius - displacement,
-                    markerSize,
-                    markerSize
+                        r.position.x - markerWidth * 0.5f,
+                        r.position.y - radius - displacementY,
+                        markerWidth,
+                        markerHeight
                 };
 
                 mPainter->SetBrushColor({color, mSettings.markerOpacity});
