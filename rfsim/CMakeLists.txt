@@ -36,10 +36,6 @@ set(RFSIM_OPENGL_SOURCES
         sources/opengl/GLTexture.cpp
         sources/opengl/GLTexture.hpp)
 
-set(RFSIM_SHADERS
-        sources/shaders/ImageDraw.hpp
-        sources/shaders/RectDraw.hpp)
-
 set(RFSIM_PHYSICS_SOURCES
         sources/physics/PhysicsServer.cpp
         sources/physics/PhysicsServer.hpp
@@ -90,7 +86,6 @@ add_executable(rfsim
         ${RFSIM_SOURCES}
         ${RFSIM_GRAPHICS_SOURCES}
         ${RFSIM_OPENGL_SOURCES}
-        ${RFSIM_SHADERS}
         ${RFSIM_PHYSICS_SOURCES}
         ${RFSIM_LOGIC_SOURCES}
         ${RFSIM_GUI_SOURCES}
