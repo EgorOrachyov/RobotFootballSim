@@ -65,6 +65,15 @@ namespace rfsim {
             }
             ImGui::Separator();
 
+            ImGui::Checkbox("Display Markers", &graphicsSettings.drawMarkers);
+            if (graphicsSettings.drawMarkers) {
+                ImGui::SliderFloat("Marker Size", &graphicsSettings.markerProp, 0.5f, 2.0f);
+                ImGui::SliderFloat("Marker Opacity", &graphicsSettings.markerOpacity, 0.1f, 1.0f);
+                ImGui::ColorEdit3("Team A color", &graphicsSettings.team1Color[0]);
+                ImGui::ColorEdit3("Team B color", &graphicsSettings.team2Color[0]);
+            }
+            ImGui::Separator();
+
             ImGui::Checkbox("Display Robots Ids", &graphicsSettings.drawRobotIDs);
             ImGui::Checkbox("Display Collision Info", &graphicsSettings.drawCollisionInfo);
             ImGui::Checkbox("Display Out Info", &graphicsSettings.drawOutInfo);

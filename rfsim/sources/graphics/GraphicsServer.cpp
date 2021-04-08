@@ -24,8 +24,10 @@
 
 #include <graphics/GraphicsServer.hpp>
 #include <glm/gtx/norm.hpp>
-#include <sstream>
 #include <iostream>
+#include <sstream>
+#include <random>
+#include <chrono>
 
 namespace rfsim {
 
@@ -40,6 +42,7 @@ namespace rfsim {
         mPainter = painter;
         mResPath = resPath;
 
+        static const auto MARKER_IMAGE_PATH = "marker.png";
         static const auto ROBOT_IMAGE_PATH = "robot.png";
         static const auto FIELD_IMAGE_PATH = "play-field-div-b.png";
         static const auto BALL_IMAGE_PATH = "ball.png";
@@ -51,6 +54,7 @@ namespace rfsim {
 
         auto prefix = mResPath + "/sprites/";
 
+        mMarkerImage = Image::LoadFromFilePath(prefix + MARKER_IMAGE_PATH);
         mTraceImage = Image::LoadFromFilePath(prefix + TRACE_POINT_IMAGE_PATH);
         mBallImage = Image::LoadFromFilePath(prefix + BALL_IMAGE_TRSP_PATH);
         mFieldImage = Image::LoadFromFilePath(prefix + FIELD_IMAGE_PATH);
@@ -105,6 +109,7 @@ namespace rfsim {
         mBallTrace.push_back(mSceneSettings.ballPosition);
 
         mTime = 0.0f;
+        mMarkerOffset = 0.0f;
         mBallAngleAccum = 0.0f;
         mTimeLastTraceCapture = 0.0f;
 
@@ -117,11 +122,11 @@ namespace rfsim {
         }
     }
 
-    void GraphicsServer::BeginDraw(float dt, const GraphicsGameState& gameState) {
+    void GraphicsServer::BeginDraw(float simDt, float realDt, const GraphicsGameState &gameState) {
         assert(mState == InternalState::InGame);
         mState = InternalState::InGameBeginDraw;
         mCurrentState = gameState;
-        mTime += dt;
+        mTime += simDt;
 
         auto room00 = mSceneSettings.roomTopLeftBounds;
         auto roomWH = mSceneSettings.roomBottomRightBounds;
@@ -140,6 +145,9 @@ namespace rfsim {
             mBallTrace.push_back(gameState.ball.position);
             mTimeLastTraceCapture = mTime;
         }
+
+        // Update markers offsets
+        mMarkerOffset += realDt * mMarkerOffsetSpeed;
     }
 
     void GraphicsServer::DrawStaticObjects() {
@@ -271,8 +279,6 @@ namespace rfsim {
 
             mBallAngleAccum += angle;
 
-            std::cout << b.velocity.x << " " << b.velocity.y << " " << angle << std::endl;
-
             mPainter->SetBrushColor(WHITE_COLOR);
             mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
             mPainter->DrawImage(rect, mBallAngleAccum, mBallImage);
@@ -344,6 +350,42 @@ namespace rfsim {
                 mPainter->SetBrushColor(WHITE_COLOR);
                 mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
                 mPainter->DrawImage(rect, 0.0f, number);
+            }
+        }
+
+        // Draw Robots Markers
+        if (mSettings.drawMarkers) {
+            const float radius = mSceneSettings.robotRadius;
+            const float markerBaseSize = mSettings.markerProp * radius;
+            const float smoothStep = std::sin(mMarkerOffset);
+            const float offsetY = 1.0f + smoothStep;
+            const float displacementY = offsetY * markerBaseSize * mMarkerOffsetScale + markerBaseSize;
+            const float markerHeight = markerBaseSize * (1.0f + smoothStep * mMarkerDeformationScale);
+            const float markerWidth = markerBaseSize * (1.0f - smoothStep * mMarkerDeformationScale);
+
+            auto drawMarker = [&](size_t id, const glm::vec3& color) {
+                const auto& r = mCurrentState.robots[id];
+
+                const Painter::Rect rect = {
+                        r.position.x - markerWidth * 0.5f,
+                        r.position.y - radius - displacementY,
+                        markerWidth,
+                        markerHeight
+                };
+
+                mPainter->SetBrushColor({color, mSettings.markerOpacity});
+                mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
+                mPainter->DrawImage(rect, 0.0f, mMarkerImage);
+            };
+
+            // Draw team A markers
+            for (const auto& r: mSceneSettings.robotsTeamA) {
+                drawMarker(r.id, mSettings.team1Color);
+            }
+
+            // Draw team B markers
+            for (const auto& r: mSceneSettings.robotsTeamB) {
+                drawMarker(r.id, mSettings.team2Color);
             }
         }
     }

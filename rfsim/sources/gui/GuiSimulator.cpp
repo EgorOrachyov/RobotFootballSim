@@ -266,7 +266,7 @@ namespace rfsim {
 
                 mPainter->FitToFramebufferArea();
 
-                mGraphicsServer->BeginDraw(simDt, game->physicsGameState);
+                mGraphicsServer->BeginDraw(simDt, dt, game->physicsGameState);
                 mGraphicsServer->DrawStaticObjects();
                 mGraphicsServer->DrawDynamicObjects();
                 mGraphicsServer->DrawAuxInfo();

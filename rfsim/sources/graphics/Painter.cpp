@@ -26,12 +26,12 @@
 #include <opengl/GLDynamicGeometry.hpp>
 #include <opengl/GLGeometryLayout.hpp>
 #include <opengl/GLTexture.hpp>
-#include <shaders/ImageDraw.hpp>
-#include <shaders/RectDraw.hpp>
 #include <graphics/Painter.hpp>
 #include <graphics/PainterItems.hpp>
 #include <unordered_map>
+#include <stdexcept>
 #include <utility>
+#include <fstream>
 
 namespace rfsim {
 
@@ -42,15 +42,12 @@ namespace rfsim {
     class PainterEnginePrivate {
     public:
 
-        PainterEnginePrivate() {
+        explicit PainterEnginePrivate(const std::string& resources) {
             std::vector<char> vertex;
             std::vector<char> fragment;
 
-            vertex.resize(IMAGE_DRAW_VERTEX_SOURCE.size());
-            std::memcpy(vertex.data(), IMAGE_DRAW_VERTEX_SOURCE.data(), IMAGE_DRAW_VERTEX_SOURCE.size());
-
-            fragment.resize(IMAGE_DRAW_FRAGMENT_SOURCE.size());
-            std::memcpy(fragment.data(), IMAGE_DRAW_FRAGMENT_SOURCE.data(), IMAGE_DRAW_FRAGMENT_SOURCE.size());
+            LoadShaderSourceCode(resources + "/shaders/image_draw_vert.glsl", vertex);
+            LoadShaderSourceCode(resources + "/shaders/image_draw_frag.glsl", fragment);
 
             mImageDrawShader = std::make_shared<GLShader>(vertex, fragment);
 
@@ -99,11 +96,8 @@ namespace rfsim {
 
             mImageDrawGeometry = std::make_shared<GLDynamicGeometry>(2, true, GL_TRIANGLES, std::move(imageDrawLayout));
 
-            vertex.resize(RECT_DRAW_VERTEX_SOURCE.size());
-            std::memcpy(vertex.data(), RECT_DRAW_VERTEX_SOURCE.data(), RECT_DRAW_VERTEX_SOURCE.size());
-
-            fragment.resize(RECT_DRAW_FRAGMENT_SOURCE.size());
-            std::memcpy(fragment.data(), RECT_DRAW_FRAGMENT_SOURCE.data(), RECT_DRAW_FRAGMENT_SOURCE.size());
+            LoadShaderSourceCode(resources + "/shaders/rect_draw_vert.glsl", vertex);
+            LoadShaderSourceCode(resources + "/shaders/rect_draw_frag.glsl", fragment);
 
             mRectDrawShader = std::make_shared<GLShader>(vertex, fragment);
 
@@ -306,6 +300,21 @@ namespace rfsim {
             }
         }
 
+        static void LoadShaderSourceCode(const std::string& path, std::vector<char> &data) {
+            std::ifstream file(path, std::ios::ate | std::ios::binary);
+
+            if (!file.is_open())
+                throw std::runtime_error("Failed to load file: " + path);
+
+            size_t size = (size_t) file.tellg();
+            data.resize(size + 1);
+
+            file.seekg(0);
+            file.read(data.data(), size);
+
+            data[size] = '\0';
+        }
+
     private:
         int mFarZ = -10000;
         int mStepZ = 2;
@@ -331,12 +340,12 @@ namespace rfsim {
         std::unordered_map<Image*, CacheEntry> mImageTexCache;
     };
 
-    Painter::Painter(const Recti &area, const Rect& space, std::shared_ptr<Window> target)
+    Painter::Painter(const Recti &area, const Rect& space, std::shared_ptr<Window> target, const std::string& resources)
         : mArea(area),
           mSpace(space),
           mWindow(std::move(target)) {
         // Actual drawing logic
-        mPrivate = std::make_shared<PainterEnginePrivate>();
+        mPrivate = std::make_shared<PainterEnginePrivate>(resources);
     }
 
     void Painter::DrawLine(const Point &from, const Point &to) {
@@ -425,5 +434,4 @@ namespace rfsim {
     const std::shared_ptr<Window> &Painter::GetWindow() const {
         return mWindow;
     }
-
 }

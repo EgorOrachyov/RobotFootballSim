@@ -49,7 +49,7 @@ namespace rfsim {
         void GetSettings(GraphicsSettings& settings) const;
 
         void BeginGame(const GraphicsSceneSettings& sceneSettings);
-        void BeginDraw(float dt, const GraphicsGameState& gameState);
+        void BeginDraw(float simDt, float realDt, const GraphicsGameState &gameState);
         void DrawStaticObjects();
         void DrawDynamicObjects();
         void DrawAuxInfo();
@@ -75,6 +75,7 @@ namespace rfsim {
         std::shared_ptr<Window> mWindow;
         std::shared_ptr<Painter> mPainter;
 
+        std::shared_ptr<Image> mMarkerImage;
         std::shared_ptr<Image> mTraceImage;
         std::shared_ptr<Image> mBallImage;
         std::shared_ptr<Image> mFieldImage;
@@ -88,6 +89,10 @@ namespace rfsim {
         std::vector<circular_buffer<glm::vec2>> mRobotsTrace;
 
         float mTime = 0.0f;
+        float mMarkerOffset = 0.0f;
+        float mMarkerDeformationScale = 0.2f;
+        float mMarkerOffsetScale = 0.8f;
+        float mMarkerOffsetSpeed = 3.0f;
         float mBallAngleAccum = 0.0f;
         float mTimeLastTraceCapture = 0.0f;
     };

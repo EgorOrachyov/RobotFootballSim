@@ -29,6 +29,7 @@
 #include <graphics/Window.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
+#include <string>
 #include <memory>
 
 namespace rfsim {
@@ -69,8 +70,9 @@ namespace rfsim {
          * @param area Area in pixels of the target screen, used for drawing.
          * @param space Virtual coordinates space mapped to the screen.
          * @param target Target window for drawing.
+         * @param resources Prefix path to resources folder
          */
-        Painter(const Recti& area, const Rect& space, std::shared_ptr<Window> target);
+        Painter(const Recti& area, const Rect& space, std::shared_ptr<Window> target, const std::string& resources);
         Painter(const Painter& engine) = delete;
         Painter(Painter&& engine) noexcept = delete;
         ~Painter() = default;
@@ -134,10 +136,11 @@ namespace rfsim {
         const std::shared_ptr<Window> &GetWindow() const;
 
     private:
+
         Recti mArea;
         Rect mSpace;
         Palette mPalette;
-        Color mClearColor;
+        Color mClearColor{};
         std::shared_ptr<Window> mWindow;
         std::shared_ptr<class PainterEnginePrivate> mPrivate;
     };
