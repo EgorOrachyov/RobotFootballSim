@@ -34,7 +34,47 @@
 #include <string.h>
 #include <time.h>
 
-// based on the https://github.com/goktug97/DynamicWindowApproach
+/**
+ * @file DwaMovement.c
+ *
+ * @brief **Dynamic Window Approach** collision avoidance algorithm implementation
+ *
+ * @details The algorithm is probably the simplest possible and the most customizable one.
+ * Imagine the moving robot. How can it change its movement? It can change its linear velocity
+ * with a finite amount of variants `V` (because robot has maximum possible acceleration) and,
+ * similarly, its angular velocity with a finite amount of variants `W`.
+ * So we have a 2D table of `V * W` possible movement changes, among which we should take
+ * one of the most preferable according to some criteria. After some time `PREDICT_TIME` we repeat
+ * the procedure to refine the direction again. That is it, nothing more.
+ *
+ * Which criteria to use and how to juxtapose them is up to you. Authors of the algorithm suggest the following:
+ * - **Clearance** criterion (recall it is a collision avoidance algorithm, right?):
+ *     we want to keep a distance from other robots. So we calculate the minimum distance from other robots
+ *     for each possible velocity and the less than the robot 's radius it is, the more penalty is.
+ *     @link calc_clearance_cost(rfsim_body,dwa_velocity,const rfsim_body_list*,const dwa_config*)
+ *
+ * - **Heading** criterion (recall we want to get to the destination, right?):
+ *     there are some variations of this criterion, but the most simple is just euclidean metric:
+ *     the closer we get to the target, the lesser the penalty is.
+ *     @link calc_heading_cost(rfsim_body,rfsim_vec2)
+ *
+ * - **Velocity** criterion (recall we want to get to the destination as fast as possible, right?):
+ *     the higher the velocity is, the lesser penalty is.
+ *     @link calc_velocity_cost(dwa_velocity,dwa_velocity,const dwa_config*)
+ *
+ * Traditionally, criteria are combined using a plain _weighted sum_. But for weights to be meaningful,
+ * each criterion should be normalized, e.g. to take values from `[0; 1]` each.
+ * Otherwise, if the first criterion is from `[-15; 650]`, second from `[30; 40]` and third from `[0; 0.1]`,
+ * what does it mean at all?
+ *
+ * To sum up, you can customize ranges which are taken under consideration,
+ * criteria and the way to combine them. It is a very hackable and simple algorithm.
+ *
+ * @see plan(rfsim_body,dwa_velocity,rfsim_vec2,const rfsim_body_list*,const dwa_config*)
+ *      Algorithm main planning procedure
+ * @see https://github.com/goktug97/DynamicWindowApproach Original implementation
+ * @see https://github.com/amslabtech/dwa_planner         Visualization of the algorithm
+ */
 
 #define FIELD_OF(type, member) (((type*) 0)->member)
 
@@ -48,20 +88,25 @@
     } while (0)
 #endif
 
-static int   TEAM_SIZE    = 0;
-static float FIELD_WIDTH  = 0;
-static float FIELD_HEIGHT = 0;
-static float FIELD_DIAG   = 0;
-static float ROBOT_RADIUS = 0;
-static float DT           = 0;
+float norm(float x, float y) {
+    return sqrtf(x * x + y * y);
+}
 
-// TODO: where from should one get it?
-#define WHEEL_RADIUS 0.15f
+float dist(rfsim_vec2 p1, rfsim_vec2 p2) {
+    const float dx = p1.x - p2.x;
+    const float dy = p1.y - p2.y;
+    return sqrtf(dx * dx + dy * dy);
+}
+
+static rfsim_game_settings GAME_SETTINGS;
+
+static int   TEAM_SIZE;
+static float FIELD_DIAG;
 
 #define EPS 1e-4f
 
 #ifndef M_PI
-    #define M_PI 3.14159265358979323846
+#define M_PI 3.14159265358979323846
 #endif
 
 // ---------------------------------------------------------------------------------
@@ -72,6 +117,9 @@ typedef struct {
     rfsim_body* bodies;
 } rfsim_body_list;
 
+/**
+ * Contains various configurations of the algorithm.
+ */
 typedef struct {
     /** maximum linear speed robot can reach [m/s] */
     float max_speed;
@@ -115,6 +163,9 @@ typedef struct {
     float angular;
 } dwa_velocity;
 
+/**
+ * 2D Table of possible velocity variants.
+ */
 typedef struct {
     int    possible_v_size;
     float* possible_v;
@@ -124,8 +175,8 @@ typedef struct {
 } dwa_dynamic_window;
 
 
-const static dwa_config DWA_CONFIG = {
-        .max_speed             = 1.0f,
+static dwa_config DWA_CONFIG = {
+        .max_speed             = 0.0f,// is set later from simulator settings
         .min_speed             = 0.0f,
         .max_yaw_speed         = (float) (360.0 * M_PI / 180.0),
         .max_lin_accel         = 0.3f,
@@ -175,15 +226,24 @@ dwa_velocity plan(
 // ---------------------------------------------------------------------------------
 //region DWA function definitions
 
+/**
+ * Simple quick check that robot can move with such velocity.
+ */
 int is_velocity_adequate(dwa_velocity v) {
     return DWA_CONFIG.min_speed <= v.linear && v.linear <= DWA_CONFIG.max_speed &&
            fabsf(v.angular) <= DWA_CONFIG.max_yaw_speed;
 }
 
+/**
+ * Helps to escape accuracy lost when dividing very small value.
+ */
 float safe_divf(float dividend, float divisor) {
     return fabsf(dividend) < EPS ? 0.0f : dividend / divisor;
 }
 
+/**
+ * Creates new table of possible velocity variants for algorithm to consider.
+ */
 dwa_dynamic_window* new_dynamic_window(dwa_velocity velocity, const dwa_config* config) {
     assert(is_velocity_adequate(velocity));
 
@@ -216,12 +276,19 @@ dwa_dynamic_window* new_dynamic_window(dwa_velocity velocity, const dwa_config* 
     return window;
 }
 
+/**
+ * Frees the table of possible velocity variants.
+ */
 void free_dynamic_window(dwa_dynamic_window* window) {
     free(window->possible_v);
     free(window->possible_w);
     free(window);
 }
 
+/**
+ * Creates new list of obstacles (typically other robots) for
+ * @link calc_clearance_cost(rfsim_body, dwa_velocity, const rfsim_body_list*, const dwa_config*)
+ */
 rfsim_body_list* new_obstacle_list(int size) {
     rfsim_body_list* obstacles = malloc(sizeof(rfsim_body_list));
     obstacles->size            = size;
@@ -229,11 +296,18 @@ rfsim_body_list* new_obstacle_list(int size) {
     return obstacles;
 }
 
+/**
+ * Frees the list of obstacles.
+ */
 void free_obstacle_list(rfsim_body_list* obstacles) {
     free(obstacles->bodies);
     free(obstacles);
 }
 
+/**
+ * Calculates target position where the body will be
+ * if it moves with given `velocity` during `dt` time.
+ */
 rfsim_body move_body(rfsim_body body, dwa_velocity velocity, float dt) {
     assert(is_velocity_adequate(velocity));
 
@@ -246,6 +320,9 @@ rfsim_body move_body(rfsim_body body, dwa_velocity velocity, float dt) {
             }};
 }
 
+/**
+ * Calculates velocity cost, see main algorithm description.
+ */
 float calc_velocity_cost(dwa_velocity source, dwa_velocity target, const dwa_config* config) {
     assert(is_velocity_adequate(source));
     assert(is_velocity_adequate(target));
@@ -257,11 +334,12 @@ float calc_velocity_cost(dwa_velocity source, dwa_velocity target, const dwa_con
     //           2;
 }
 
+/**
+ * Calculates heading cost, see main algorithm description.
+ */
 float calc_heading_cost(rfsim_body source, rfsim_vec2 target) {
     //            1 (simple distance)
-    const float dx = target.x - source.position.x;
-    const float dy = target.y - source.position.y;
-    return sqrtf(dx * dx + dy * dy) / FIELD_DIAG;
+    return dist(source.position, target) / FIELD_DIAG;
 
     //        2 (angle error)
     //    const float dx           = target.x - source.position.x;
@@ -272,6 +350,9 @@ float calc_heading_cost(rfsim_body source, rfsim_vec2 target) {
     //    return angle_cost / M_PI;
 }
 
+/**
+ * Calculates clearance cost, see main algorithm description.
+ */
 float calc_clearance_cost(
         rfsim_body             body,
         dwa_velocity           velocity,
@@ -286,18 +367,23 @@ float calc_clearance_cost(
         curr_pose = move_body(curr_pose, velocity, config->dt);
 
         for (int i = 0; i < obstacles->size; ++i) {
-            const float dx = curr_pose.position.x - obstacles->bodies[i].position.x;
-            const float dy = curr_pose.position.y - obstacles->bodies[i].position.y;
-
-            const float r = fmaxf(0.0f, sqrtf(dx * dx + dy * dy) - 2 * ROBOT_RADIUS);
+            const float d = dist(curr_pose.position, obstacles->bodies[i].position);
+            const float r = fmaxf(0.0f, d - 2 * GAME_SETTINGS.robot_radius);
             if (r < min_r) {
                 min_r = r;
             }
         }
     }
-    return fabsf(min_r) < EPS ? FLT_MAX : fmaxf(0, ROBOT_RADIUS - min_r) / ROBOT_RADIUS;
+    return fabsf(min_r) < EPS ? FLT_MAX
+                              : fmaxf(0, GAME_SETTINGS.robot_radius - min_r) / GAME_SETTINGS.robot_radius;
 }
 
+/**
+ * Main DWA algorithm planning procedure:
+ * 1. creates table of possible variants
+ * 2. iterates over it and counts criteria
+ * 3. selects the best velocity variant with the least cost
+ */
 dwa_velocity plan(
         rfsim_body             source,
         dwa_velocity           source_velocity,
@@ -366,6 +452,10 @@ float uniform_rand(float min, float max) {
     return (float) (min + scale * (max - min));
 }
 
+enum algo_state { MOVING_TO_HIT_POSITION, CALIBRATING_ANGLE, READY_HIT };
+
+static enum algo_state ALGO_STATE = MOVING_TO_HIT_POSITION;
+
 RFSIM_DEFINE_FUNCTION_INIT {
     strcpy(context->name, "DWA Ball Follow - Random Obstacles");
     strcpy(context->description, "Single robot eternally follows the ball among randomly moving robots");
@@ -376,11 +466,11 @@ RFSIM_DEFINE_FUNCTION_INIT {
 }
 
 RFSIM_DEFINE_FUNCTION_BEGIN_GAME {
-    TEAM_SIZE    = start->team_size;
-    FIELD_HEIGHT = settings->field_Size.y;
-    FIELD_WIDTH  = settings->field_Size.x;
-    FIELD_DIAG   = sqrtf(FIELD_HEIGHT * FIELD_HEIGHT + FIELD_WIDTH * FIELD_WIDTH);
-    ROBOT_RADIUS = settings->robot_radius;
+    GAME_SETTINGS        = *settings;
+    TEAM_SIZE            = start->team_size;
+    FIELD_DIAG           = norm(settings->field_Size.x, settings->field_Size.y);
+    DWA_CONFIG.max_speed = settings->robot_max_speed;
+    ALGO_STATE           = MOVING_TO_HIT_POSITION;
     return rfsim_status_success;
 }
 
@@ -400,20 +490,20 @@ float clampf(float v, float min, float max) {
 /**
  * @see http://www.cs.columbia.edu/~allen/F17/NOTES/icckinematics.pdf
  */
-rfsim_control velocity_dwa_to_rfsim(dwa_velocity v) {
+rfsim_control velocity_dwa_to_rfsim(dwa_velocity v, float dt) {
     assert(is_velocity_adequate(v));
 
-    const float l = WHEEL_RADIUS * 2;
+    const float l = GAME_SETTINGS.robot_wheel_x_offset * 2;
 
     const float w = -v.angular;
 
-    if (1 - cosf(w * DT) < 1e-6) {
+    if (1 - cosf(w * dt) < 1e-6) {
         return (rfsim_control){
                 .left_wheel_velocity  = v.linear,
                 .right_wheel_velocity = v.linear,
         };
     } else {
-        const float R = sqrtf(v.linear * DT * v.linear * DT / 2.0f / (1 - cosf(w * DT))) * ((float) signf(w));
+        const float R = sqrtf(v.linear * dt * v.linear * dt / 2.0f / (1 - cosf(w * dt))) * ((float) signf(w));
 
         const float rw = (w * l + 2 * R * w) / 2.0f;
         const float lw = 2 * R * w - rw;
@@ -428,11 +518,11 @@ rfsim_control velocity_dwa_to_rfsim(dwa_velocity v) {
 /**
  * @see http://www.cs.columbia.edu/~allen/F17/NOTES/icckinematics.pdf
  */
-dwa_velocity velocity_rfsim_to_dwa(rfsim_control v) {
+dwa_velocity velocity_rfsim_to_dwa(rfsim_control v, float dt) {
     const float v_l = v.left_wheel_velocity;
     const float v_r = v.right_wheel_velocity;
 
-    const float l = WHEEL_RADIUS * 2;
+    const float l = GAME_SETTINGS.robot_wheel_x_offset * 2;
 
     dwa_velocity result;
     if (fabsf(v_l - v_r) < EPS) {
@@ -446,12 +536,11 @@ dwa_velocity velocity_rfsim_to_dwa(rfsim_control v) {
 
         // we suppose x = 0, y = 0, sin_theta = 0, cos_theta = 1
         // then we get following simplified formulas
-        const float x_n = sinf(w * DT) * R;
-        const float y_n = cosf(w * DT) * (-R) + R;
+        const float x_n = sinf(w * dt) * R;
+        const float y_n = cosf(w * dt) * (-R) + R;
 
         result = (dwa_velocity){
-                .linear =
-                        clampf(sqrtf(x_n * x_n + y_n * y_n) / DT, DWA_CONFIG.min_speed, DWA_CONFIG.max_speed),
+                .linear  = clampf(norm(x_n, y_n) / dt, DWA_CONFIG.min_speed, DWA_CONFIG.max_speed),
                 .angular = clampf(w, -DWA_CONFIG.max_yaw_speed, DWA_CONFIG.max_yaw_speed),
         };
     }
@@ -460,9 +549,38 @@ dwa_velocity velocity_rfsim_to_dwa(rfsim_control v) {
     return result;
 }
 
-RFSIM_DEFINE_FUNCTION_TICK_GAME {
-    DT = state->dt;
+rfsim_control dwa_move_to_target(
+        rfsim_control          initial_control,
+        rfsim_body             initial_position,
+        const float            dt,
+        const rfsim_body_list* obstacles,
+        rfsim_vec2             target) {
 
+    dwa_velocity  initial_v = velocity_rfsim_to_dwa(initial_control, dt);
+    dwa_velocity  result_v  = plan(initial_position, initial_v, target, obstacles, &DWA_CONFIG);
+    rfsim_control converted = velocity_dwa_to_rfsim(result_v, dt);
+
+    DEBUG_(
+            printf("L = % 2.3f | W = % 2.3f | LW = % 2.3f | RW = % 2.3f \n",
+                   result_v.linear,
+                   result_v.angular,
+                   converted.left_wheel_velocity,
+                   converted.right_wheel_velocity));
+    return converted;
+}
+
+rfsim_control rotate_to_angle(float source_angle, float target_angle, float dt) {
+    return velocity_dwa_to_rfsim(
+            (dwa_velocity){
+                    .linear = 0.0f,
+                    .angular =
+                            clampf((target_angle - source_angle) / dt,
+                                   -DWA_CONFIG.max_yaw_speed / 4,
+                                   DWA_CONFIG.max_yaw_speed / 4)},
+            dt);
+}
+
+RFSIM_DEFINE_FUNCTION_TICK_GAME {
     //     set all robots except team_a[0] to move randomly
     set_random_control(&state->team_b_control[0], true);
     for (int i = 1; i < TEAM_SIZE; ++i) {
@@ -479,20 +597,37 @@ RFSIM_DEFINE_FUNCTION_TICK_GAME {
     memcpy(obstacle_bodies, &state->team_a[1], (TEAM_SIZE - 1) * sizeof(*state->team_a));
     memcpy(&obstacle_bodies[TEAM_SIZE - 1], state->team_b, TEAM_SIZE * sizeof(*state->team_b));
 
-    // run DWA
-    dwa_velocity velocity = velocity_rfsim_to_dwa(state->team_a_control[0]);
-    dwa_velocity result_v = plan(state->team_a[0], velocity, state->ball.position, &obstacles, &DWA_CONFIG);
+    static const rfsim_vec2 BEFORE_HIT_POSITION = {.x = 5.85f, .y = 5.4f};
+    static const float      BEFORE_HIT_ANGLE    = (float) -0.7175;
+    static const rfsim_vec2 TARGET_FOR_HIT      = {.x = 9.0f, .y = 3.0f};
 
-    rfsim_control converted = velocity_dwa_to_rfsim(result_v);
+    const rfsim_body* forward     = &state->team_a[0];
+    rfsim_control*    forward_ctl = &state->team_a_control[0];
 
-    DEBUG_(
-            printf("L = % 2.3f | W = % 2.3f | LW = % 2.3f | RW = % 2.3f \n",
-                   result_v.linear,
-                   result_v.angular,
-                   converted.left_wheel_velocity,
-                   converted.right_wheel_velocity));
-
-    state->team_a_control[0] = converted;
+    switch (ALGO_STATE) {
+        case MOVING_TO_HIT_POSITION:
+            if (dist(forward->position, BEFORE_HIT_POSITION) > 0.1) {
+                *forward_ctl = dwa_move_to_target(
+                        *forward_ctl,
+                        *forward,
+                        state->dt,
+                        &obstacles,
+                        BEFORE_HIT_POSITION);
+                break;
+            }
+        case CALIBRATING_ANGLE:
+            ALGO_STATE = CALIBRATING_ANGLE;
+            if (fabsf(forward->angle - BEFORE_HIT_ANGLE) > 0.01) {
+                *forward_ctl = rotate_to_angle(forward->angle, BEFORE_HIT_ANGLE, state->dt);
+                break;
+            }
+        case READY_HIT:
+            ALGO_STATE   = READY_HIT;
+            *forward_ctl = dwa_move_to_target(*forward_ctl, *forward, state->dt, &obstacles, TARGET_FOR_HIT);
+            break;
+        default:
+            assert(false);
+    }
 
     return rfsim_status_success;
 }

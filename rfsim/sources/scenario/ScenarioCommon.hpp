@@ -53,12 +53,12 @@ namespace rfsim {
             pp.robotMass = 1.0f;
             pp.robotFriction = 0.25f;
             pp.robotRestitution = 0.1f;
-            pp.robotMaxSpeed = 100.0f;
+            pp.robotMaxSpeed = 1.0f;
             pp.robotWheelXOffset = 0.15f;
             pp.ballRadius = 0.043;
             pp.ballMass = 0.05f;
             pp.ballFriction = 0.005f;
-            pp.ballRestitution = 0.05f;
+            pp.ballRestitution = 0.7f;
 
             return pp;
         }
