@@ -65,7 +65,7 @@ namespace rfsim {
         bool TryFixedStep();
         bool UpdateState(const std::shared_ptr<Game> &game);
 
-        void SetFieldFriction(b2Body *target, float maxForceMult = 1.0f, float maxTorqueMult = 1.0f);
+        void SetBallRollingFriction(b2Body *ball, float maxFrictionForceMult = 1.0f, float maxFrictionTorqueMult = 1.0f);
 
         bool IsRoomBounds(b2Body *body) const;
         bool IsFieldBounds(b2Body *body) const;
@@ -80,7 +80,8 @@ namespace rfsim {
         // Convert position from physics coordinates (y axis points up) to game ones (y axis points down)
         static glm::vec2 ToGameCoords(const glm::vec2& p);
         static float AngleToGameCoords(float angle);
-        static b2PolygonShape createRobotShape(double r) ;
+        static b2PolygonShape CreateRobotShape(double r);
+        static float GetRobotArea(const b2PolygonShape &shape);
 
         float mFixedDt;
         float mDtAccumulated;
