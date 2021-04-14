@@ -76,8 +76,6 @@
  * @see https://github.com/amslabtech/dwa_planner         Visualization of the algorithm
  */
 
-// based on the
-
 #define FIELD_OF(type, member) (((type*) 0)->member)
 
 //#define MY_DEBUG
@@ -89,6 +87,16 @@
     do {                                                                                                     \
     } while (0)
 #endif
+
+float norm(float x, float y) {
+    return sqrtf(x * x + y * y);
+}
+
+float dist(rfsim_vec2 p1, rfsim_vec2 p2) {
+    const float dx = p1.x - p2.x;
+    const float dy = p1.y - p2.y;
+    return sqrtf(dx * dx + dy * dy);
+}
 
 static rfsim_game_settings GAME_SETTINGS;
 
@@ -331,9 +339,7 @@ float calc_velocity_cost(dwa_velocity source, dwa_velocity target, const dwa_con
  */
 float calc_heading_cost(rfsim_body source, rfsim_vec2 target) {
     //            1 (simple distance)
-    const float dx = target.x - source.position.x;
-    const float dy = target.y - source.position.y;
-    return sqrtf(dx * dx + dy * dy) / FIELD_DIAG;
+    return dist(source.position, target) / FIELD_DIAG;
 
     //        2 (angle error)
     //    const float dx           = target.x - source.position.x;
@@ -361,10 +367,8 @@ float calc_clearance_cost(
         curr_pose = move_body(curr_pose, velocity, config->dt);
 
         for (int i = 0; i < obstacles->size; ++i) {
-            const float dx = curr_pose.position.x - obstacles->bodies[i].position.x;
-            const float dy = curr_pose.position.y - obstacles->bodies[i].position.y;
-
-            const float r = fmaxf(0.0f, sqrtf(dx * dx + dy * dy) - 2 * GAME_SETTINGS.robot_radius);
+            const float d = dist(curr_pose.position, obstacles->bodies[i].position);
+            const float r = fmaxf(0.0f, d - 2 * GAME_SETTINGS.robot_radius);
             if (r < min_r) {
                 min_r = r;
             }
@@ -448,6 +452,10 @@ float uniform_rand(float min, float max) {
     return (float) (min + scale * (max - min));
 }
 
+enum algo_state { MOVING_TO_HIT_POSITION, CALIBRATING_ANGLE, READY_HIT };
+
+static enum algo_state ALGO_STATE = MOVING_TO_HIT_POSITION;
+
 RFSIM_DEFINE_FUNCTION_INIT {
     strcpy(context->name, "DWA Ball Follow - Random Obstacles");
     strcpy(context->description, "Single robot eternally follows the ball among randomly moving robots");
@@ -458,12 +466,11 @@ RFSIM_DEFINE_FUNCTION_INIT {
 }
 
 RFSIM_DEFINE_FUNCTION_BEGIN_GAME {
-    GAME_SETTINGS = *settings;
-    TEAM_SIZE     = start->team_size;
-    FIELD_DIAG =
-            sqrtf(settings->field_Size.y * settings->field_Size.y +
-                  settings->field_Size.x * settings->field_Size.x);
+    GAME_SETTINGS        = *settings;
+    TEAM_SIZE            = start->team_size;
+    FIELD_DIAG           = norm(settings->field_Size.x, settings->field_Size.y);
     DWA_CONFIG.max_speed = settings->robot_max_speed;
+    ALGO_STATE           = MOVING_TO_HIT_POSITION;
     return rfsim_status_success;
 }
 
@@ -533,14 +540,44 @@ dwa_velocity velocity_rfsim_to_dwa(rfsim_control v, float dt) {
         const float y_n = cosf(w * dt) * (-R) + R;
 
         result = (dwa_velocity){
-                .linear =
-                        clampf(sqrtf(x_n * x_n + y_n * y_n) / dt, DWA_CONFIG.min_speed, DWA_CONFIG.max_speed),
+                .linear  = clampf(norm(x_n, y_n) / dt, DWA_CONFIG.min_speed, DWA_CONFIG.max_speed),
                 .angular = clampf(w, -DWA_CONFIG.max_yaw_speed, DWA_CONFIG.max_yaw_speed),
         };
     }
 
     assert(is_velocity_adequate(result));
     return result;
+}
+
+rfsim_control dwa_move_to_target(
+        rfsim_control          initial_control,
+        rfsim_body             initial_position,
+        const float            dt,
+        const rfsim_body_list* obstacles,
+        rfsim_vec2             target) {
+
+    dwa_velocity  initial_v = velocity_rfsim_to_dwa(initial_control, dt);
+    dwa_velocity  result_v  = plan(initial_position, initial_v, target, obstacles, &DWA_CONFIG);
+    rfsim_control converted = velocity_dwa_to_rfsim(result_v, dt);
+
+    DEBUG_(
+            printf("L = % 2.3f | W = % 2.3f | LW = % 2.3f | RW = % 2.3f \n",
+                   result_v.linear,
+                   result_v.angular,
+                   converted.left_wheel_velocity,
+                   converted.right_wheel_velocity));
+    return converted;
+}
+
+rfsim_control rotate_to_angle(float source_angle, float target_angle, float dt) {
+    return velocity_dwa_to_rfsim(
+            (dwa_velocity){
+                    .linear = 0.0f,
+                    .angular =
+                            clampf((target_angle - source_angle) / dt,
+                                   -DWA_CONFIG.max_yaw_speed / 4,
+                                   DWA_CONFIG.max_yaw_speed / 4)},
+            dt);
 }
 
 RFSIM_DEFINE_FUNCTION_TICK_GAME {
@@ -560,20 +597,37 @@ RFSIM_DEFINE_FUNCTION_TICK_GAME {
     memcpy(obstacle_bodies, &state->team_a[1], (TEAM_SIZE - 1) * sizeof(*state->team_a));
     memcpy(&obstacle_bodies[TEAM_SIZE - 1], state->team_b, TEAM_SIZE * sizeof(*state->team_b));
 
-    // run DWA
-    dwa_velocity velocity = velocity_rfsim_to_dwa(state->team_a_control[0], state->dt);
-    dwa_velocity result_v = plan(state->team_a[0], velocity, state->ball.position, &obstacles, &DWA_CONFIG);
+    static const rfsim_vec2 BEFORE_HIT_POSITION = {.x = 5.85f, .y = 5.4f};
+    static const float      BEFORE_HIT_ANGLE    = (float) -0.7175;
+    static const rfsim_vec2 TARGET_FOR_HIT      = {.x = 9.0f, .y = 3.0f};
 
-    rfsim_control converted = velocity_dwa_to_rfsim(result_v, state->dt);
+    const rfsim_body* forward     = &state->team_a[0];
+    rfsim_control*    forward_ctl = &state->team_a_control[0];
 
-    DEBUG_(
-            printf("L = % 2.3f | W = % 2.3f | LW = % 2.3f | RW = % 2.3f \n",
-                   result_v.linear,
-                   result_v.angular,
-                   converted.left_wheel_velocity,
-                   converted.right_wheel_velocity));
-
-    state->team_a_control[0] = converted;
+    switch (ALGO_STATE) {
+        case MOVING_TO_HIT_POSITION:
+            if (dist(forward->position, BEFORE_HIT_POSITION) > 0.1) {
+                *forward_ctl = dwa_move_to_target(
+                        *forward_ctl,
+                        *forward,
+                        state->dt,
+                        &obstacles,
+                        BEFORE_HIT_POSITION);
+                break;
+            }
+        case CALIBRATING_ANGLE:
+            ALGO_STATE = CALIBRATING_ANGLE;
+            if (fabsf(forward->angle - BEFORE_HIT_ANGLE) > 0.01) {
+                *forward_ctl = rotate_to_angle(forward->angle, BEFORE_HIT_ANGLE, state->dt);
+                break;
+            }
+        case READY_HIT:
+            ALGO_STATE   = READY_HIT;
+            *forward_ctl = dwa_move_to_target(*forward_ctl, *forward, state->dt, &obstacles, TARGET_FOR_HIT);
+            break;
+        default:
+            assert(false);
+    }
 
     return rfsim_status_success;
 }

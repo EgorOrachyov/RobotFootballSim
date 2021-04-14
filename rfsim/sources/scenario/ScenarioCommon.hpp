@@ -58,7 +58,7 @@ namespace rfsim {
             pp.ballRadius = 0.043;
             pp.ballMass = 0.05f;
             pp.ballFriction = 0.005f;
-            pp.ballRestitution = 0.05f;
+            pp.ballRestitution = 0.7f;
 
             return pp;
         }
