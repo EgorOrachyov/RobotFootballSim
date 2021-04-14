@@ -53,8 +53,8 @@ namespace rfsim {
             const float fieldWidth = fieldSize.x;
             const float fieldHeight = fieldSize.y;
 
-            // Team size (total x2 robots)
-            game->teamSize = ScenarioCommon::DEFAULT_TEAM_SIZE;
+            // Team size is only 1 for Duel scenario
+            game->teamSize = 1;
 
             auto& physicsProperties = game->physicsGameProperties;
             physicsProperties = ScenarioCommon::GetDefaultPhysicsProperties();
