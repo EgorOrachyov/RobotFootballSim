@@ -223,21 +223,23 @@ namespace rfsim {
             mBall = mWorld->CreateBody(&dynamicBodyDef);
 
             const auto r = (double)mProperties.ballRadius;
-            const double ballVolume = 4.0 / 3.0 * glm::pi<double>() * r * r * r;
-            assert(ballVolume > 0.0);
+            // need to calculate area instead of volume for box2d,
+            // so the mass can be predicted more accurately
+            const double ballArea = glm::pi<double>() * r * r;
+            assert(ballArea > 0.0);
 
             b2CircleShape shape = {};
             shape.m_radius = r;
 
             b2FixtureDef fixture = {};
-            fixture.density = (float)((double)mProperties.ballMass / ballVolume);
+            fixture.density = (float)((double)mProperties.ballMass / ballArea);
             fixture.friction = mProperties.ballFriction;
             fixture.restitution = mProperties.ballRestitution;
             fixture.shape = &shape;
 
             mBall->CreateFixture(&fixture);
 
-            SetFieldFriction(mBall);
+            SetBallRollingFriction(mBall);
         }
 
         // robots
@@ -263,17 +265,21 @@ namespace rfsim {
                 robotBodyDef.angle = angle;
 
                 b2Body *body = mWorld->CreateBody(&robotBodyDef);
-
-                // approximate a robot with a cylinder
-                const auto r = (double)mProperties.robotRadius;
-                const auto h = (double)mProperties.robotHeight;
-                const double robotVolume = glm::pi<double>() * r * r * h;
-                assert(robotVolume > 0.0);
           
-                b2PolygonShape shape = createRobotShape(r);
+                // approximate a robot with a cylinder
+                const float r = mProperties.robotRadius;
+                const float h = mProperties.robotHeight;
+
+                b2PolygonShape shape = CreateRobotShape(r);
+
+                // need to calculate area instead of volume for box2d,
+                // so the mass can be predicted more accurately;
+                // estimate its area 
+                const float robotArea = GetRobotArea(shape);
+                assert(robotArea > 0.0f);
 
                 b2FixtureDef fixture = {};
-                fixture.density = (float)((double)mProperties.robotMass / robotVolume);
+                fixture.density = mProperties.robotMass / robotArea;
                 fixture.friction = mProperties.robotFriction;
                 fixture.restitution = mProperties.robotRestitution;
                 fixture.shape = &shape;
@@ -285,7 +291,7 @@ namespace rfsim {
         }
     }
 
-    b2PolygonShape PhysicsServer::createRobotShape(const double r) {
+    b2PolygonShape PhysicsServer::CreateRobotShape(const double r) {
         const auto pi = glm::pi<double>();
 
         // Accordingly to the spec:
@@ -361,29 +367,37 @@ namespace rfsim {
         }
     }
 
-    void PhysicsServer::SetFieldFriction(b2Body *target, float maxForceMult, float maxTorqueMult) {
+    void PhysicsServer::SetBallRollingFriction(b2Body *ball, float maxFrictionForceMult, float maxFrictionTorqueMult) {
         assert(mWorld);
         assert(mRoomBounds);
 
         float gravity = 9.8f;
-	    float I = target->GetInertia();
-	    float mass = target->GetMass();
+        float I = ball->GetInertia();
+	    float mass = ball->GetMass();
+
+        // rolling resistance coefficient for a golf ball,
+        // the value is inspired by "Golf Ball Landing, Bounce and Roll on Turf", Woo-Jin Roha, Chong-Won Leeb
+        float Crr = 0.02f;
+
+        // normal force
+        float N = mass * gravity;
+        // rolling resistance force
+        float F = Crr * N;
 
         // (for notes, refer to apply_force example in box2d testbed)
 	    // for a circle: I = 0.5 * m * r * r ==> r = sqrt(2 * I / m)
 	    float effectiveRadius = b2Sqrt(2.0f * I / mass);
-
-        maxForceMult *= mProperties.fieldFriction;
-        maxTorqueMult *= mProperties.fieldFriction;
+        // coarse fix for the fact that ball touches a field with some small area
+        effectiveRadius *= 0.05f;
 
         b2FrictionJointDef jd;
 	    jd.localAnchorA.SetZero();
 	    jd.localAnchorB.SetZero();
 	    jd.bodyA = mRoomBounds;
-	    jd.bodyB = target;
+	    jd.bodyB = ball;
 	    jd.collideConnected = true;
-	    jd.maxForce = maxForceMult * mass * gravity;
-	    jd.maxTorque = maxTorqueMult * mass * effectiveRadius * gravity;
+	    jd.maxForce = maxFrictionForceMult * F;
+	    jd.maxTorque = maxFrictionTorqueMult * mass * effectiveRadius * gravity;
         
         mWorld->CreateJoint(&jd);
     }
@@ -654,4 +668,25 @@ namespace rfsim {
         return -angle;
     }
 
+    float PhysicsServer::GetRobotArea(const b2PolygonShape &shape)
+    {
+        // from b2PolygonShape::ComputeMass()
+        float area = 0.0f;
+
+        b2Vec2 s = shape.m_vertices[0];
+
+	    for (int32 i = 0; i < shape.m_count; ++i)
+	    {
+		    // Triangle vertices.
+		    b2Vec2 e1 = shape.m_vertices[i] - s;
+		    b2Vec2 e2 = i + 1 < shape.m_count ? shape.m_vertices[i+1] - s : shape.m_vertices[0] - s;
+
+		    float D = b2Cross(e1, e2);
+
+		    float triangleArea = 0.5f * D;
+		    area += triangleArea;
+        }
+
+        return area;
+    }
 }
