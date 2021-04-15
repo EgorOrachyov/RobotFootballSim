@@ -50,6 +50,7 @@ namespace rfsim {
         bool drawMarkers = true;
         float markerProp = 1.2f;
         float markerOpacity = 0.8f;
+        glm::vec3 ballColor = {0.01, 0.01f, 0.01f };
         glm::vec3 team1Color = {0.95f, 0.05f, 0.05f };
         glm::vec3 team2Color = {0.05f, 0.05f, 0.95f };
 

@@ -43,6 +43,7 @@ namespace rfsim {
         mResPath = resPath;
 
         static const auto MARKER_IMAGE_PATH = "marker.png";
+        static const auto BALL_MARKER_IMAGE_PATH = "ball-marker.png";
         static const auto ROBOT_IMAGE_PATH = "robot.png";
         static const auto FIELD_IMAGE_PATH = "play-field-div-b.png";
         static const auto BALL_IMAGE_PATH = "ball.png";
@@ -55,6 +56,7 @@ namespace rfsim {
         auto prefix = mResPath + "/sprites/";
 
         mMarkerImage = Image::LoadFromFilePath(prefix + MARKER_IMAGE_PATH);
+        mBallMarkerImage = Image::LoadFromFilePath(prefix + BALL_MARKER_IMAGE_PATH);
         mTraceImage = Image::LoadFromFilePath(prefix + TRACE_POINT_IMAGE_PATH);
         mBallImage = Image::LoadFromFilePath(prefix + BALL_IMAGE_TRSP_PATH);
         mFieldImage = Image::LoadFromFilePath(prefix + FIELD_IMAGE_PATH);
@@ -173,7 +175,7 @@ namespace rfsim {
 
                 for (const auto& tr: mRobotsTrace) {
                     float factor = 0.1f;
-                    float step = 0.9f / (float) mSettings.traceLength;
+                    float step = 0.9f / (tr.empty()? 1.0f: (float) tr.size());
 
                     tr.for_each([&](const glm::vec2& pos) {
                         mPainter->SetBrushColor({mSettings.traceColor, factor});
@@ -353,7 +355,7 @@ namespace rfsim {
             }
         }
 
-        // Draw Robots Markers
+        // Draw Markers
         if (mSettings.drawMarkers) {
             const float radius = mSceneSettings.robotRadius;
             const float markerBaseSize = mSettings.markerProp * radius;
@@ -386,6 +388,25 @@ namespace rfsim {
             // Draw team B markers
             for (const auto& r: mSceneSettings.robotsTeamB) {
                 drawMarker(r.id, mSettings.team2Color);
+            }
+
+            // Ball marker
+            {
+                const auto& b = mCurrentState.ball;
+                const float r = mSceneSettings.ballRadius;
+                const float baseSize = 4.0f * r * (1.0f + mSettings.markerProp);
+                const float deformSize = baseSize * (1.0f + smoothStep * mMarkerDeformationScale);
+
+                const Painter::Rect rect = {
+                    b.position.x - deformSize * 0.5f,
+                    b.position.y - deformSize * 0.5f,
+                    deformSize,
+                    deformSize
+                };
+
+                mPainter->SetBrushColor({mSettings.ballColor, mSettings.markerOpacity});
+                mPainter->SetTransparentColor(NO_TRANSPARENT_COLOR);
+                mPainter->DrawImage(rect, 0.0f, mBallMarkerImage);
             }
         }
     }
