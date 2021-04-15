@@ -69,8 +69,9 @@ namespace rfsim {
             if (graphicsSettings.drawMarkers) {
                 ImGui::SliderFloat("Marker Size", &graphicsSettings.markerProp, 0.5f, 2.0f);
                 ImGui::SliderFloat("Marker Opacity", &graphicsSettings.markerOpacity, 0.1f, 1.0f);
-                ImGui::ColorEdit3("Team A color", &graphicsSettings.team1Color[0]);
-                ImGui::ColorEdit3("Team B color", &graphicsSettings.team2Color[0]);
+                ImGui::ColorEdit3("Ball marker", &graphicsSettings.ballColor[0]);
+                ImGui::ColorEdit3("Team A marker", &graphicsSettings.team1Color[0]);
+                ImGui::ColorEdit3("Team B marker", &graphicsSettings.team2Color[0]);
             }
             ImGui::Separator();
 

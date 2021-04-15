@@ -76,6 +76,7 @@ namespace rfsim {
         std::shared_ptr<Painter> mPainter;
 
         std::shared_ptr<Image> mMarkerImage;
+        std::shared_ptr<Image> mBallMarkerImage;
         std::shared_ptr<Image> mTraceImage;
         std::shared_ptr<Image> mBallImage;
         std::shared_ptr<Image> mFieldImage;
