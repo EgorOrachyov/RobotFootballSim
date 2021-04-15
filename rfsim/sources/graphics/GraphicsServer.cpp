@@ -175,7 +175,7 @@ namespace rfsim {
 
                 for (const auto& tr: mRobotsTrace) {
                     float factor = 0.1f;
-                    float step = 0.9f / (float) mSettings.traceLength;
+                    float step = 0.9f / (tr.empty()? 1.0f: (float) tr.size());
 
                     tr.for_each([&](const glm::vec2& pos) {
                         mPainter->SetBrushColor({mSettings.traceColor, factor});
