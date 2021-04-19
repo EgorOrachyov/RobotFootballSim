@@ -8,6 +8,7 @@
     "pluginPaths": [
         "randommove",
         "followmove",
-        "dwamove"
+        "dwamove",
+        "rrtmove"
     ]
 }
