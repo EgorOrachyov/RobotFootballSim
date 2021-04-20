@@ -32,6 +32,7 @@
 #include <cmath>
 #include <iostream>
 #include <float.h>
+#include <cassert>
 
 static rfsim_game_settings g_settings;
 static rfsim_game_start_info g_start_info;
@@ -527,7 +528,7 @@ RFSIM_DEFINE_FUNCTION_BEGIN_GAME {
 
 float x_ar[40];
 float y_ar[40];
-int posi = 1;
+int posit = 1;
 
 RFSIM_DEFINE_FUNCTION_TICK_GAME {
 	if (flag) {
@@ -552,6 +553,7 @@ RFSIM_DEFINE_FUNCTION_TICK_GAME {
 			}
         } else {
 				printf("RRT ERROR\n");
+				assert(0);
 			}
 
 
@@ -561,14 +563,20 @@ RFSIM_DEFINE_FUNCTION_TICK_GAME {
 	const rfsim_body* forward     = &state->team_a[0];
     rfsim_control*    forward_ctl = &state->team_a_control[0];
 	rfsim_vec2 target;
-	target.x = x_ar[posi];
-	target.y = y_ar[posi];
+	if (posit < 37) {
+		target.x = x_ar[posit];
+		target.y = y_ar[posit];
+	} else {
+		return rfsim_status_success;
+	}
+
 	if (dist(forward->position, target) > 0.1) {
 		*forward_ctl = rrt_move_to_target(*forward_ctl,*forward, state->dt, target);
 	} else {
-		posi = posi + 1;
-		target.x = x_ar[posi];
-		target.y = y_ar[posi];
+		posit = posit + 1;
+		target.x = x_ar[posit];
+		target.y = y_ar[posit];
+
 		*forward_ctl = rrt_move_to_target(*forward_ctl,*forward, state->dt, target);
 	}
     return rfsim_status_success;
