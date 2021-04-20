@@ -30,40 +30,16 @@
 #include <deque>
 #include <limits>
 #include <cmath>
+#include <iostream>
 
-static const rfsim_game_settings* g_settings;
-static const rfsim_game_start_info* g_start_info;
+static rfsim_game_settings g_settings;
+static rfsim_game_start_info g_start_info;
 
-RFSIM_DEFINE_FUNCTION_INIT {
-    std::strcpy(context->name, "RRT movement");
-    std::strcpy(context->description, "Moving to ball using rrt path finding algorithm");
-    return rfsim_status_success;
-    
-};
+static bool flag = true;
 
-RFSIM_DEFINE_FUNCTION_BEGIN_GAME {
-    g_settings = settings;
-    g_start_info = start;
-
-    return rfsim_status_success;
-};
-
-RFSIM_DEFINE_FUNCTION_TICK_GAME {
-    auto baseVelA = 1.0f;
-    auto baseVelB = 1.1f;
-
-    auto& b = state->ball;
-
-    return rfsim_status_success;
-};
-
-RFSIM_DEFINE_FUNCTION_END_GAME {
-    return rfsim_status_success;
-};
-
-RFSIM_DEFINE_FUNCTION_FINALIZE {
-    return rfsim_status_success;
-};
+static double getLength(const rfsim_vec2& v) {
+    return sqrt(pow(v.x, 2) + pow(v.y, 2));
+}
 
 static double getDistance(const rfsim_vec2& v1, const rfsim_vec2& v2) {
     return sqrt(pow(v1.x - v2.x, 2) + pow(v1.y - v2.y, 2));
@@ -97,7 +73,7 @@ class Tree {
     //создать дерево, положить в него состояние поля, инфу об игроке (см структуру)
     //вызвать run, если хорошо, то вызвать getPath. первый элемент - ближайшая точка 
     public:
-        Tree(rfsim_game_state_info* gameState, PlayerInfo playerInfo, rfsim_vec2 goalState) {
+        Tree(rfsim_game_state_info* gameState, PlayerInfo playerInfo) {
             _gameState = gameState;
             _playerInfo = playerInfo;
             _startState = playerInfo.team == 1 ?
@@ -107,13 +83,14 @@ class Tree {
             _goalState = gameState->ball.position;
             //_goalState = goalState;
 
-            _nodes.push_back(Node(_startState, nullptr));
+            _nodes.emplace_back(_startState, nullptr);
 
-            setStepSize(0.1);
-            setMaxIterations(10000);
+            setStepSize(g_settings.robot_radius * 2);
+            setMaxIterations(1000);
             setGoalBias(0.5);
-            setGoalMaxDistance(0.1);
-            setObstacleDistance(g_settings->robot_radius * 2);
+            setGoalMaxDistance(g_settings.robot_radius / 2 + g_settings.ball_radius);
+            setObstacleDistance(g_settings.robot_radius * 2);
+            std::cout << "1st x:" << _nodes.back().state().x << " y:" << _nodes.back().state().y << "\n";
         };
 
         rfsim_vec2& goalState() { return _goalState; };
@@ -137,9 +114,13 @@ class Tree {
         Node* grow() {
             double r = (double) rand() / RAND_MAX;
             if (r < goalBias()) {
+                //std::cout << "to goal!    ";
                 return extend(goalState());
             } else {
-                return extend(randomState());
+                // std::cout << "bruh...     ";
+                rfsim_vec2 ts = randomState();
+                // std::cout << "!!!x:" << ts.x << " y:" << ts.y << "!!!"; 
+                return extend(ts);
             }
         };
 
@@ -151,24 +132,30 @@ class Tree {
                 target.y - source->state().y 
             };
 
-            double dlength = getDistance(delta, {0,0});
+            float dlength = (float) getLength(delta);
+
+            delta.x /= dlength;
+            delta.y /= dlength;
+
+            delta.x *= stepSize();
+            delta.y *= stepSize();
 
             rfsim_vec2 nextState = {
-                source->state().x + delta.x / dlength,
-                source->state().y + delta.y / dlength
+                source->state().x + delta.x,
+                source->state().y + delta.y,
             };
 
             //найти расстояние до каждого прочего игрока
             double minDist = std::numeric_limits<double>::max();
 
-            for (int i = 0; i < g_start_info->team_size; i++) {
+            for (int i = 0; i < g_start_info.team_size; i++) {
                 if (_playerInfo.team != 1 || (_playerInfo.team == 1 && _playerInfo.id != i)) {
                     double tmp = getDistance(nextState, _gameState->team_a[i].position);
                     if (tmp < minDist) minDist = tmp;
                 }
             }
 
-            for (int i = 0; i < g_start_info->team_size; i++) {
+            for (int i = 0; i < g_start_info.team_size; i++) {
                 if (_playerInfo.team == 1 || (_playerInfo.team != 1 && _playerInfo.id != i)) {
                     double tmp = getDistance(nextState, _gameState->team_b[i].position);
                     if (tmp < minDist) minDist = tmp;
@@ -179,9 +166,8 @@ class Tree {
                 return nullptr;
             }
 
-            Node nextNode = Node(nextState, source);
-            _nodes.push_back(nextNode);
-            return &nextNode;
+            _nodes.emplace_back(nextState, source);
+            return &_nodes.back();
         }
 
         Node* nearest(const rfsim_vec2& target) {
@@ -200,11 +186,18 @@ class Tree {
         }
 
         bool run() {
+            // std::cout << stepSize() << "\n";
+            // std::cout << goalMaxDistance() << "\n";
+            // std::cout << "x:" << _goalState.x << " y:" << _goalState.y << "\n";
             for (int i = 0; i < _maxIterations; i++) {
                 Node* newNode = grow();
 
                 if (newNode && getDistance(newNode->state(), _goalState) < goalMaxDistance())
                     return true;
+            }
+
+            for (auto& node: _nodes) {
+
             }
 
             return false;
@@ -217,14 +210,16 @@ class Tree {
             {
                 res.push_front(tmp.state());
                 tmp = *(tmp.parent());
-            } while (tmp.parent() != nullptr);            
+            } while (tmp.parent() != nullptr);    
+
+            return res;        
         }
 
 
         rfsim_vec2 randomState() {
             return {
-                (float) rand() / RAND_MAX * g_settings->field_Size.x,
-                (float) rand() / RAND_MAX * g_settings->field_Size.y
+                (float) rand() / RAND_MAX * g_settings.field_Size.x,
+                (float) rand() / RAND_MAX * g_settings.field_Size.y
             };
         }
 
@@ -244,4 +239,54 @@ class Tree {
         double _goalBias;
         double _goalMaxDistance;
         double _obstacleDistance;
+};
+
+RFSIM_DEFINE_FUNCTION_INIT {
+    std::strcpy(context->name, "RRT movement");
+    std::strcpy(context->description, "Moving to ball using rrt path finding algorithm");
+    return rfsim_status_success;
+    
+};
+
+RFSIM_DEFINE_FUNCTION_BEGIN_GAME {
+    g_settings = *settings;
+    g_start_info = *start;
+    // std::cout << "rr:" << g_settings.robot_radius << "\n";
+    // std::cout << "fx:" << g_settings.field_Size.x << " fy:" << g_settings.field_Size.y << "\n";
+
+    return rfsim_status_success;
+};
+
+RFSIM_DEFINE_FUNCTION_TICK_GAME {
+    if (flag) {
+        Tree rrt = Tree(state, { 1, 0 });
+        // std::cout << "rr:" << g_settings.robot_radius << "\n";
+        // std::cout << "br:" << g_settings.ball_radius << "\n";
+
+        // std::cout << "fx:" << g_settings.field_Size.x << " fy:" << g_settings.field_Size.y << "\n";
+
+        // std::cout << "pl x:" << state->team_a[0].position.x << " y:" << state->team_a[0].position.y << "\n";
+        // std::cout << "bl x:" << state->ball.position.x << " y:" << state->ball.position.y << "\n";
+        if (rrt.run())
+        {
+            std::cout << "done\n";
+            std::deque<rfsim_vec2> path = rrt.getPath();
+            int i = 0;
+            for (auto& pos: path) {
+                std::cout << i << " x:" << pos.x << " y:" << pos.y << "\n";
+                i++;
+            }
+        }
+        flag = false;
+    }
+
+    return rfsim_status_success;
+};
+
+RFSIM_DEFINE_FUNCTION_END_GAME {
+    return rfsim_status_success;
+};
+
+RFSIM_DEFINE_FUNCTION_FINALIZE {
+    return rfsim_status_success;
 };

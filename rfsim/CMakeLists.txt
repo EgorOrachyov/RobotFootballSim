@@ -141,7 +141,7 @@ target_link_libraries(dwamove PRIVATE plugin)
 set_target_properties(dwamove PROPERTIES C_STANDARD 11)
 set_target_properties(dwamove PROPERTIES C_STANDARD_REQUIRED ON)
 
-add_library(rrtmove SHARED plugins/BallFollowMovement.cpp)
+add_library(rrtmove SHARED plugins/RRTMovement.cpp)
 target_link_libraries(rrtmove PRIVATE plugin)
 set_target_properties(rrtmove PROPERTIES CXX_STANDARD 14)
 set_target_properties(rrtmove PROPERTIES CXX_STANDARD_REQUIRED ON)
