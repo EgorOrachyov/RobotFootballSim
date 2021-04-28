@@ -141,6 +141,11 @@ target_link_libraries(dwamove PRIVATE plugin)
 set_target_properties(dwamove PROPERTIES C_STANDARD 11)
 set_target_properties(dwamove PROPERTIES C_STANDARD_REQUIRED ON)
 
+add_library(rrtmove SHARED plugins/RRTMovement.cpp)
+target_link_libraries(rrtmove PRIVATE plugin)
+set_target_properties(rrtmove PROPERTIES CXX_STANDARD 14)
+set_target_properties(rrtmove PROPERTIES CXX_STANDARD_REQUIRED ON)
+
 message(STATUS "${RESOURCES_PATH}")
 file(COPY ${RESOURCES_PATH} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${CONFIG_PATH} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
